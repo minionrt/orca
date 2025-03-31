@@ -7,7 +7,7 @@
   ```console
   git clone git@github.com:autominion/teamprojekt-agents.git
   ```
-- Navigate to any git repository for testing and run:
+- From the root of this repository, run:
   ```console
   minion run --containerfile ./Containerfile
   ```
