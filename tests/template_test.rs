@@ -4,11 +4,11 @@ mod tests {
 
     #[test]
     fn example_test() {
-        // setup 
+        // setup
         let a = 2;
         let b = 3;
 
-        // execute 
+        // execute
         let result = a + b;
 
         // assert
