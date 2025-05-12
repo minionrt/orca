@@ -13,6 +13,5 @@ mod tests {
 
         // assert
         assert_eq!(result, 5, "2 + 3 should equal 5");
-        assert!(true)
     }
 }
