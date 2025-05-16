@@ -1,1 +1,33 @@
+# Rust specific files
 /target
+
+# Allow .gitignore in root
+!.gitignore
+
+# IDE/Editor specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*.sublime-workspace
+*.sublime-project
+
+# OS or Editor backups
+*.bak
+*.tmp
+*.old
+*.orig
+
+# Debug/Profiling related files
+*.profraw
+
+# Other temporary files
+*.log
+*.DS_Store
+
+# dissallow .env files
+*.env
+
+# build artifacts
+**/*.rs.bk
