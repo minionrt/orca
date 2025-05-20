@@ -1,3 +1,4 @@
+use std::fmt;
 use url::Url;
 
 /// Represents the reason for a task failure as reported to the API.
@@ -12,16 +13,16 @@ pub enum TaskFailureReason {
     ProblemSolving,
 }
 
-impl ToString for TaskFailureReason {
-    fn to_string(&self) -> String {
-        match self {
-            TaskFailureReason::TechnicalIssues => "TechnicalIssues".to_string(),
-            TaskFailureReason::TaskIssues => "TaskIssues".to_string(),
-            TaskFailureReason::ProblemSolving => "ProblemSolving".to_string(),
-        }
+impl fmt::Display for TaskFailureReason {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            TaskFailureReason::TechnicalIssues => "TechnicalIssues",
+            TaskFailureReason::TaskIssues => "TaskIssues",
+            TaskFailureReason::ProblemSolving => "ProblemSolving",
+        };
+        write!(f, "{}", s)
     }
 }
-
 
 /// Reports successful completion of a task to the API.
 ///
@@ -35,7 +36,7 @@ impl ToString for TaskFailureReason {
 ///
 /// Panics if the HTTP request fails.
 #[allow(dead_code)] // in our current example we only report failure, so not used
-pub fn report_success(minion_api : Url, minion_token : String, description: &str) {
+pub fn report_success(minion_api: Url, minion_token: String, description: &str) {
     reqwest::blocking::Client::new()
         .post(minion_api.join("agent/task/complete").unwrap())
         .bearer_auth(minion_token)
@@ -44,7 +45,6 @@ pub fn report_success(minion_api : Url, minion_token : String, description: &str
         .send()
         .unwrap();
 }
-
 
 /// Reports a task failure to the API.
 ///
@@ -58,12 +58,16 @@ pub fn report_success(minion_api : Url, minion_token : String, description: &str
 /// # Panics
 ///
 /// Panics if the HTTP request fails.
-pub fn report_failure(minion_api : Url, minion_token : String, description: &str, reason: Option<TaskFailureReason>) {
+pub fn report_failure(
+    minion_api: Url,
+    minion_token: String,
+    description: &str,
+    reason: Option<TaskFailureReason>,
+) {
     let body = match reason {
         Some(r) => format!(
             "{{\"reason\": \"{}\", \"description\": \"{}\"}}",
-            r.to_string(),
-            description
+            r, description
         ),
         None => format!("{{\"description\": \"{}\"}}", description),
     };
