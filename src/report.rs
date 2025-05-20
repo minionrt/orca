@@ -1,10 +1,14 @@
 use url::Url;
-#[derive(Debug)]
 
+/// Represents the reason for a task failure as reported to the API.
+#[derive(Debug)]
 #[allow(dead_code)] // optional, therefore might this not be used
 pub enum TaskFailureReason {
+    /// The agent failed due to technical problems unrelated to the task itself.
     TechnicalIssues,
+    /// The agent failed due to a problem with the task itself (e.g., unclear or impossible).
     TaskIssues,
+    /// The agent failed due to not succeeding at task-specific problem-solving.
     ProblemSolving,
 }
 
@@ -19,6 +23,17 @@ impl ToString for TaskFailureReason {
 }
 
 
+/// Reports successful completion of a task to the API.
+///
+/// # Arguments
+///
+/// * `minion_api` - The base URL of the minion API.
+/// * `minion_token` - The authentication token for the minion.
+/// * `description` - A natural-language description of the result.
+///
+/// # Panics
+///
+/// Panics if the HTTP request fails.
 #[allow(dead_code)] // in our current example we only report failure, so not used
 pub fn report_success(minion_api : Url, minion_token : String, description: &str) {
     reqwest::blocking::Client::new()
@@ -30,6 +45,19 @@ pub fn report_success(minion_api : Url, minion_token : String, description: &str
         .unwrap();
 }
 
+
+/// Reports a task failure to the API.
+///
+/// # Arguments
+///
+/// * `minion_api` - The base URL of the minion API.
+/// * `minion_token` - The authentication token for the minion.
+/// * `description` - A natural-language description of the task failure.
+/// * `reason` - Optional reason for the task failure (`TaskFailureReason`).
+///
+/// # Panics
+///
+/// Panics if the HTTP request fails.
 pub fn report_failure(minion_api : Url, minion_token : String, description: &str, reason: Option<TaskFailureReason>) {
     let body = match reason {
         Some(r) => format!(

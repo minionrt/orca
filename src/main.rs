@@ -1,7 +1,7 @@
 use std::env;
 use url::Url;
 mod report;
-use report::{report_failure, TaskFailureReason};
+use report::report_failure;
 
 fn main() {
     println!();
@@ -17,5 +17,5 @@ fn main() {
     // See https://github.com/autominion/spec/blob/main/spec/http.md
     //
     // This will exit the `minion` CLI.
-   report_failure(minion_api,   minion_token,"Not implemented yet", Some(TaskFailureReason::TechnicalIssues));
+   report_failure(minion_api, minion_token,"Not implemented yet", None);
 }
