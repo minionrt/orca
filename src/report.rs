@@ -32,18 +32,25 @@ impl fmt::Display for TaskFailureReason {
 /// * `minion_token` - The authentication token for the minion.
 /// * `description` - A natural-language description of the result.
 ///
+/// # Returns
+///
+/// A Result with the Response or an Error
+///
 /// # Panics
 ///
-/// Panics if the HTTP request fails.
+/// Panics if the API Url join does not succeed
 #[allow(dead_code)] // in our current example we only report failure, so not used
-pub fn report_success(minion_api: Url, minion_token: String, description: &str) {
+pub fn report_success(
+    minion_api: Url,
+    minion_token: String,
+    description: &str,
+) -> Result<reqwest::blocking::Response, reqwest::Error> {
     reqwest::blocking::Client::new()
         .post(minion_api.join("agent/task/complete").unwrap())
         .bearer_auth(minion_token)
         .header("Content-Type", "application/json")
         .body(format!("{{\"description\": \"{}\"}}", description))
         .send()
-        .unwrap();
 }
 
 /// Reports a task failure to the API.
@@ -55,15 +62,19 @@ pub fn report_success(minion_api: Url, minion_token: String, description: &str) 
 /// * `description` - A natural-language description of the task failure.
 /// * `reason` - Optional reason for the task failure (`TaskFailureReason`).
 ///
+/// # Returns
+///
+/// A Result with the Response or an Error
+///
 /// # Panics
 ///
-/// Panics if the HTTP request fails.
+/// Panics if the API Url join does not succeed
 pub fn report_failure(
     minion_api: Url,
     minion_token: String,
     description: &str,
     reason: Option<TaskFailureReason>,
-) {
+) -> Result<reqwest::blocking::Response, reqwest::Error> {
     let body = match reason {
         Some(r) => format!(
             "{{\"reason\": \"{}\", \"description\": \"{}\"}}",
@@ -78,5 +89,4 @@ pub fn report_failure(
         .header("Content-Type", "application/json")
         .body(body)
         .send()
-        .unwrap();
 }
