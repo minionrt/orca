@@ -1,14 +1,63 @@
 use std::fmt;
 use crate::openai;
 
+#[derive(Clone, Debug)]
 pub struct Completion {
-    content: String,
-    role: MessageRole,
+    pub content: String,
 }
 impl Completion {
     pub fn new(content: String, role: MessageRole) -> Self {
         Completion {
-            content, role
+            content,
+        }
+    }
+}
+impl TryFrom<openai::Choice> for Completion {
+    type Error = LLMAPIError;
+
+    fn try_from(choice: openai::Choice) -> std::result::Result<Self, Self::Error> {
+        Ok(Self {
+            content:
+                choice.message.content
+                    .ok_or(LLMAPIError::RefusedCompletion(
+                        choice.message.refusal.ok_or(
+                            LLMAPIError::UnknownError("Empty completion".to_owned())
+                        )?
+                    ))?
+        })
+    }
+}
+
+#[derive(Clone)]
+pub struct Message {
+    pub content: String,
+    pub role: MessageRole,
+    pub name: Option<String>,
+}
+
+impl Message {
+    pub fn new(content: String, role: MessageRole) -> Self {
+        Self {
+            content,
+            role,
+            name: None,
+        }
+    }
+    pub fn new_named(content: String, role: MessageRole, name: String) -> Self {
+        Self {
+            content,
+            role,
+            name: Some(name),
+        }
+    }
+}
+
+impl From<Message> for openai::Message {
+    fn from(m: Message) -> Self {
+        openai::Message {
+            content: m.content,
+            role: m.role.into(),
+            name: m.name,
         }
     }
 }
@@ -25,9 +74,29 @@ impl PromptResponse {
     }
 }
 
+impl TryFrom<openai::Completion> for PromptResponse {
+    type Error = LLMAPIError;
+    fn try_from(completion: openai::Completion) -> Result<Self> {
+        let checked_completions =
+            completion.choices.iter()
+                .map(|c| c.clone().try_into())
+                .collect::<Vec<_>>();
+
+        if let Some(err) = checked_completions.iter().find(|c| c.is_err()) {
+            Err(err.clone().unwrap_err())
+        } else {
+            Ok(Self {
+                completions: checked_completions.iter().map(|c| c.clone().unwrap()).collect(),
+            })
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum LLMAPIError {
     RefusedCompletion(String),
+    NetworkError(String),
+    UnknownError(String),
 }
 
 impl std::error::Error for LLMAPIError {}
@@ -35,7 +104,12 @@ impl std::error::Error for LLMAPIError {}
 impl fmt::Display for LLMAPIError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            LLMAPIError::RefusedCompletion(refusal) => write!(f, "The LLM refused completion with the following response: {}", refusal)
+            LLMAPIError::RefusedCompletion(refusal) =>
+                write!(f, "The LLM refused completion with the following response: {}", refusal),
+            LLMAPIError::NetworkError(err) =>
+                write!(f, "Network Error: {}", err),
+            LLMAPIError::UnknownError(err) =>
+                write!(f, "Unknown Error: {}", err),
         }
     }
 }
@@ -69,9 +143,7 @@ pub struct LLM {
     base_url: String,
     model: String,
 
-    max_tokens: Option<u32>,
-
-    messages: Vec<openai::Message>,
+    max_tokens: Option<i32>,
 }
 
 impl LLM {
@@ -81,7 +153,6 @@ impl LLM {
             base_url: "".to_string(),
             model: "".to_string(),
             max_tokens: None,
-            messages: vec![],
         }
     }
     fn full(api_key: String, base_url: String, model: String) -> Self {
@@ -105,7 +176,7 @@ impl LLM {
         self
     }
 
-    fn with_max_tokens(&mut self, max_tokens: u32) -> &mut Self {
+    fn with_max_tokens(&mut self, max_tokens: i32) -> &mut Self {
         self.max_tokens = Some(max_tokens);
         self
     }
@@ -114,28 +185,51 @@ impl LLM {
         self
     }
 
-    pub fn add_message(&mut self, role: MessageRole, content: String) -> &mut Self {
-        self.messages.push(openai::Message{
-            content,
-            role: role.into(),
-            name: None,
-        });
-        self
+    /// prompts the llm with the messages given beforehand
+    pub async fn prompt(&self, messages: &Vec<Message>) -> Result<PromptResponse> {
+        let client = reqwest::Client::new();
+        
+        let completion =
+            openai::fetch_completion(
+                &self.base_url,
+                &self.api_key,
+                &self.make_body(messages),
+                client
+            ).await;
+
+        match completion {
+            Ok(ok) => ok.try_into(),
+            Err(err) => Err(LLMAPIError::NetworkError(err.to_string()))
+        }
     }
-    pub fn add_named_message(&mut self, role: MessageRole, content: String, name: String) -> &mut Self {
-        self.messages.push(openai::Message{
-            content,
-            role: role.into(),
-            name: Some(name),
-        });
-        self
+
+    pub async fn prompt_single(&self, message: Message) -> Result<PromptResponse> {
+        self.prompt(&vec![message]).await
     }
 
-    pub fn prompt(&mut self) -> Result<PromptResponse> {
-        // TODO actually prompt
+    pub async fn prompt_unwrapped(&self, content: String, role: MessageRole) -> Result<PromptResponse> {
+        self.prompt_single(Message::new(content, role)).await
+    }
 
-        self.messages.clear();
+    pub async fn prompt_unwrapped_named(&self, content: String, role: MessageRole, name: String) -> Result<PromptResponse> {
+        self.prompt_single(Message::new_named(content, role, name)).await
+    }
 
-        Ok(PromptResponse::new(vec![Completion::new("this is a dummy response".to_owned(), MessageRole::Assistant)]))
+    fn make_body(&self, messages: &Vec<Message>) -> openai::CompletionBody {
+        openai::CompletionBody {
+            messages: messages.iter().map(|m| m.clone().into()).collect(),
+            model: self.model.clone(),
+            temperature: None,
+            top_p: None,
+            stream: None,
+            frequency_penalty: None,
+            presence_penalty: None,
+            n: None,
+            logit_bias: None,
+            logprobs: None,
+            max_completion_tokens: self.max_tokens,
+            max_tokens: self.max_tokens,
+            user: None,
+        }
     }
 }
