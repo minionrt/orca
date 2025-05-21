@@ -1,6 +1,9 @@
 # Rust specific files
 /target
 
+# docker generated files
+docker
+
 # Allow .gitignore in root
 !.gitignore
 
