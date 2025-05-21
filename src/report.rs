@@ -1,9 +1,9 @@
+#![allow(dead_code)] 
 use std::fmt;
 use url::Url;
 
 /// Represents the reason for a task failure as reported to the API.
 #[derive(Debug)]
-#[allow(dead_code)] // optional, therefore might this not be used
 pub enum TaskFailureReason {
     /// The agent failed due to technical problems unrelated to the task itself.
     TechnicalIssues,
@@ -39,7 +39,6 @@ impl fmt::Display for TaskFailureReason {
 /// # Panics
 ///
 /// Panics if the API Url join does not succeed
-#[allow(dead_code)] // in our current example we only report failure, so not used
 pub fn report_success(
     minion_api: Url,
     minion_token: String,
