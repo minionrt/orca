@@ -1,0 +1,48 @@
+name: Container Publish
+run-name: ${{ github.event.workflow_run.head_commit.message }}
+
+on:
+  workflow_run:
+    workflows: ["Rust CI"]
+    branches: [feature/build_container_image]
+    types:
+      - completed
+
+  push:  # Nur zu Testzwecken
+    branches:
+      - feature/build_container_image
+
+permissions:
+  contents: read
+  packages: write
+  statuses: write
+
+jobs:
+  publish-minion-x86-64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Container Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Containerfile
+          push: true
+          tags: ghcr.io/autominion/teamprojekt-agents:x86-64-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
