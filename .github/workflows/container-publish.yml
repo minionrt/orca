@@ -8,7 +8,7 @@ on:
     types:
       - completed
 
-  push:  # Nur zu Testzwecken
+  push:  # Nur zu Testzwecken, sollte eigentlich ohne push-trigger funktionieren
     branches:
       - publish_container_image
 
