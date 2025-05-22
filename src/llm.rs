@@ -1,5 +1,5 @@
-use std::fmt;
 use crate::openai;
+use std::fmt;
 
 #[derive(Clone, Debug)]
 #[allow(dead_code)]
@@ -9,9 +9,7 @@ pub struct Completion {
 #[allow(dead_code)]
 impl Completion {
     pub fn new(content: String, _role: MessageRole) -> Self {
-        Completion {
-            content,
-        }
+        Completion { content }
     }
 }
 impl TryFrom<openai::Choice> for Completion {
@@ -19,14 +17,13 @@ impl TryFrom<openai::Choice> for Completion {
 
     fn try_from(choice: openai::Choice) -> std::result::Result<Self, Self::Error> {
         Ok(Self {
-            content: choice.message.content
-                    .ok_or_else(|| {
-                        if choice.message.refusal.is_some() {
-                            LLMAPIError::RefusedCompletion(choice.message.refusal.unwrap())
-                        } else {
-                            LLMAPIError::UnknownError("Empty completion".to_owned())
-                        }
-                    })?
+            content: choice.message.content.ok_or_else(|| {
+                if choice.message.refusal.is_some() {
+                    LLMAPIError::RefusedCompletion(choice.message.refusal.unwrap())
+                } else {
+                    LLMAPIError::UnknownError("Empty completion".to_owned())
+                }
+            })?,
         })
     }
 }
@@ -76,25 +73,27 @@ pub struct PromptResponse {
 #[allow(dead_code)]
 impl PromptResponse {
     pub fn new(completions: Vec<Completion>) -> Self {
-        PromptResponse {
-            completions,
-        }
+        PromptResponse { completions }
     }
 }
 
 impl TryFrom<openai::Completion> for PromptResponse {
     type Error = LLMAPIError;
     fn try_from(completion: openai::Completion) -> Result<Self> {
-        let checked_completions =
-            completion.choices.iter()
-                .map(|c| c.clone().try_into())
-                .collect::<Vec<_>>();
+        let checked_completions = completion
+            .choices
+            .iter()
+            .map(|c| c.clone().try_into())
+            .collect::<Vec<_>>();
 
         if let Some(err) = checked_completions.iter().find(|c| c.is_err()) {
             Err(err.clone().unwrap_err())
         } else {
             Ok(Self {
-                completions: checked_completions.iter().map(|c| c.clone().unwrap()).collect(),
+                completions: checked_completions
+                    .iter()
+                    .map(|c| c.clone().unwrap())
+                    .collect(),
             })
         }
     }
@@ -113,12 +112,13 @@ impl std::error::Error for LLMAPIError {}
 impl fmt::Display for LLMAPIError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            LLMAPIError::RefusedCompletion(refusal) =>
-                write!(f, "The LLM refused completion with the following response: {}", refusal),
-            LLMAPIError::NetworkError(err) =>
-                write!(f, "Network Error: {}", err),
-            LLMAPIError::UnknownError(err) =>
-                write!(f, "Unknown Error: {}", err),
+            LLMAPIError::RefusedCompletion(refusal) => write!(
+                f,
+                "The LLM refused completion with the following response: {}",
+                refusal
+            ),
+            LLMAPIError::NetworkError(err) => write!(f, "Network Error: {}", err),
+            LLMAPIError::UnknownError(err) => write!(f, "Unknown Error: {}", err),
         }
     }
 }
@@ -200,20 +200,20 @@ impl LLM {
     pub async fn prompt(&self, messages: &[Message]) -> Result<PromptResponse> {
         // TODO reuse client
         let client = reqwest::Client::new();
-        
-        let completion =
-            openai::fetch_completion(
-                &self.base_url,
-                &self.api_key,
-                &self.make_body(messages),
-                client
-            ).await;
+
+        let completion = openai::fetch_completion(
+            &self.base_url,
+            &self.api_key,
+            &self.make_body(messages),
+            client,
+        )
+        .await;
 
         println!("{:?}", completion);
 
         match completion {
             Ok(ok) => ok.try_into(),
-            Err(err) => Err(LLMAPIError::NetworkError(err.to_string()))
+            Err(err) => Err(LLMAPIError::NetworkError(err.to_string())),
         }
     }
 
@@ -221,12 +221,22 @@ impl LLM {
         self.prompt(&[message]).await
     }
 
-    pub async fn prompt_unwrapped(&self, content: String, role: MessageRole) -> Result<PromptResponse> {
+    pub async fn prompt_unwrapped(
+        &self,
+        content: String,
+        role: MessageRole,
+    ) -> Result<PromptResponse> {
         self.prompt_single(Message::new(content, role)).await
     }
 
-    pub async fn prompt_unwrapped_named(&self, content: String, role: MessageRole, name: String) -> Result<PromptResponse> {
-        self.prompt_single(Message::new_named(content, role, name)).await
+    pub async fn prompt_unwrapped_named(
+        &self,
+        content: String,
+        role: MessageRole,
+        name: String,
+    ) -> Result<PromptResponse> {
+        self.prompt_single(Message::new_named(content, role, name))
+            .await
     }
 
     fn make_body(&self, messages: &[Message]) -> openai::CompletionBody {
