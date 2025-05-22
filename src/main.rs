@@ -1,5 +1,6 @@
 mod llm;
 mod openai;
+mod task_handler;
 
 use std::env;
 
