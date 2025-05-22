@@ -38,7 +38,7 @@ jobs:
         with:
           context: .
           file: Containerfile
-          push: false             
+          push: false             # Nur zum Createn, nicht pushen
           tags: ghcr.io/autominion/teamprojekt-agents:x86-64-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
