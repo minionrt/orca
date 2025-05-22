@@ -187,7 +187,6 @@ impl LLM {
         self
     }
 
-    /// prompts the llm with the messages given beforehand
     pub async fn prompt(&self, messages: &Vec<Message>) -> Result<PromptResponse> {
         // TODO reuse client
         let client = reqwest::Client::new();
