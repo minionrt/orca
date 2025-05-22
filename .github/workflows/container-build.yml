@@ -8,9 +8,9 @@ on:
     types:
       - completed
 
-  push:
-    branches:
-      - feature/build_container_image
+  #push:
+    #branches:
+      #- feature/build_container_image
 
 
 permissions:
