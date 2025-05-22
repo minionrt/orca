@@ -148,6 +148,7 @@ impl From<MessageRole> for String {
 
 #[derive(Clone)]
 #[allow(dead_code)]
+#[allow(clippy::upper_case_acronyms)]
 pub struct LLM {
     api_key: String,
     base_url: String,
@@ -157,7 +158,6 @@ pub struct LLM {
 }
 
 #[allow(dead_code)]
-#[allow(clippy::upper_case_acronyms)]
 impl LLM {
     pub fn new() -> Self {
         LLM {
@@ -197,7 +197,7 @@ impl LLM {
         self
     }
 
-    pub async fn prompt(&self, messages: &Vec<Message>) -> Result<PromptResponse> {
+    pub async fn prompt(&self, messages: &[Message]) -> Result<PromptResponse> {
         // TODO reuse client
         let client = reqwest::Client::new();
         
@@ -218,7 +218,7 @@ impl LLM {
     }
 
     pub async fn prompt_single(&self, message: Message) -> Result<PromptResponse> {
-        self.prompt(&vec![message]).await
+        self.prompt(&[message]).await
     }
 
     pub async fn prompt_unwrapped(&self, content: String, role: MessageRole) -> Result<PromptResponse> {
