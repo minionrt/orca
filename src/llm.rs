@@ -17,13 +17,14 @@ impl TryFrom<openai::Choice> for Completion {
 
     fn try_from(choice: openai::Choice) -> std::result::Result<Self, Self::Error> {
         Ok(Self {
-            content:
-                choice.message.content
-                    .ok_or(LLMAPIError::RefusedCompletion(
-                        choice.message.refusal.ok_or(
+            content: choice.message.content
+                    .ok_or_else(|| {
+                        if choice.message.refusal.is_some() {
+                            LLMAPIError::RefusedCompletion(choice.message.refusal.unwrap())
+                        } else {
                             LLMAPIError::UnknownError("Empty completion".to_owned())
-                        )?
-                    ))?
+                        }
+                    })?
         })
     }
 }
@@ -62,6 +63,7 @@ impl From<Message> for openai::Message {
     }
 }
 
+#[derive(Debug)]
 pub struct PromptResponse {
     pub completions: Vec<Completion>,
 }
@@ -147,7 +149,7 @@ pub struct LLM {
 }
 
 impl LLM {
-    fn new() -> Self {
+    pub fn new() -> Self {
         LLM {
             api_key: "".to_string(),
             base_url: "".to_string(),
@@ -155,7 +157,7 @@ impl LLM {
             max_tokens: None,
         }
     }
-    fn full(api_key: String, base_url: String, model: String) -> Self {
+    pub fn full(api_key: String, base_url: String, model: String) -> Self {
         Self::new()
             .with_api_key(api_key)
             .with_base_url(base_url)
@@ -163,20 +165,20 @@ impl LLM {
             .clone()
     }
 
-    fn with_api_key(&mut self, api_key: String) -> &mut Self {
+    pub fn with_api_key(&mut self, api_key: String) -> &mut Self {
         self.api_key = api_key;
         self
     }
-    fn with_base_url(&mut self, base_url: String) -> &mut Self {
+    pub fn with_base_url(&mut self, base_url: String) -> &mut Self {
         self.base_url = base_url;
         self
     }
-    fn with_model(&mut self, model: String) -> &mut Self {
+    pub fn with_model(&mut self, model: String) -> &mut Self {
         self.model = model;
         self
     }
 
-    fn with_max_tokens(&mut self, max_tokens: i32) -> &mut Self {
+    pub fn with_max_tokens(&mut self, max_tokens: i32) -> &mut Self {
         self.max_tokens = Some(max_tokens);
         self
     }
@@ -187,6 +189,7 @@ impl LLM {
 
     /// prompts the llm with the messages given beforehand
     pub async fn prompt(&self, messages: &Vec<Message>) -> Result<PromptResponse> {
+        // TODO reuse client
         let client = reqwest::Client::new();
         
         let completion =
@@ -196,6 +199,8 @@ impl LLM {
                 &self.make_body(messages),
                 client
             ).await;
+
+        println!("{:?}", completion);
 
         match completion {
             Ok(ok) => ok.try_into(),

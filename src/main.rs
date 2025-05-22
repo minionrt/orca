@@ -4,8 +4,18 @@ mod openai;
 use std::env;
 
 use url::Url;
+use crate::llm::MessageRole;
 
 fn main() {
+    println!("{:?}", tokio::runtime::Runtime::new().unwrap().block_on(async {
+        llm::LLM::new()
+            .with_base_url("http://localhost:11434/v1/chat/completions".to_owned())
+            .with_api_key("123".to_owned())
+            .with_model("deepseek-r1".to_owned())
+            .prompt_unwrapped("hello".to_owned(), MessageRole::User)
+            .await
+    }));
+
     println!();
     println!();
     println!("This is a message from the agent.");
