@@ -4,7 +4,7 @@ run-name: ${{ github.event.workflow_run.head_commit.message }}
 on:
   workflow_run:
     workflows: ["Rust CI"]
-    branches: ["**"]
+    branches: ["feature/build_container_image"]
     types:
       - completed
 
