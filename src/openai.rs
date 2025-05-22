@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use std::collections::HashMap;
 use std::error::Error;
 use reqwest::Client;
@@ -190,6 +189,7 @@ pub struct CompletionBody {
     pub user: Option<String>,
 }
 
+#[allow(dead_code)]
 pub async fn fetch_completion(
     base_url: &str,
     api_key: &str,

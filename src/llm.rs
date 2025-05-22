@@ -2,11 +2,13 @@ use std::fmt;
 use crate::openai;
 
 #[derive(Clone, Debug)]
+#[allow(dead_code)]
 pub struct Completion {
     pub content: String,
 }
+#[allow(dead_code)]
 impl Completion {
-    pub fn new(content: String, role: MessageRole) -> Self {
+    pub fn new(content: String, _role: MessageRole) -> Self {
         Completion {
             content,
         }
@@ -30,12 +32,14 @@ impl TryFrom<openai::Choice> for Completion {
 }
 
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct Message {
     pub content: String,
     pub role: MessageRole,
     pub name: Option<String>,
 }
 
+#[allow(dead_code)]
 impl Message {
     pub fn new(content: String, role: MessageRole) -> Self {
         Self {
@@ -64,10 +68,12 @@ impl From<Message> for openai::Message {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct PromptResponse {
     pub completions: Vec<Completion>,
 }
 
+#[allow(dead_code)]
 impl PromptResponse {
     pub fn new(completions: Vec<Completion>) -> Self {
         PromptResponse {
@@ -95,6 +101,7 @@ impl TryFrom<openai::Completion> for PromptResponse {
 }
 
 #[derive(Clone, Debug)]
+#[allow(dead_code)]
 pub enum LLMAPIError {
     RefusedCompletion(String),
     NetworkError(String),
@@ -140,6 +147,7 @@ impl From<MessageRole> for String {
 }
 
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct LLM {
     api_key: String,
     base_url: String,
@@ -148,6 +156,7 @@ pub struct LLM {
     max_tokens: Option<i32>,
 }
 
+#[allow(dead_code)]
 impl LLM {
     pub fn new() -> Self {
         LLM {

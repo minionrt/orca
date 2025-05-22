@@ -4,7 +4,6 @@ mod openai;
 use std::env;
 
 use url::Url;
-use crate::llm::MessageRole;
 
 fn main() {
     println!();
