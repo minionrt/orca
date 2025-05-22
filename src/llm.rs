@@ -157,6 +157,7 @@ pub struct LLM {
 }
 
 #[allow(dead_code)]
+#[allow(clippy::upper_case_acronyms)]
 impl LLM {
     pub fn new() -> Self {
         LLM {
@@ -228,7 +229,7 @@ impl LLM {
         self.prompt_single(Message::new_named(content, role, name)).await
     }
 
-    fn make_body(&self, messages: &Vec<Message>) -> openai::CompletionBody {
+    fn make_body(&self, messages: &[Message]) -> openai::CompletionBody {
         openai::CompletionBody {
             messages: messages.iter().map(|m| m.clone().into()).collect(),
             model: self.model.clone(),
