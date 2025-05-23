@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use reqwest::Client;
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
@@ -186,7 +188,6 @@ pub struct CompletionBody {
     pub user: Option<String>,
 }
 
-#[allow(dead_code)]
 pub async fn fetch_completion(
     base_url: &str,
     api_key: &str,
