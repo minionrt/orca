@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 
-use reqwest::Client;
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -188,11 +187,11 @@ pub struct CompletionBody {
     pub user: Option<String>,
 }
 
-pub async fn fetch_completion(
+pub fn fetch_completion(
     base_url: &str,
     api_key: &str,
     body: &CompletionBody,
-    client: Client,
+    client: reqwest::blocking::Client,
 ) -> Result<Completion, Box<dyn Error>> {
     let authorization = format!("Bearer {}", api_key);
     let json_body = serde_json::to_string(body)?;
@@ -202,14 +201,13 @@ pub async fn fetch_completion(
         .header(AUTHORIZATION, authorization)
         .header(CONTENT_TYPE, "application/json")
         .body(json_body)
-        .send()
-        .await?;
+        .send()?;
 
     if response.status().is_success() {
-        let openai_response: Completion = response.json().await?;
+        let openai_response: Completion = response.json()?;
         Ok(openai_response)
     } else {
-        let error = response.text().await?;
+        let error = response.text()?;
         Err(format!("API Error: {}", error).into())
     }
 }

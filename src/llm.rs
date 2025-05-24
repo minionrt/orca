@@ -149,6 +149,7 @@ pub struct LLM {
     model: String,
 
     max_tokens: Option<i32>,
+    client: Option<reqwest::blocking::Client>,
 }
 
 impl LLM {
@@ -158,6 +159,7 @@ impl LLM {
             base_url: "".to_string(),
             model: "".to_string(),
             max_tokens: None,
+            client: None,
         }
     }
     pub fn full(api_key: String, base_url: String, model: String) -> Self {
@@ -185,22 +187,25 @@ impl LLM {
         self.max_tokens = Some(max_tokens);
         self
     }
-    fn with_unlimited_tokens(&mut self) -> &mut Self {
+    pub fn with_unlimited_tokens(&mut self) -> &mut Self {
         self.max_tokens = None;
         self
     }
+    pub fn with_client(&mut self, client: reqwest::blocking::Client) -> &mut Self {
+        self.client = Some(client);
+        self
+    }
 
-    pub async fn prompt(&self, messages: &[Message]) -> Result<PromptResponse> {
+    pub fn prompt(&self, messages: &[Message]) -> Result<PromptResponse> {
         // TODO reuse client
-        let client = reqwest::Client::new();
+        let client = self.client.clone().unwrap_or(self.default_client());
 
         let completion = openai::fetch_completion(
             &self.base_url,
             &self.api_key,
             &self.make_body(messages),
             client,
-        )
-        .await;
+        );
 
         println!("{:?}", completion);
 
@@ -210,26 +215,21 @@ impl LLM {
         }
     }
 
-    pub async fn prompt_single(&self, message: Message) -> Result<PromptResponse> {
-        self.prompt(&[message]).await
+    pub fn prompt_single(&self, message: Message) -> Result<PromptResponse> {
+        self.prompt(&[message])
     }
 
-    pub async fn prompt_unwrapped(
-        &self,
-        content: String,
-        role: MessageRole,
-    ) -> Result<PromptResponse> {
-        self.prompt_single(Message::new(content, role)).await
+    pub fn prompt_unwrapped(&self, content: String, role: MessageRole) -> Result<PromptResponse> {
+        self.prompt_single(Message::new(content, role))
     }
 
-    pub async fn prompt_unwrapped_named(
+    pub fn prompt_unwrapped_named(
         &self,
         content: String,
         role: MessageRole,
         name: String,
     ) -> Result<PromptResponse> {
         self.prompt_single(Message::new_named(content, role, name))
-            .await
     }
 
     fn make_body(&self, messages: &[Message]) -> openai::CompletionBody {
@@ -248,5 +248,9 @@ impl LLM {
             max_tokens: self.max_tokens,
             user: None,
         }
+    }
+
+    fn default_client(&self) -> reqwest::blocking::Client {
+        reqwest::blocking::Client::new()
     }
 }
