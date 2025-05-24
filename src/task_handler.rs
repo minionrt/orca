@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use url::Url;
+
 use crate::llm::{Completion, Message, MessageRole, LLM};
 
 const SMART_MODEL: &str = "o1-mini";
@@ -21,8 +23,10 @@ impl From<Model> for String {
     }
 }
 
-const INTRO_1: &str = r#"You are an autonomous agent that solves coding tasks. You keep your explanations as concise as possible.
-You are connected to a Linux-based development environment. You are in the project directory. Your current task is as follows:"#;
+const INTRO_1: &str = r#"You are an autonomous agent that solves coding tasks. 
+You keep your explanations as concise as possible.
+You are connected to a Linux-based development environment. You are in the 
+project directory. Your current task is as follows:"#;
 
 pub enum TaskOutcome {
     Complete(Vec<Completion>),
@@ -30,7 +34,7 @@ pub enum TaskOutcome {
 }
 
 pub struct Task{
-    request: String,
+    pub request: String,
 }
 
 /** Instance of TaskHandler contains the functions new and run.
@@ -45,12 +49,12 @@ pub struct TaskHandler{
  *  Use for sending tasks to llm and so interaction
  */
 impl TaskHandler{
-    pub fn new(api_key: String, base_url: String) ->  Self{
-        TaskHandler { llm: LLM::full(api_key, base_url, BASIC_MODEL.to_string())}
+    pub fn new(api_key: &String, base_url: &Url) ->  Self{
+        TaskHandler { llm: LLM::full(api_key.clone(), base_url.clone().into(), BASIC_MODEL.to_string())}
     }
 
-    pub fn new__set_model(api_key: String, base_url: String, model: Model) ->  Self{
-        TaskHandler { llm: LLM::full(api_key, base_url, String::from(model))}
+    pub fn new_set_model(api_key: &String, base_url: &Url, model: Model) ->  Self{
+        TaskHandler { llm: LLM::full(api_key.clone(), base_url.clone().into(), String::from(model))}
     }
 
     /// runs interaction with the llm for a given task
