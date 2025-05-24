@@ -1,5 +1,6 @@
+#![allow(dead_code)]
 
-use crate::llm::{LLM, Message, MessageRole};
+use crate::llm::{Completion, Message, MessageRole, LLM};
 
 const SMART_MODEL: &str = "o1-mini";
 const BASIC_MODEL: &str = "gpt-4o-mini";
@@ -7,7 +8,7 @@ const TEST_MODEL: &str = "test-model"; //no functionality yet
 pub enum Model{
     SmartModel,
     BasicModel,
-    TestModel
+    //TestModel
 }
 
 impl From<Model> for String {
@@ -15,7 +16,7 @@ impl From<Model> for String {
         match m {
             Model::SmartModel => SMART_MODEL.to_string(),
             Model::BasicModel => BASIC_MODEL.to_string(),
-            Model::TestModel => TEST_MODEL.to_string()
+            //Model::TestModel => TEST_MODEL.to_string()
         }
     }
 }
@@ -24,7 +25,7 @@ const INTRO_1: &str = r#"You are an autonomous agent that solves coding tasks. Y
 You are connected to a Linux-based development environment. You are in the project directory. Your current task is as follows:"#;
 
 pub enum TaskOutcome {
-    Complete(String),
+    Complete(Vec<Completion>),
     Failure
 }
 
@@ -79,7 +80,7 @@ impl TaskHandler{
         let response = match response {
             Ok(r) => TaskOutcome::Complete(r.completions),
             Err(_) => TaskOutcome::Failure
-        }
+        };
         response
     }
 
