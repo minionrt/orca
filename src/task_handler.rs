@@ -4,12 +4,15 @@ use url::Url;
 
 use crate::llm::{Completion, Message, MessageRole, LLM};
 
-const SMART_MODEL: &str = "o1-mini";
-const BASIC_MODEL: &str = "gpt-4o-mini";
+//you can find all the openai models here: https://platform.openai.com/docs/models
+const SMART_MODEL: &str = "o4-mini-2025-04-16";
+const BASIC_MODEL: &str = "gpt-4.1-nano-2025-04-14";
+const GEMINI: &str = "gemini-2.5-flash-preview-05-20";
 const TEST_MODEL: &str = "test-model"; //no functionality yet
 pub enum Model{
     SmartModel,
     BasicModel,
+    Gemini,
     //TestModel
 }
 
@@ -18,6 +21,7 @@ impl From<Model> for String {
         match m {
             Model::SmartModel => SMART_MODEL.to_string(),
             Model::BasicModel => BASIC_MODEL.to_string(),
+            Model::Gemini => GEMINI.to_string(),
             //Model::TestModel => TEST_MODEL.to_string()
         }
     }
@@ -39,6 +43,7 @@ pub struct Task{
 
 /** Instance of TaskHandler contains the functions new and run.
 * `new()` expects an api_key, base_url and a model -> returns TaskHandler
+* `new_set_model()` like new(), but also expects a model
 * `run()` handles interaction with LLM and expects a Task
 */
 pub struct TaskHandler{
@@ -50,11 +55,15 @@ pub struct TaskHandler{
  */
 impl TaskHandler{
     pub fn new(api_key: &String, base_url: &Url) ->  Self{
-        TaskHandler { llm: LLM::full(api_key.clone(), base_url.clone().into(), BASIC_MODEL.to_string())}
+        let base_url: String = base_url.clone().into();
+        let base_url = format!("{}/chat/completions", base_url);
+        TaskHandler { llm: LLM::full(api_key.clone(), base_url, BASIC_MODEL.to_string())}
     }
 
     pub fn new_set_model(api_key: &String, base_url: &Url, model: Model) ->  Self{
-        TaskHandler { llm: LLM::full(api_key.clone(), base_url.clone().into(), String::from(model))}
+        let base_url: String = base_url.clone().into();
+        let base_url = format!("{}/chat/completions", base_url);
+        TaskHandler { llm: LLM::full(api_key.clone(), base_url, String::from(model))}
     }
 
     /// runs interaction with the llm for a given task
