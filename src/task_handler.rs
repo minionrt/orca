@@ -2,7 +2,7 @@
 
 use url::Url;
 
-use crate::llm::{Completion, Message, MessageRole, LLM};
+use crate::llm::{Completion, LLM, Message, MessageRole};
 
 //you can find all the openai models here: https://platform.openai.com/docs/models
 const SMART_MODEL: &str = "o4-mini-2025-04-16";
