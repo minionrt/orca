@@ -10,8 +10,8 @@ const BASIC_MODEL: &str = "gpt-4.1-nano-2025-04-14";
 const GEMINI: &str = "gemini-2.5-flash-preview-05-20";
 const TEST_MODEL: &str = "test-model"; //no functionality yet
 pub enum Model{
-    SmartModel,
-    BasicModel,
+    Smart,
+    Basic,
     Gemini,
     //TestModel
 }
@@ -19,8 +19,8 @@ pub enum Model{
 impl From<Model> for String {
     fn from(m: Model) -> String {
         match m {
-            Model::SmartModel => SMART_MODEL.to_string(),
-            Model::BasicModel => BASIC_MODEL.to_string(),
+            Model::Smart => SMART_MODEL.to_string(),
+            Model::Basic => BASIC_MODEL.to_string(),
             Model::Gemini => GEMINI.to_string(),
             //Model::TestModel => TEST_MODEL.to_string()
         }
@@ -54,16 +54,16 @@ pub struct TaskHandler{
  *  Use for sending tasks to llm and so interaction
  */
 impl TaskHandler{
-    pub fn new(api_key: &String, base_url: &Url) ->  Self{
+    pub fn new(api_key: &str, base_url: &Url) ->  Self{
         let base_url: String = base_url.clone().into();
         let base_url = format!("{}/chat/completions", base_url);
-        TaskHandler { llm: LLM::full(api_key.clone(), base_url, BASIC_MODEL.to_string())}
+        TaskHandler { llm: LLM::full(api_key.to_string(), base_url, BASIC_MODEL.to_string())}
     }
 
-    pub fn new_set_model(api_key: &String, base_url: &Url, model: Model) ->  Self{
+    pub fn new_set_model(api_key: &str, base_url: &Url, model: Model) ->  Self{
         let base_url: String = base_url.clone().into();
         let base_url = format!("{}/chat/completions", base_url);
-        TaskHandler { llm: LLM::full(api_key.clone(), base_url, String::from(model))}
+        TaskHandler { llm: LLM::full(api_key.to_string(), base_url, String::from(model))}
     }
 
     /// runs interaction with the llm for a given task
@@ -76,25 +76,25 @@ impl TaskHandler{
     /// send single code task request without memory
     fn single_request(&self, request: &String) -> TaskOutcome{
         let history = "".to_string();
-        self.send_request(&request, &history)
+        self.send_request(request, &history)
     }
     /// send code task request with memory - meant for longer interaction loops
-    fn send_request(&self, request: &String, history: &String) -> TaskOutcome{
+    fn send_request(&self, request: &str, history: &String) -> TaskOutcome{
         //dev message so user cannot mess with LLM
         let dev_message = Message::new(INTRO_1.to_string(), MessageRole::Developer);
         //history posted as Assistant to make the LLM know what happened before
         let history_message = Message::new(history.clone(), MessageRole::Assistant);
         //build user request as Message
-        let user_message = Message::new(request.clone(), MessageRole::User);
+        let user_message = Message::new(request.to_string(), MessageRole::User);
         let messages = vec![dev_message, history_message, user_message];
 
         //send all the messages to the LLM and take result
         let response = self.llm.prompt(&messages);
-        let response = match response {
+        
+        match response {
             Ok(r) => TaskOutcome::Complete(r.completions),
             Err(_) => TaskOutcome::Failure
-        };
-        response
+        }
     }
 
 }
