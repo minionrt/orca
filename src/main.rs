@@ -19,13 +19,10 @@ fn main() {
     let minion_token = env::var("MINION_API_TOKEN").unwrap();
 
     //task handler interaction example
-    let task_handler = TaskHandler::new_set_model(
-        &minion_token, 
-        &minion_api, 
-        task_handler::Model::Gemini
-    );
-    let task = Task{ 
-        request: "Please write a simple FizzBuzz program.".to_string()
+    let task_handler =
+        TaskHandler::new_set_model(&minion_token, &minion_api, task_handler::Model::Gemini);
+    let task = Task {
+        request: "Please write a simple FizzBuzz program.".to_string(),
     };
     let response = task_handler.run(&task);
     let _response = match response {

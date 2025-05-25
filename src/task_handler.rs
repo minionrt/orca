@@ -9,7 +9,7 @@ const SMART_MODEL: &str = "o4-mini-2025-04-16";
 const BASIC_MODEL: &str = "gpt-4.1-nano-2025-04-14";
 const GEMINI: &str = "gemini-2.5-flash-preview-05-20";
 const TEST_MODEL: &str = "test-model"; //no functionality yet
-pub enum Model{
+pub enum Model {
     Smart,
     Basic,
     Gemini,
@@ -34,10 +34,10 @@ project directory. Your current task is as follows:"#;
 
 pub enum TaskOutcome {
     Complete(Vec<Completion>),
-    Failure
+    Failure,
 }
 
-pub struct Task{
+pub struct Task {
     pub request: String,
 }
 
@@ -46,40 +46,45 @@ pub struct Task{
 * `new_set_model()` like new(), but also expects a model
 * `run()` handles interaction with LLM and expects a Task
 */
-pub struct TaskHandler{
-    llm: LLM
+pub struct TaskHandler {
+    llm: LLM,
 }
 
 /** Responsible to handle the interaction with the LLM
  *  Use for sending tasks to llm and so interaction
  */
-impl TaskHandler{
-    pub fn new(api_key: &str, base_url: &Url) ->  Self{
+impl TaskHandler {
+    pub fn new(api_key: &str, base_url: &Url) -> Self {
         let base_url: String = base_url.clone().into();
         let base_url = format!("{}/chat/completions", base_url);
-        TaskHandler { llm: LLM::full(api_key.to_string(), base_url, BASIC_MODEL.to_string())}
+        TaskHandler {
+            llm: LLM::full(api_key.to_string(), base_url, BASIC_MODEL.to_string()),
+        }
     }
 
-    pub fn new_set_model(api_key: &str, base_url: &Url, model: Model) ->  Self{
+    pub fn new_set_model(api_key: &str, base_url: &Url, model: Model) -> Self {
         let base_url: String = base_url.clone().into();
         let base_url = format!("{}/chat/completions", base_url);
-        TaskHandler { llm: LLM::full(api_key.to_string(), base_url, String::from(model))}
+        TaskHandler {
+            llm: LLM::full(api_key.to_string(), base_url, String::from(model)),
+        }
     }
 
     /// runs interaction with the llm for a given task
-    pub fn run(&self, task: &Task) -> TaskOutcome{ //we might have to add a container here if we want to use the result
+    pub fn run(&self, task: &Task) -> TaskOutcome {
+        //we might have to add a container here if we want to use the result
 
         //we cann add interaction loop here @Frodo
-        self.single_request(&task.request) 
+        self.single_request(&task.request)
     }
-    
+
     /// send single code task request without memory
-    fn single_request(&self, request: &str) -> TaskOutcome{
+    fn single_request(&self, request: &str) -> TaskOutcome {
         let history = "".to_string();
         self.send_request(request, &history)
     }
     /// send code task request with memory - meant for longer interaction loops
-    fn send_request(&self, request: &str, history: &str) -> TaskOutcome{
+    fn send_request(&self, request: &str, history: &str) -> TaskOutcome {
         //dev message so user cannot mess with LLM
         let dev_message = Message::new(INTRO_1.to_string(), MessageRole::Developer);
         //history posted as Assistant to make the LLM know what happened before
@@ -90,11 +95,10 @@ impl TaskHandler{
 
         //send all the messages to the LLM and take result
         let response = self.llm.prompt(&messages);
-        
+
         match response {
             Ok(r) => TaskOutcome::Complete(r.completions),
-            Err(_) => TaskOutcome::Failure
+            Err(_) => TaskOutcome::Failure,
         }
     }
-
 }
