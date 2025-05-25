@@ -74,16 +74,16 @@ impl TaskHandler{
     }
     
     /// send single code task request without memory
-    fn single_request(&self, request: &String) -> TaskOutcome{
+    fn single_request(&self, request: &str) -> TaskOutcome{
         let history = "".to_string();
         self.send_request(request, &history)
     }
     /// send code task request with memory - meant for longer interaction loops
-    fn send_request(&self, request: &str, history: &String) -> TaskOutcome{
+    fn send_request(&self, request: &str, history: &str) -> TaskOutcome{
         //dev message so user cannot mess with LLM
         let dev_message = Message::new(INTRO_1.to_string(), MessageRole::Developer);
         //history posted as Assistant to make the LLM know what happened before
-        let history_message = Message::new(history.clone(), MessageRole::Assistant);
+        let history_message = Message::new(history.to_string(), MessageRole::Assistant);
         //build user request as Message
         let user_message = Message::new(request.to_string(), MessageRole::User);
         let messages = vec![dev_message, history_message, user_message];
