@@ -1,4 +1,6 @@
 use std::env;
+mod fetch_task;
+use fetch_task::get_task;
 
 use url::Url;
 
@@ -17,6 +19,9 @@ fn main() {
     //
     // Since nothing is implemented yet, we just mark the task as failed.
     // This will exit the `minion` CLI.
+
+    let res = get_task(minion_api.clone(),minion_token.clone()).unwrap();
+    println!("{:?}",res);
     reqwest::blocking::Client::new()
         .post(minion_api.join("agent/task/fail").unwrap())
         .bearer_auth(minion_token)
