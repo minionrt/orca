@@ -1,9 +1,11 @@
 #![allow(dead_code)]
 use std::fmt;
 use url::Url;
+use serde::Serialize;
+use serde_json::json;
 
 /// Represents the reason for a task failure as reported to the API.
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub enum TaskFailureReason {
     /// The agent failed due to technical problems unrelated to the task itself.
     TechnicalIssues,
@@ -44,11 +46,13 @@ pub fn report_success(
     minion_token: String,
     description: &str,
 ) -> Result<reqwest::blocking::Response, reqwest::Error> {
+    let body = json!({ "description": description }).to_string();
+
     reqwest::blocking::Client::new()
         .post(minion_api.join("agent/task/complete").unwrap())
         .bearer_auth(minion_token)
         .header("Content-Type", "application/json")
-        .body(format!("{{\"description\": \"{}\"}}", description))
+        .body(body)
         .send()
 }
 
@@ -75,11 +79,15 @@ pub fn report_failure(
     reason: Option<TaskFailureReason>,
 ) -> Result<reqwest::blocking::Response, reqwest::Error> {
     let body = match reason {
-        Some(r) => format!(
-            "{{\"reason\": \"{}\", \"description\": \"{}\"}}",
-            r, description
-        ),
-        None => format!("{{\"description\": \"{}\"}}", description),
+        Some(r) => json!({
+            "reason": r.to_string(),
+            "description": description
+        })
+        .to_string(),
+        None => json!({
+            "description": description
+        })
+        .to_string(),
     };
 
     reqwest::blocking::Client::new()
