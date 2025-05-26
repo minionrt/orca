@@ -17,5 +17,14 @@ fn main() {
     // See https://github.com/autominion/spec/blob/main/spec/http.md
     //
     // This will exit the `minion` CLI.
-    report_failure(minion_api, minion_token, "Not implemented yet", None).unwrap();
+    let client = reqwest::blocking::Client::new();
+
+    report_failure(
+        minion_api,
+        minion_token,
+        "Not implemented yet",
+        None,
+        client,
+    )
+    .unwrap();
 }

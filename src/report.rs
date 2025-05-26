@@ -1,9 +1,9 @@
 #![allow(dead_code)]
-use std::fmt;
-use url::Url;
+use reqwest::blocking::Client;
 use serde::Serialize;
 use serde_json::json;
-
+use std::fmt;
+use url::Url;
 /// Represents the reason for a task failure as reported to the API.
 #[derive(Debug, Serialize)]
 pub enum TaskFailureReason {
@@ -45,10 +45,10 @@ pub fn report_success(
     minion_api: Url,
     minion_token: String,
     description: &str,
+    client: Client,
 ) -> Result<reqwest::blocking::Response, reqwest::Error> {
     let body = json!({ "description": description }).to_string();
-
-    reqwest::blocking::Client::new()
+    client
         .post(minion_api.join("agent/task/complete").unwrap())
         .bearer_auth(minion_token)
         .header("Content-Type", "application/json")
@@ -77,6 +77,7 @@ pub fn report_failure(
     minion_token: String,
     description: &str,
     reason: Option<TaskFailureReason>,
+    client: Client,
 ) -> Result<reqwest::blocking::Response, reqwest::Error> {
     let body = match reason {
         Some(r) => json!({
@@ -90,7 +91,7 @@ pub fn report_failure(
         .to_string(),
     };
 
-    reqwest::blocking::Client::new()
+    client
         .post(minion_api.join("agent/task/fail").unwrap())
         .bearer_auth(minion_token)
         .header("Content-Type", "application/json")
