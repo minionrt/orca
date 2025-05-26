@@ -19,11 +19,11 @@ fn main() {
     //
     // Since nothing is implemented yet, we just mark the task as failed.
     // This will exit the `minion` CLI.
-    
+
     let client = reqwest::blocking::Client::new();
-    let sample_task = get_task(minion_api.clone(), minion_token.clone(),client).unwrap();
+    let sample_task = get_task(minion_api.clone(), minion_token.clone(), client).unwrap();
     println!("{:?}", sample_task);
-    
+
     reqwest::blocking::Client::new()
         .post(minion_api.join("agent/task/fail").unwrap())
         .bearer_auth(minion_token)
