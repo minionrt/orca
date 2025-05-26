@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 use serde::Deserialize;
 use url::Url;
+use reqwest::blocking::Client;
+
 
 /// Represents the status of a task as returned by the API.
 #[derive(Debug, Deserialize, PartialEq, Eq)]
@@ -33,9 +35,13 @@ pub struct TaskResponse {
 /// # Returns
 ///
 /// A Result containing the `TaskResponse` or a `reqwest::Error`.
-pub fn get_task(minion_api: Url, minion_token: String) -> Result<TaskResponse, reqwest::Error> {
+pub fn get_task(
+    minion_api: Url,
+    minion_token: String,
+    client: Client
+) -> Result<TaskResponse, reqwest::Error> {
     let url = minion_api.join("agent/task").unwrap();
-    let response = reqwest::blocking::Client::new()
+    let response = client
         .get(url)
         .bearer_auth(minion_token)
         .send()?
