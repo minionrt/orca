@@ -21,8 +21,9 @@ fn main() {
     // This will exit the `minion` CLI.
     
     let client = reqwest::blocking::Client::new();
-    let res = get_task(minion_api.clone(), minion_token.clone(),client).unwrap();
-    println!("{:?}", res);
+    let sample_task = get_task(minion_api.clone(), minion_token.clone(),client).unwrap();
+    println!("{:?}", sample_task);
+    
     reqwest::blocking::Client::new()
         .post(minion_api.join("agent/task/fail").unwrap())
         .bearer_auth(minion_token)
