@@ -34,8 +34,11 @@ impl TryFrom<openai::Choice> for Completion {
 /// One message that can be sent to the LLM in a chain of other messages
 #[derive(Clone)]
 pub struct Message {
+    /// the contents of the message
     pub content: String,
+    /// the role of the message author
     pub role: MessageRole,
+    /// an optional name for the participant, to be used for differentiating between participants of the same role
     pub name: Option<String>,
 }
 
