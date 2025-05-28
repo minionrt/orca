@@ -31,17 +31,14 @@ pub struct TaskHandler {
 /// Use for sending tasks to llm and so interaction
 impl TaskHandler {
     pub fn new(api_key: &str, base_url: &Url) -> Self {
-        let base_url: String = base_url.clone().into();
         TaskHandler {
-            llm: LLM::full(api_key.to_string(), base_url, Model::Basic.into()),
+            llm: LLM::full(api_key.to_string(), base_url.clone(), Model::Basic.into()),
         }
     }
 
     pub fn new_set_model(api_key: &str, base_url: &Url, model: Model) -> Self {
-        let base_url: String = base_url.clone().into();
-        let base_url = format!("{}/chat/completions", base_url);
         TaskHandler {
-            llm: LLM::full(api_key.to_string(), base_url, String::from(model)),
+            llm: LLM::full(api_key.to_string(), base_url.clone(), String::from(model)),
         }
     }
 
