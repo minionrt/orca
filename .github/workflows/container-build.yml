@@ -4,8 +4,8 @@ run-name: ${{ github.event.workflow_run.head_commit.message }}
 on:
   push:
     branches:
-      - feature/build_container_image
-      - test/feature/container_image
+      '**'
+      
 
 
 permissions:
