@@ -2,10 +2,11 @@ name: Container Build
 run-name: ${{ github.event.workflow_run.head_commit.message }}
 
 on:
-  push:
-    branches:
-      - feature/build_container_image
-
+  workflow_run:
+    workflows: ["Rust CI"]
+    branches: ["test/feature/container_image"]        # reacts on certain branch
+    types:
+      - completed                                     # if Rust-CI is completed
 
 permissions:
   contents: read
@@ -14,6 +15,7 @@ permissions:
 
 jobs:
   build-minion-x86-64:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}  # only if Rust-CI is completed
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -37,7 +39,7 @@ jobs:
         with:
           context: .
           file: Containerfile
-          push: false             # Nur zum Createn, nicht pushen
+          push: false
           tags: ghcr.io/autominion/teamprojekt-agents:x86-64-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
