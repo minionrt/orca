@@ -1,6 +1,6 @@
 use create::llm::{LLM, MessageRole};
 
-const SUMMARIZE_INTRO: &str = "Build a memory representation of the interaction. 
+const SUMMARIZE_INTRO: &str = "Build a memory representation of the interaction. Skip all introduction. 
 Summarize the most important points from the entire conversation history provided, 
 along with the latest two messages—one from the user and one from the assistant. 
 Focus on capturing key facts, goals, preferences, and any evolving context.\n";
@@ -38,7 +38,7 @@ impl Memory{
         self.history
     }
     pub fn add(&self, user_input: String, llm_answer: String){
-        content = format!("{}User Input: {}\n The ansnwer of the LLM: {}", SUMMARIZE_INTRO, user_input, llm_answer);
+        content = format!("{}\n History: {} \n User Input: {}\n The ansnwer of the LLM: {}", SUMMARIZE_INTRO, self.history, user_input, llm_answer);
         self.history = self.llm.prompt_unwrapped(content, MessageRole::User);
     }
     pub fn delete_history(&self)-> Self{
