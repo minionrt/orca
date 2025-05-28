@@ -2,10 +2,11 @@ name: Container Build
 run-name: ${{ github.event.workflow_run.head_commit.message }}
 
 on:
-  workflow_run:
-    workflows: ["Rust CI"]         # Must be the exact `name:` of Rust CI
-    types:
-      - completed
+  push:
+    branches:
+      '**'
+      
+
 
 permissions:
   contents: read
@@ -14,9 +15,7 @@ permissions:
 
 jobs:
   build-minion-x86-64:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}  # only if succeeded
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
