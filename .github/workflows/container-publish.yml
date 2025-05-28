@@ -1,4 +1,4 @@
-name: Container Publsih
+name: Container Publish
 run-name: ${{ github.event.workflow_run.head_commit.message }}
 
 on:
