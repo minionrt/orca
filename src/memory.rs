@@ -1,8 +1,9 @@
 use create::llm::{LLM, MessageRole};
 
-const SUMMARIZE_INTRO: &str = "You are building your own memory of an interaction. 
-    Please summarize the most important points of the following interaction history
-    and the new two messages, one by the user and one by the LLM:\n";
+const SUMMARIZE_INTRO: &str = "Build a memory representation of the interaction. 
+Summarize the most important points from the entire conversation history provided, 
+along with the latest two messages—one from the user and one from the assistant. 
+Focus on capturing key facts, goals, preferences, and any evolving context.\n";
 
 pub struct Memory{
     history: String,
@@ -15,7 +16,7 @@ impl Memory{
     pub fn new(api_key: String, base_url:String) -> Self{
         Memory{
             history: "".to_owned,
-            llm: LLM::full(api_key, base_url, "model"), //TODO change model
+            llm: LLM::full(api_key, base_url, "model"), //TODO replace model with one from model enum
             api_key: api_key,
             base_url: base_url
         }
@@ -28,8 +29,8 @@ impl Memory{
         self.history = history;
         self
     }
-    pub fn with_model(&self, model: String) -> Self{ //TODO change Model to model type and implement global enum for models
-        self.llm = LLM::full(self.api_key, self.base_url, model);
+    pub fn with_model(&self, model: String) -> Self{ //TODO change Model to model type
+        self.llm = LLM::full(self.api_key, self.base_url, model); //add model.into() here
         self
     }
     
