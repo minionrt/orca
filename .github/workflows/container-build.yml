@@ -2,11 +2,11 @@ name: Container Build
 run-name: ${{ github.event.workflow_run.head_commit.message }}
 
 on:
-  workflow_run:
-    workflows: ["Rust CI"]
-    branches: ["**"]                                  # reacts on certain branch
-    types:
-      - completed                                     # if Rust-CI is completed
+  push:
+    branches:
+      - feature/build_container_image
+      - test/feature/container_image
+
 
 permissions:
   contents: read
