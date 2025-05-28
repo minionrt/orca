@@ -1,4 +1,4 @@
-name: CD
+name: Container Publsih
 run-name: ${{ github.event.workflow_run.head_commit.message }}
 
 on:
@@ -35,8 +35,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: Containerfile.minion
+          file: Containerfile
           push: true
-          tags: ghcr.io/autominion/default-minion:x86-64-latest
+          tags: ghcr.io/autominion/teamprojekt-agents:x86-64-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
