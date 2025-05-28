@@ -15,7 +15,6 @@ permissions:
 
 jobs:
   build-minion-x86-64:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}  # only if Rust-CI is completed
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
