@@ -3,7 +3,9 @@ use reqwest::blocking::Client;
 use serde::Serialize;
 use serde_json::json;
 use std::fmt;
+use std::io::{self, Write};
 use url::Url;
+
 /// Represents the reason for a task failure as reported to the API.
 #[derive(Debug, Serialize)]
 pub enum TaskFailureReason {
@@ -97,4 +99,37 @@ pub fn report_failure(
         .header("Content-Type", "application/json")
         .body(body)
         .send()
+}
+
+/// Wrapper for reporting success, prints error to stderr if the API call fails.
+pub fn try_report_success(
+    minion_api: Url,
+    minion_token: String,
+    description: &str,
+    client: Client,
+) -> bool {
+    match report_success(minion_api, minion_token, description, client) {
+        Ok(_) => true,
+        Err(e) => {
+            let _ = writeln!(io::stderr(), "Failed to report success: {e}");
+            false
+        }
+    }
+}
+
+/// Wrapper for reporting failure, prints error to stderr if the API call fails.
+pub fn try_report_failure(
+    minion_api: Url,
+    minion_token: String,
+    description: &str,
+    reason: Option<TaskFailureReason>,
+    client: Client,
+) -> bool {
+    match report_failure(minion_api, minion_token, description, reason, client) {
+        Ok(_) => true,
+        Err(e) => {
+            let _ = writeln!(io::stderr(), "Failed to report failure: {e}");
+            false
+        }
+    }
 }

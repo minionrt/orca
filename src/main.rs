@@ -1,7 +1,7 @@
 use std::env;
 use url::Url;
 mod report;
-use report::report_failure;
+use report::try_report_failure;
 
 fn main() {
     println!();
@@ -19,12 +19,11 @@ fn main() {
     // This will exit the `minion` CLI.
     let client = reqwest::blocking::Client::new();
 
-    report_failure(
+    try_report_failure(
         minion_api,
         minion_token,
         "Not implemented yet",
         None,
         client,
-    )
-    .unwrap();
+    );
 }
