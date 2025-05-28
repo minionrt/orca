@@ -4,7 +4,7 @@ run-name: ${{ github.event.workflow_run.head_commit.message }}
 on:
   workflow_run:
     workflows: ["Rust CI"]
-    branches: ["test/feature/container_image"]        # reacts on certain branch
+    branches: ["**"]                                  # reacts on certain branch
     types:
       - completed                                     # if Rust-CI is completed
 
