@@ -1,3 +1,6 @@
+mod llm;
+mod openai;
+
 use std::env;
 
 use url::Url;
