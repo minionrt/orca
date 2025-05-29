@@ -188,7 +188,7 @@ pub struct CompletionBody {
 }
 
 pub fn fetch_completion(
-    base_url: &str,
+    base_url: &reqwest::Url,
     api_key: &str,
     body: &CompletionBody,
     client: reqwest::blocking::Client,
@@ -196,8 +196,11 @@ pub fn fetch_completion(
     let authorization = format!("Bearer {}", api_key);
     let json_body = serde_json::to_string(body)?;
 
+    let mut url = base_url.clone();
+    url.set_path(&(url.path().to_owned() + "/chat/completions"));
+
     let response = client
-        .post(base_url)
+        .post(url)
         .header(AUTHORIZATION, authorization)
         .header(CONTENT_TYPE, "application/json")
         .body(json_body)

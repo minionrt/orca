@@ -172,7 +172,7 @@ impl From<MessageRole> for String {
 #[allow(clippy::upper_case_acronyms)]
 pub struct LLM {
     api_key: Option<String>,
-    base_url: Option<String>,
+    base_url: Option<reqwest::Url>,
     model: Option<String>,
 
     max_tokens: Option<i32>,
@@ -191,7 +191,7 @@ impl LLM {
         }
     }
     /// create a new LLM with all configuration necessary for prompting (API key, base URL and model)
-    pub fn full(api_key: String, base_url: String, model: String) -> Self {
+    pub fn full(api_key: String, base_url: reqwest::Url, model: String) -> Self {
         Self::new()
             .with_api_key(api_key)
             .with_base_url(base_url)
@@ -205,8 +205,8 @@ impl LLM {
         self
     }
 
-    /// set the base URL
-    pub fn with_base_url(&mut self, base_url: String) -> &mut Self {
+    /// set the base URL, this is *not* the URL of the LLM endpoint, but on which `/chat/completions` will be appended for the OpenAI API
+    pub fn with_base_url(&mut self, base_url: reqwest::Url) -> &mut Self {
         self.base_url = Some(base_url);
         self
     }
