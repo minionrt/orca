@@ -38,6 +38,6 @@ jobs:
           context: .
           file: Containerfile
           push: true
-          tags: ghcr.io/se-tuebingen-autominion/<container_image>:latest
+          tags: ghcr.io/se-tuebingen-autominion/teamprojekt-agents:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
