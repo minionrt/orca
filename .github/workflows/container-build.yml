@@ -1,5 +1,5 @@
 name: Container Build
-run-name: ${{ github.event.workflow_run.head_commit.message }}
+run-name: ${{ github.event.head_commit.message }}
 
 on:
   push:
