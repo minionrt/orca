@@ -2,8 +2,9 @@ mod llm;
 mod openai;
 
 use std::env;
-
 use url::Url;
+mod report;
+use report::try_report_failure;
 
 fn main() {
     println!();
@@ -18,13 +19,14 @@ fn main() {
     // The agent uses an HTTP API to fetch the task and report the result.
     // See https://github.com/autominion/spec/blob/main/spec/http.md
     //
-    // Since nothing is implemented yet, we just mark the task as failed.
     // This will exit the `minion` CLI.
-    reqwest::blocking::Client::new()
-        .post(minion_api.join("agent/task/fail").unwrap())
-        .bearer_auth(minion_token)
-        .header("Content-Type", "application/json")
-        .body(r#"{"description": "Not yet implemented"}"#)
-        .send()
-        .unwrap();
+    let client = reqwest::blocking::Client::new();
+
+    try_report_failure(
+        minion_api,
+        minion_token,
+        "Not implemented yet",
+        None,
+        client,
+    );
 }
