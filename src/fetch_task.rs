@@ -35,8 +35,8 @@ pub struct TaskResponse {
 ///
 /// A Result containing the `TaskResponse` or a `reqwest::Error`.
 pub fn get_task(
-    minion_api: Url,
-    minion_token: String,
+    minion_api: &Url,
+    minion_token: &String,
     client: Client,
 ) -> Result<TaskResponse, reqwest::Error> {
     let url = minion_api.join("agent/task").unwrap();
