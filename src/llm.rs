@@ -5,6 +5,8 @@ use std::fmt;
 
 /// One completion-response of a LLM
 #[derive(Clone, Debug)]
+
+//struct containing the content of the response
 pub struct Completion {
     pub content: String,
 }
