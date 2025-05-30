@@ -1,5 +1,6 @@
 mod llm;
 mod models;
+mod memory;
 mod openai;
 mod task_handler;
 
