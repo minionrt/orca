@@ -20,8 +20,8 @@ fn main() {
     // See https://github.com/autominion/spec/blob/main/spec/http.md
     //
     // This will exit the `minion` CLI.
-    let client = reqwest::blocking::Client::new();
 
+    let client = reqwest::blocking::Client::new();
     try_report_failure(
         minion_api,
         minion_token,
