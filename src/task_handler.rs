@@ -19,22 +19,19 @@ pub struct Task {
     pub request: String,
 }
 
-/** Instance of TaskHandler contains the functions new and run.
-* `new()` expects an api_key, base_url and a model -> returns TaskHandler
-* `new_set_model()` like new(), but also expects a model
-* `run()` handles interaction with LLM and expects a Task
-*/
+/// Instance of TaskHandler contains the functions new and run.
+/// * `new()` expects an api_key, base_url and a model -> returns TaskHandler
+/// * `new_set_model()` like new(), but also expects a model
+/// * `run()` handles interaction with LLM and expects a Task
 pub struct TaskHandler {
     llm: LLM,
 }
 
-/** Responsible to handle the interaction with the LLM
- *  Use for sending tasks to llm and so interaction
- */
+/// Responsible to handle the interaction with the LLM
+/// Use for sending tasks to llm and so interaction
 impl TaskHandler {
     pub fn new(api_key: &str, base_url: &Url) -> Self {
         let base_url: String = base_url.clone().into();
-        let base_url = format!("{}/chat/completions", base_url);
         TaskHandler {
             llm: LLM::full(api_key.to_string(), base_url, Model::Basic.into()),
         }
