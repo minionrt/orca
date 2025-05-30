@@ -24,7 +24,7 @@ fn main() {
     // This will exit the `minion` CLI.
 
     let client = reqwest::blocking::Client::new();
-    let sample_task = get_task(minion_api.clone(), minion_token.clone(), client).unwrap();
+    let sample_task = get_task(&minion_api, &minion_token, client).unwrap();
     println!("{:?}", sample_task);
 
     reqwest::blocking::Client::new()
