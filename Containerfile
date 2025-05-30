@@ -48,4 +48,4 @@ COPY . .
 ENV PATH="/root/.cargo/bin:$PATH"
 
 # Set default entrypoint to the built binary
-ENTRYPOINT ["sh", "-c", "/usr/local/bin/teamprojekt-agents"]
+ENTRYPOINT ["/usr/local/bin/teamprojekt-agents"]
