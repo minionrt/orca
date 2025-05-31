@@ -17,11 +17,51 @@ pub struct ChatCompletionMessage {
 
     /// The role of the author of this message.
     pub role: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tool_calls: Option<Vec<ToolCall>>,
+
     // TODO
     // - annotations
-    // - tool_calls
+    
+    
+}
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ToolCall{
+    pub id: String,
+    #[serde(rename="type")]
+    pub tool_type: String,
+    pub function: ResponseFunction
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ResponseFunction{
+    pub name: String, 
+    pub arguments: String,
+}
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Tool{
+
+    pub function: Function,
+
+    #[serde(rename= "type")]
+    pub tool_type: String, 
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Function{
+    pub name: String,
+}
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ToolChoice{
+    /// Can be one of none, auto or required.
+    /// If set to none - no tools will be used.
+    /// If set to auto - the model can choose between generating a 
+    /// message or calling one or more tools.
+    /// If set to required - the model must call one or more tools.
+    pub tool_choice: String,
+    // Todo: its possible to specify a required tool. 
+    // See: https://platform.openai.com/docs/api-reference/chat/create -> tool_choice
+}
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Choice {
     /// The reason the model stopped generating tokens. This will be `stop` if the model hit
@@ -125,6 +165,13 @@ pub struct CompletionBody {
 
     /// Model ID used to generate the response
     pub model: String,
+
+    /// Optional List of Tools 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tools: Option<Vec<Tool>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_choice: Option<ToolChoice>,
 
     /// Sampling temperature to use (higher values mean more randomness).
     /// Range: 0.0 to 2.0.
