@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::error::Error;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+/// AI Response - Message content from LLM 
 pub struct ChatCompletionMessage {
     /// The contents of the message.
     #[serde(default)]
@@ -26,6 +27,7 @@ pub struct ChatCompletionMessage {
     
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
+/// AI Response - Tool call requested by LLM 
 pub struct ToolCall{
     pub id: String,
     #[serde(rename="type")]
@@ -34,11 +36,13 @@ pub struct ToolCall{
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+/// AI Response - Function that LLM wants to call
 pub struct ResponseFunction{
     pub name: String, 
     pub arguments: String,
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
+/// AI Request - Tool definition sent to LLM
 pub struct Tool{
 
     pub function: Function,
@@ -47,11 +51,13 @@ pub struct Tool{
     pub tool_type: String, 
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)] 
+/// AI Request - Available functions for tools
 pub struct Function{
     pub name: String,
 }
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)] 
+/// AI Request - How the LLM chooses to tools
 pub struct ToolChoice{
     /// Can be one of none, auto or required.
     /// If set to none - no tools will be used.
@@ -63,6 +69,7 @@ pub struct ToolChoice{
     // See: https://platform.openai.com/docs/api-reference/chat/create -> tool_choice
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
+/// AI Response - One possible answer choice from LLM
 pub struct Choice {
     /// The reason the model stopped generating tokens. This will be `stop` if the model hit
     /// a natural stop point or a provided stop sequence, `length` if the maximum number of
@@ -81,6 +88,8 @@ pub struct Choice {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+///AI Response
+
 pub struct TokenDetail {
     /// When using Predicted Outputs, the number of tokens in the prediction that appeared in the completion.
     pub accepted_prediction_tokens: i32,
@@ -95,6 +104,7 @@ pub struct TokenDetail {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+/// AI Response - Usage statistics for billing/monitoring  
 pub struct UsageStatistic {
     /// Number of tokens in the generated completion.
     pub completion_tokens: i32,
@@ -113,6 +123,7 @@ pub struct UsageStatistic {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+///AI Response
 pub struct Completion {
     /// A list of chat completion choices. Can be more than one if `n` is greater than 1.
     pub choices: Vec<Choice>,
@@ -138,6 +149,7 @@ pub struct Completion {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+/// Part of the AI Request 
 pub struct Message {
     /// The contents of the message
     pub content: String,
@@ -159,6 +171,7 @@ pub struct Message {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+///AI Request
 pub struct CompletionBody {
     /// A list of messages comprising the conversation so far
     pub messages: Vec<Message>,
@@ -260,4 +273,4 @@ pub fn fetch_completion(
         let error = response.text()?;
         Err(format!("API Error: {}", error).into())
     }
-}
+}   
