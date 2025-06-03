@@ -1,8 +1,16 @@
 # Description
 
 Brief summary of the PR and its purpose
+(Please include before/after screenshots if your changes affect visuals.)
 
 Closes # (issue)
+
+# Does this introduce a breaking change? 
+
+- [ ] Yes
+- [ ] No
+
+If yes, please describe:
 
 # How Has This Been Tested?
 
