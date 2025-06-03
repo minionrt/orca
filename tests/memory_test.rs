@@ -11,7 +11,7 @@ mod tests {
         // setup
         let expected_history = "Test history.".to_string();
         let memory = Memory::new(
-            "test".to_string(),
+            &"test".to_string(),
             &Url::parse("https://www.test.io/").expect("Invalid URL"),
         );
         let memory = memory.with_model(Model::TestModel); //to prevent prompting a real model

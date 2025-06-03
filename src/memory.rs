@@ -10,6 +10,17 @@ Summarize the most important points from the entire conversation history provide
 along with the latest two messages—one from the user and one from the assistant. 
 Focus on capturing key facts, goals, preferences, and any evolving context.\n";
 
+
+/* Example code for testing or usind memory:
+    let mut memory = Memory::new(&minion_token, &minion_api);
+    memory.add(
+        "Ich liebe Hühnchen, mit Reis".to_string(),
+        "Aber ich bin Veganer!!!".to_string(),
+    );
+    print!("{}", memory.read());
+    */
+
+/// Memory contains the summary of all previous interactions with the llm
 pub struct Memory {
     history: String, //currently still the skateboard, if we would want to upgrade we can mix a queue with the current history
     llm: LLM,
@@ -19,21 +30,21 @@ pub struct Memory {
 
 impl Memory {
     ///creates new Memory instance with empty history and predefined model
-    pub fn new(api_key: String, base_url: &Url) -> Self {
+    pub fn new(api_key: &String, base_url: &Url) -> Self {
         Memory {
             history: "".to_string(),
             llm: LLM::full(api_key.clone(), base_url.clone(), Model::Gemini.into()), //TODO replace model with one from model enum
-            api_key: api_key,
+            api_key: api_key.clone(),
             base_url: base_url.clone(),
         }
     }
     ///creates a new Memory instance with given history and predefined model
     pub fn new_with_history(api_key: String, base_url: &Url, history: String) -> Self {
-        Self::new(api_key, base_url).with_history(&history)
+        Self::new(&api_key, base_url).with_history(&history)
     }
     ///(re-)sets the current history to the given one
-    pub fn with_history(mut self, history: &String) -> Self {
-        self.history = history.clone();
+    pub fn with_history(mut self, history: &str) -> Self {
+        self.history = history.to_owned();
         self
     }
     ///(re-)sets the current model to the given one
@@ -48,7 +59,7 @@ impl Memory {
         &self.history
     }
     ///add new interaction to history
-    pub fn add(mut self, user_input: String, llm_answer: String) {
+    pub fn add(&mut self, user_input: String, llm_answer: String) {
         let content = format!(
             "{}\n History: {} \n User Input: {}\n The ansnwer of the LLM: {}",
             SUMMARIZE_INTRO, self.history, user_input, llm_answer
@@ -59,7 +70,7 @@ impl Memory {
         };
     }
     ///delete whole history
-    pub fn delete_history(mut self) -> Self {
+    pub fn delete_history(&mut self) -> &Self {
         self.history = "".to_string();
         self
     }
