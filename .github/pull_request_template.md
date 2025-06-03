@@ -2,7 +2,7 @@
 
 Brief summary of the PR and its purpose
 
-Fixes # (issue)
+Closes # (issue)
 
 # How Has This Been Tested?
 
