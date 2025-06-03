@@ -29,11 +29,11 @@ pub struct Memory {
 
 impl Memory {
     ///creates new Memory instance with empty history and predefined model
-    pub fn new(api_key: &String, base_url: &Url) -> Self {
+    pub fn new(api_key: &str, base_url: &Url) -> Self {
         Memory {
             history: "".to_string(),
-            llm: LLM::full(api_key.clone(), base_url.clone(), Model::Gemini.into()), //TODO replace model with one from model enum
-            api_key: api_key.clone(),
+            llm: LLM::full(api_key.to_string(), base_url.clone(), Model::Gemini.into()), //TODO replace model with one from model enum
+            api_key: api_key.to_string(),
             base_url: base_url.clone(),
         }
     }
