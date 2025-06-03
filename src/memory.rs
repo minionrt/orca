@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use crate::llm::{LLM, MessageRole};
+use crate::models::Model;
 use url::Url;
 
 const SUMMARIZE_INTRO: &str =
@@ -10,7 +11,7 @@ along with the latest two messages—one from the user and one from the assistan
 Focus on capturing key facts, goals, preferences, and any evolving context.\n";
 
 pub struct Memory {
-    history: String, //make option??
+    history: String, //currently still the skateboard, if we would want to upgrade we can mix a queue with the current history
     llm: LLM,
     api_key: String,
     base_url: Url,
@@ -21,7 +22,7 @@ impl Memory {
     pub fn new(api_key: String, base_url: &Url) -> Self {
         Memory {
             history: "".to_string(),
-            llm: LLM::full(api_key.clone(), base_url.clone(), "model".to_string()), //TODO replace model with one from model enum
+            llm: LLM::full(api_key.clone(), base_url.clone(), Model::Gemini.into()), //TODO replace model with one from model enum
             api_key: api_key,
             base_url: base_url.clone(),
         }
@@ -36,9 +37,9 @@ impl Memory {
         self
     }
     ///(re-)sets the current model to the given one
-    pub fn with_model(mut self, model: String) -> Self {
+    pub fn with_model(mut self, model: Model) -> Self {
         //TODO change Model to model type
-        self.llm = LLM::full(self.api_key.clone(), self.base_url.clone(), model); //add model.into() here
+        self.llm = LLM::full(self.api_key.clone(), self.base_url.clone(), model.into()); //add model.into() here
         self
     }
 
@@ -54,7 +55,7 @@ impl Memory {
         );
         self.history = match self.llm.prompt_unwrapped(content, MessageRole::User) {
             Ok(r) => r.completions[0].content.clone(),
-            Err(e) => panic!("Something went wrong with summarizing the memory."),
+            Err(_e) => panic!("Something went wrong with summarizing the memory."),
         };
     }
     ///delete whole history
