@@ -179,6 +179,8 @@ pub struct LLM {
 
     max_tokens: Option<i32>,
     client: Option<reqwest::blocking::Client>,
+    pub tools: Option<Vec<openai::Tool>>,
+    pub tool_choice: Option<openai::ToolChoice>,
 }
 
 impl LLM {
@@ -190,6 +192,8 @@ impl LLM {
             model: None,
             max_tokens: None,
             client: None,
+            tools: None,
+            tool_choice: None,
         }
     }
     /// create a new LLM with all configuration necessary for prompting (API key, base URL and model)
@@ -232,6 +236,14 @@ impl LLM {
     /// set a custom `reqwest::blocking::Client` which is then used to query the LLM endpoint
     pub fn with_client(&mut self, client: reqwest::blocking::Client) -> &mut Self {
         self.client = Some(client);
+        self
+    }
+    pub fn with_tools(&mut self, tools: Vec<openai::Tool>) -> &mut Self {
+        self.tools = Some(tools);
+        self
+    }
+    pub fn with_tool_choice(&mut self, tool_choice: openai::ToolChoice) -> &mut Self {
+        self.tool_choice = Some(tool_choice);
         self
     }
 
@@ -300,6 +312,8 @@ impl LLM {
             max_completion_tokens: self.max_tokens,
             max_tokens: self.max_tokens,
             user: None,
+            tools: self.tools.clone(),           
+            tool_choice: self.tool_choice.clone(), 
         }
     }
 
