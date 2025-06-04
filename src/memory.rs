@@ -20,6 +20,9 @@ print!("{}", memory.read());
 */
 
 /// Memory contains the summary of all previous interactions with the llm
+/// It prompts a (ideally) really basic model for a summary of the previous
+/// history and the new additional interaction messages and stores this
+/// summary in history
 pub struct Memory {
     history: String, //currently still the skateboard, if we would want to upgrade we can mix a queue with the current history
     llm: LLM,
@@ -57,12 +60,14 @@ impl Memory {
     pub fn read(&self) -> &String {
         &self.history
     }
-    ///add new interaction to history
+    ///add new interaction to history, expects the latest user input and the latest llm answer
     pub fn add(&mut self, user_input: String, llm_answer: String) {
         let content = format!(
             "{}\n History: {} \n User Input: {}\n The ansnwer of the LLM: {}",
             SUMMARIZE_INTRO, self.history, user_input, llm_answer
         );
+        // prompts a (ideally) really basic model for a summary of the previous
+        // history and the new additional interaction messages and stores this summary in self.history
         self.history = match self.llm.prompt_unwrapped(content, MessageRole::User) {
             Ok(r) => r.completions[0].content.clone(),
             Err(_e) => panic!("Something went wrong with summarizing the memory."),
