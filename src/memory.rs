@@ -10,7 +10,7 @@ Summarize the most important points from the entire conversation history provide
 along with the latest two messages—one from the user and one from the assistant. 
 Focus on capturing key facts, goals, preferences, and any evolving context.\n";
 
-/* Example code for testing or usind memory:
+/* Example code for testing or using memory:
 let mut memory = Memory::new(&minion_token, &minion_api);
 memory.add(
     "Ich liebe Hühnchen, mit Reis".to_string(),
