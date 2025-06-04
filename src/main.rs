@@ -6,7 +6,6 @@ mod task_handler;
 
 use std::env;
 use task_handler::{Task, TaskHandler, TaskOutcome};
-use teamprojekt_agents::memory::Memory;
 use url::Url;
 mod report;
 use report::try_report_failure;

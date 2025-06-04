@@ -11,7 +11,7 @@ pub enum Model {
     Smart,
     Basic,
     Gemini,
-    TestModel,
+    Test,
 }
 
 impl From<Model> for String {
@@ -20,7 +20,7 @@ impl From<Model> for String {
             Model::Smart => SMART_COHERE_MODEL.to_string(),
             Model::Basic => BASIC_COHERE_MODEL.to_string(),
             Model::Gemini => GEMINI.to_string(),
-            Model::TestModel => TEST_MODEL.to_string(),
+            Model::Test => TEST_MODEL.to_string(),
         }
     }
 }
