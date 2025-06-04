@@ -18,6 +18,7 @@ pub struct ChatCompletionMessage {
 
     /// The role of the author of this message.
     pub role: String,
+    /// Weather the Model wants to use a tool and if yes which tool.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tool_calls: Option<Vec<ToolCall>>,
 
