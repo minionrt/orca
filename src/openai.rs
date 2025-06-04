@@ -18,6 +18,7 @@ pub struct ChatCompletionMessage {
 
     /// The role of the author of this message.
     pub role: String,
+
     /// Weather the Model wants to use a tool and if yes which tool.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tool_calls: Option<Vec<ToolCall>>,
@@ -45,7 +46,7 @@ pub struct ResponseFunction{
 #[derive(Clone, Debug, Serialize, Deserialize)]
 /// AI Request - Tool definition sent to LLM
 pub struct Tool{
-
+    ///The Function name
     pub function: Function,
 
     #[serde(rename= "type")]
@@ -56,7 +57,11 @@ pub struct Tool{
 /// AI Request - Available functions for tools
 pub struct Function{
     pub name: String,
+    pub description: String,
+    ///Felixble for json values
+    pub parameters: serde_json::Value,
 }
+
 #[derive(Clone, Debug, Serialize, Deserialize)] 
 /// AI Request - How the LLM chooses to tools
 pub struct ToolChoice{
