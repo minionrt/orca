@@ -5,6 +5,7 @@ mod task_handler;
 
 use std::env;
 use task_handler::{Task, TaskHandler, TaskOutcome};
+use llm::CompletionKind;
 use url::Url;
 mod report;
 use report::try_report_failure;
@@ -28,10 +29,17 @@ fn main() {
         request: "Please write a simple FizzBuzz program.".to_string(),
     };
     let response = task_handler.run(&task);
+
     let _response = match response {
-        TaskOutcome::Complete(a) => a[1].content.clone(),
-        TaskOutcome::Failure => "didn't work, sorry".to_string(),
+    TaskOutcome::Complete(a) => match &a[1].kind {
+        // If the completion kind is Text, clone the text
+        CompletionKind::Text(txt) => txt.clone(),
+        // If the completion kind is ToolCalls, format it as a string
+        CompletionKind::ToolCalls(tc) => format!("ToolCalls: {:?}", tc),
+    },
+    TaskOutcome::Failure => "didn't work, sorry".to_string(),
     };
+
 
     // The agent uses an HTTP API to fetch the task and report the result.
     // See https://github.com/autominion/spec/blob/main/spec/http.md
