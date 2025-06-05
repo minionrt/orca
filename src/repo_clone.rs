@@ -84,8 +84,8 @@ impl GitRepository {
     // Executes the complete setup flow: clone, configure, checkout
     pub fn prepare_repository(&self) -> io::Result<()> {
 
-        self.configure_git_user()?;
         self.clone_repo()?;
+        self.configure_git_user()?;
         self.checkout_branch()?;
         Ok(())
     }
