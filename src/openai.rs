@@ -62,18 +62,6 @@ pub struct Function{
     pub parameters: serde_json::Value,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)] 
-/// AI Request - How the LLM chooses to tools
-pub struct ToolChoice{
-    /// Can be one of none, auto or required.
-    /// If set to none - no tools will be used.
-    /// If set to auto - the model can choose between generating a 
-    /// message or calling one or more tools.
-    /// If set to required - the model must call one or more tools.
-    pub tool_choice: String,
-    // Todo: its possible to specify a required tool. 
-    // See: https://platform.openai.com/docs/api-reference/chat/create -> tool_choice
-}
 #[derive(Clone, Debug, Serialize, Deserialize)]
 /// AI Response - One possible answer choice from LLM
 pub struct Choice {
@@ -127,6 +115,19 @@ pub struct UsageStatistic {
     // TODO
     // - prompt_tokens_details
 }
+///AI Request
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum ToolChoice{
+    /// Dynamic tool calls - the model chooses wheter to use tools 
+    /// and which tool is used
+    #[serde(rename="auto")]
+    Auto,
+    /// Disallow tools calls 
+    #[serde(rename="none")]
+    None,
+    //#[serde(rename="required")]
+    //Required,
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 ///AI Response
@@ -155,7 +156,7 @@ pub struct Completion {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-/// Part of the AI Request 
+///AI Request 
 pub struct Message {
     /// The contents of the message
     pub content: String,
