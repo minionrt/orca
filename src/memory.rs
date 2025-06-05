@@ -35,7 +35,7 @@ impl Memory {
     pub fn new(api_key: &str, base_url: &Url) -> Self {
         Memory {
             history: "".to_string(),
-            llm: LLM::full(api_key.to_string(), base_url.clone(), Model::Gemini.into()), //TODO replace model with one from model enum
+            llm: LLM::full(api_key.to_string(), base_url.clone(), Model::Basic.into()), //TODO replace model with one from model enum
             api_key: api_key.to_string(),
             base_url: base_url.clone(),
         }
