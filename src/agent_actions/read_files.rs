@@ -4,7 +4,7 @@ use std::fs;
 ///
 /// # Arguments
 ///
-/// * `path` - The path to the file to read.
+/// * `path` -  The path to the file to read.
 ///
 /// # Returns
 ///
