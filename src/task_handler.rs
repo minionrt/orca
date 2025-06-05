@@ -53,7 +53,7 @@ impl TaskHandler {
 
     /// send single code task request without memory
     fn single_request(&self, request: &str) -> TaskOutcome {
-        let history = "".to_string();
+        let history = "no history".to_string();
         self.send_request(request, &history)
     }
     /// send code task request with memory - meant for longer interaction loops
