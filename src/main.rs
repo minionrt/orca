@@ -22,8 +22,7 @@ fn main() {
 
     //task handler interaction example
     //let task_handler = TaskHandler::new_set_model(&minion_token, &minion_api, models::Model::Smart);
-    let task_handler =
-        TaskHandler::new_set_model(&minion_token, &minion_api, models::Model::Gemini);
+    let task_handler = TaskHandler::new_set_model(&minion_token, &minion_api, models::Model::Basic);
     let task = Task {
         request: "Please write a simple FizzBuzz program.".to_string(),
     };

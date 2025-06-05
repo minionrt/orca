@@ -33,7 +33,7 @@ impl TaskHandler {
     pub fn new(api_key: &str, base_url: &Url) -> Self {
         TaskHandler {
             //llm: LLM::full(api_key.to_string(), base_url.clone(), Model::Basic.into()),
-            llm: LLM::full(api_key.to_string(), base_url.clone(), Model::Gemini.into()),
+            llm: LLM::full(api_key.to_string(), base_url.clone(), Model::Smart.into()),
         }
     }
 
