@@ -11,7 +11,7 @@ fn test_read_file_existing() {
     cleanup(test_file);
     let content = "Test content for reading.";
     fs::write(test_file, content).expect("Failed to write test file");
-    
+
     let result = read_file(test_file.to_string());
     assert_eq!(result, Some(content.to_string()), "Content mismatch");
 
@@ -22,7 +22,7 @@ fn test_read_file_existing() {
 fn test_read_file_nonexistent() {
     let test_file = "test_read_nonexistent.txt";
     cleanup(test_file);
-    
+
     let result = read_file(test_file.to_string());
     assert_eq!(result, None, "Expected None for nonexistent file");
 }
