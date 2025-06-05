@@ -33,14 +33,32 @@ impl TaskHandler {
     pub fn new(api_key: &str, base_url: &Url) -> Self {
         TaskHandler {
             //llm: LLM::full(api_key.to_string(), base_url.clone(), Model::Basic.into()),
-            llm: LLM::full(api_key.to_string(), base_url.clone(), Model::Gemini.into()),
+            llm: LLM::full(api_key.to_string(), base_url.clone(), Model::Gemini.into(),None,None),
         }
     }
 
     pub fn new_set_model(api_key: &str, base_url: &Url, model: Model) -> Self {
         TaskHandler {
-            llm: LLM::full(api_key.to_string(), base_url.clone(), String::from(model)),
+            llm: LLM::full(api_key.to_string(), base_url.clone(), String::from(model),None,None),
         }
+    }
+    pub fn new_set_model_and_tools(
+        api_key: &str,
+        base_url: &Url, 
+        model: Model, 
+        tools: Option<Vec<crate::openai::Tool>>, 
+        tool_choice: Option<crate::openai::ToolChoice>,
+    )-> Self{
+        TaskHandler{
+            llm: LLM::full(
+                api_key.to_string(),
+                base_url.clone(),
+                String::from(model),
+                tools,
+                tool_choice
+
+            ),
+        }    
     }
 
     /// runs interaction with the llm for a given task
