@@ -27,7 +27,8 @@ RUN apt-get update && \
         curl \
         build-essential \
         gcc \
-        pkg-config && \
+        pkg-config  \
+        git && \
     # Installs Rust to the debian-runtime
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
     export PATH=$PATH:/root/.cargo/bin && \
