@@ -13,7 +13,7 @@ pub struct GitRepository {
 
 impl GitRepository {
 
-    // Initializes the GitRepository struct
+    /// Initializes the GitRepository struct
     pub fn new(repo_url: &str, branch: &str, user_name: &str, user_email: &str, target_dir: &str) -> Self {
         GitRepository {
             repo_url: repo_url.to_string(),
@@ -24,7 +24,7 @@ impl GitRepository {
         }
     }
 
-    // Sets the git user name and email
+    /// Sets the git user name and email
     pub fn configure_git_user(&self) -> io::Result<()> {
 
         let config_name = Command::new("git")
@@ -48,7 +48,7 @@ impl GitRepository {
         Ok(())
     }
 
-    // Clones the repository to the target directory
+    /// Clones the repository to the target directory
     pub fn clone_repo(&self) -> io::Result<()> {
         println!("Cloning repo: {} into {}", self.repo_url, self.target_dir);
         // The git command is build
@@ -65,7 +65,7 @@ impl GitRepository {
         Ok(())
     }
 
-    // Checks out the specified branch
+    /// Checks out the specified branch
     pub fn checkout_branch(&self) -> io::Result<()> {
 
         let status = Command::new("git")
@@ -81,7 +81,7 @@ impl GitRepository {
         Ok(())
     }
 
-    // Executes the complete setup flow: clone, configure, checkout
+    /// Executes the complete setup flow: clone, configure, checkout
     pub fn prepare_repository(&self) -> io::Result<()> {
 
         self.clone_repo()?;
