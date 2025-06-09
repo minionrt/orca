@@ -33,7 +33,7 @@ impl TaskHandler {
     pub fn new(api_key: &str, base_url: &Url) -> Self {
         TaskHandler {
             //llm: LLM::full(api_key.to_string(), base_url.clone(), Model::Basic.into()),
-            llm: LLM::full(api_key.to_string(), base_url.clone(), Model::Gemini.into()),
+            llm: LLM::full(api_key.to_string(), base_url.clone(), Model::Smart.into()),
         }
     }
 
@@ -53,7 +53,7 @@ impl TaskHandler {
 
     /// send single code task request without memory
     fn single_request(&self, request: &str) -> TaskOutcome {
-        let history = "".to_string();
+        let history = "no history".to_string();
         self.send_request(request, &history)
     }
     /// send code task request with memory - meant for longer interaction loops
