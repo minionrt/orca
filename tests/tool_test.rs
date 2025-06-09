@@ -1,5 +1,5 @@
 
-use teamprojekt_agents::llm::{CompletionKind};
+use teamprojekt_agents::llm::{Completion};
 use teamprojekt_agents::openai::{ToolCall};
 
 #[test]
@@ -19,13 +19,13 @@ use teamprojekt_agents::openai::{ToolCall};
         "#;
 
         let tool_calls: Vec<ToolCall> = serde_json::from_str(json).unwrap();
-        let completion_kind = CompletionKind::ToolCalls(tool_calls.clone());
+        let completion_kind = Completion::ToolCalls(tool_calls.clone());
         // run cargo test -- --nocapture to see actual parsing.
         println!("{:?}", completion_kind);
 
         // checking if it was parsed right
         match completion_kind {
-            CompletionKind::ToolCalls(tc) => {
+            Completion::ToolCalls(tc) => {
                 assert_eq!(tc[0].function.name, "get_current_weather");
                 assert_eq!(tc[0].function.arguments, "{\"location\": \"Boston, MA\"}");
             }
