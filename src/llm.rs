@@ -5,19 +5,13 @@ use std::fmt;
 
 ///Enum to choose between content and tool_calls
 #[derive(Clone, Debug)]
-pub enum CompletionKind{
+pub enum Completion{
     Text(String), 
     ToolCalls(Vec<ToolCall>)
 }
-/// One completion-response of a LLM
-#[derive(Clone, Debug)]
-//struct containing the content of the response
-pub struct Completion {
-    pub kind: CompletionKind
-}
 impl Completion {
     pub fn new(content: String, _role: MessageRole) -> Self {
-        Completion { kind: {CompletionKind::Text(content)} }
+        Completion::Text(content)
     }
 }
 
@@ -30,19 +24,13 @@ impl TryFrom<openai::Choice> for Completion {
 
         match (message.content, message.tool_calls) {
             // Only tool_calls
-            (None, Some(tool_calls)) => Ok(Self {
-                kind: CompletionKind::ToolCalls(tool_calls),
-            }),
+            (None, Some(tool_calls)) => Ok(Self::ToolCalls(tool_calls)),
             // Only content 
-            (Some(content), None) => Ok(Self {
-                kind: CompletionKind::Text(content),
-            }),
+            (Some(content), None) => Ok(Self::Text(content)),
             // if content and tool calls is provided 
             (Some(_content), Some(tool_calls)) => {
-                // 
-                Ok(Self {
-                    kind: CompletionKind::ToolCalls(tool_calls),
-                })
+                //Tool calls is more likely to be important
+                Ok(Self::ToolCalls(tool_calls))
             }
             //Error - missing content and
             (None, None) => Err(LLMAPIError::UnknownError(

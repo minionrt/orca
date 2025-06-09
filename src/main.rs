@@ -5,7 +5,7 @@ mod task_handler;
 
 use std::env;
 use task_handler::{Task, TaskHandler, TaskOutcome};
-use llm::CompletionKind;
+use llm::Completion;
 use url::Url;
 mod report;
 use report::try_report_failure;
@@ -31,11 +31,11 @@ fn main() {
     let response = task_handler.run(&task);
 
     let _response = match response {
-    TaskOutcome::Complete(a) => match &a[1].kind {
-        // If the completion kind is Text, clone the text
-        CompletionKind::Text(txt) => txt.clone(),
-        // If the completion kind is ToolCalls, format it as a string
-        CompletionKind::ToolCalls(tc) => format!("ToolCalls: {:?}", tc),
+    TaskOutcome::Complete(a) => match &a[1] {
+        // If the completion is Text, clone the text
+        Completion::Text(txt) => txt.clone(),
+        // If the completion is ToolCalls, format it as a string
+        Completion::ToolCalls(tc) => format!("ToolCalls: {:?}", tc),
     },
     TaskOutcome::Failure => "didn't work, sorry".to_string(),
     };
