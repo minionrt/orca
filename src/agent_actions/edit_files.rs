@@ -1,4 +1,5 @@
-use std::fs::{self};
+use std::fs;
+use std::io;
 
 /// Overwrites the entire contents of a file with the provided content.
 ///
@@ -12,11 +13,9 @@ use std::fs::{self};
 ///
 /// # Errors
 ///
-/// If the file cannot be written, an error message will be printed to stderr.
-pub fn edit_file(path: String, content: String) {
-    if let Err(e) = fs::write(&path, content) {
-        eprintln!("Failed to write file '{}': {}", path, e);
-    }
+/// Returns an error if the file cannot be written.
+pub fn edit_file(path: String, content: String) -> io::Result<()> {
+    fs::write(&path, content)
 }
 
 /// Replaces a specified byte range in a file with new content.
@@ -34,20 +33,27 @@ pub fn edit_file(path: String, content: String) {
 ///
 /// # Errors
 ///
-/// If the file cannot be written, an error message will be printed to stderr.
-pub fn edit_file_from_to(path: String, content: String, from: usize, to: usize) {
-    let mut file_content = fs::read_to_string(&path).unwrap_or_default();
-
-    let from_usize = from.max(0);
-    let to_usize = to.max(from);
+/// Returns an error if the file cannot be read or written.
+pub fn edit_file_from_to(path: String, content: String, from: usize, to: usize) -> io::Result<()> {
+    let mut file_content = match fs::read_to_string(&path) {
+        Ok(data) => data,
+        Err(e) if e.kind() == io::ErrorKind::NotFound => String::new(),
+        Err(e) => return Err(e),
+    };
 
     let file_len = file_content.len();
-    let from_idx = from_usize.min(file_len);
-    let to_idx = to_usize.min(file_len);
+    let from_idx = from.clamp(0, file_len);
+    let to_idx = to.clamp(from_idx, file_len);
+
+    // Ensure indices are on char boundaries
+    if !file_content.is_char_boundary(from_idx) || !file_content.is_char_boundary(to_idx) {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "from/to indices are not on valid UTF-8 character boundaries",
+        ));
+    }
 
     file_content.replace_range(from_idx..to_idx, &content);
 
-    if let Err(e) = fs::write(&path, file_content) {
-        eprintln!("Failed to write file '{}': {}", path, e);
-    }
+    fs::write(&path, file_content)
 }
