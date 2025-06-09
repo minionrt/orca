@@ -19,7 +19,7 @@ pub struct ChatCompletionMessage {
     /// The role of the author of this message.
     pub role: String,
 
-    /// Weather the Model wants to use a tool and if yes which tool.
+    /// Whether the Model wants to use a tool and if so, which tool.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tool_calls: Option<Vec<ToolCall>>,
     // TODO
@@ -29,6 +29,7 @@ pub struct ChatCompletionMessage {
 /// AI Response - Tool call requested by LLM
 pub struct ToolCall {
     pub id: String,
+    //The type of the tool. Currently, only function is supported.
     #[serde(rename = "type")]
     pub tool_type: String,
     pub function: ResponseFunction,
