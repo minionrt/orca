@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::error::Error;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-/// AI Response - Message content from LLM 
+/// AI Response - Message content from LLM
 pub struct ChatCompletionMessage {
     /// The contents of the message.
     #[serde(default)]
@@ -22,40 +22,37 @@ pub struct ChatCompletionMessage {
     /// Weather the Model wants to use a tool and if yes which tool.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tool_calls: Option<Vec<ToolCall>>,
-
     // TODO
     // - annotations
-    
-    
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
-/// AI Response - Tool call requested by LLM 
-pub struct ToolCall{
+/// AI Response - Tool call requested by LLM
+pub struct ToolCall {
     pub id: String,
-    #[serde(rename="type")]
+    #[serde(rename = "type")]
     pub tool_type: String,
-    pub function: ResponseFunction
+    pub function: ResponseFunction,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 /// AI Response - Function that LLM wants to call
-pub struct ResponseFunction{
-    pub name: String, 
+pub struct ResponseFunction {
+    pub name: String,
     pub arguments: String,
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 /// AI Request - Tool definition sent to LLM
-pub struct Tool{
+pub struct Tool {
     ///The Function name
     pub function: Function,
 
-    #[serde(rename= "type")]
-    pub tool_type: String, 
+    #[serde(rename = "type")]
+    pub tool_type: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)] 
+#[derive(Clone, Debug, Serialize, Deserialize)]
 /// AI Request - Available functions for tools
-pub struct Function{
+pub struct Function {
     pub name: String,
     pub description: String,
     ///Felixble for json values
@@ -116,13 +113,13 @@ pub struct UsageStatistic {
 }
 ///AI Request
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum ToolChoice{
-    /// Dynamic tool calls - the model chooses wheter to use tools 
+pub enum ToolChoice {
+    /// Dynamic tool calls - the model chooses wheter to use tools
     /// and which tool is used
-    #[serde(rename="auto")]
+    #[serde(rename = "auto")]
     Auto,
-    /// Disallow tools calls 
-    #[serde(rename="none")]
+    /// Disallow tools calls
+    #[serde(rename = "none")]
     None,
     //#[serde(rename="required")]
     //Required,
@@ -155,7 +152,7 @@ pub struct Completion {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-///AI Request 
+///AI Request
 pub struct Message {
     /// The contents of the message
     pub content: String,
@@ -185,7 +182,7 @@ pub struct CompletionBody {
     /// Model ID used to generate the response
     pub model: String,
 
-    /// Optional List of Tools 
+    /// Optional List of Tools
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tools: Option<Vec<Tool>>,
 
@@ -279,4 +276,4 @@ pub fn fetch_completion(
         let error = response.text()?;
         Err(format!("API Error: {}", error).into())
     }
-}   
+}

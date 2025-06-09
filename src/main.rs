@@ -3,9 +3,9 @@ mod models;
 mod openai;
 mod task_handler;
 
+use llm::Completion;
 use std::env;
 use task_handler::{Task, TaskHandler, TaskOutcome};
-use llm::Completion;
 use url::Url;
 mod report;
 use report::try_report_failure;
@@ -31,15 +31,14 @@ fn main() {
     let response = task_handler.run(&task);
 
     let _response = match response {
-    TaskOutcome::Complete(a) => match &a[1] {
-        // If the completion is Text, clone the text
-        Completion::Text(txt) => txt.clone(),
-        // If the completion is ToolCalls, format it as a string
-        Completion::ToolCalls(tc) => format!("ToolCalls: {:?}", tc),
-    },
-    TaskOutcome::Failure => "didn't work, sorry".to_string(),
+        TaskOutcome::Complete(a) => match &a[1] {
+            // If the completion is Text, clone the text
+            Completion::Text(txt) => txt.clone(),
+            // If the completion is ToolCalls, format it as a string
+            Completion::ToolCalls(tc) => format!("ToolCalls: {:?}", tc),
+        },
+        TaskOutcome::Failure => "didn't work, sorry".to_string(),
     };
-
 
     // The agent uses an HTTP API to fetch the task and report the result.
     // See https://github.com/autominion/spec/blob/main/spec/http.md
