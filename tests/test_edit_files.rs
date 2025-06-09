@@ -1,71 +1,97 @@
 use std::fs;
-use teamprojekt_agents::agent_actions::edit_files::{edit_file, edit_file_from_to};
+use std::io::Write;
+use tempfile::NamedTempFile;
+use teamprojekt_agents::agent_actions::edit_files::{
+    edit_file, edit_file_from_to, edit_file_line_col_range,
+};
 
-fn cleanup(file: &str) {
-    let _ = fs::remove_file(file);
+fn read_file(path: &std::path::Path) -> String {
+    fs::read_to_string(path).expect("File should be readable")
 }
 
 #[test]
 fn test_edit_file_creates_and_writes() {
-    let test_file = "test_creates_and_writes.txt";
-    cleanup(test_file);
+    let tmp = NamedTempFile::new().unwrap();
     let content = "Hello, world!";
-    edit_file(test_file.to_string(), content.to_string());
-    let read = fs::read_to_string(test_file).expect("File should exist after edit_file");
+    edit_file(tmp.path().to_string_lossy().to_string(), content.to_string()).unwrap();
+    let read = read_file(tmp.path());
     assert_eq!(read, content, "File content mismatch after create/write");
-    cleanup(test_file);
 }
 
 #[test]
 fn test_edit_file_overwrites() {
-    let test_file = "test_overwrites.txt";
-    cleanup(test_file);
-    fs::write(test_file, "Old content").expect("Failed to write initial content");
+    let mut tmp = NamedTempFile::new().unwrap();
+    write!(tmp, "Old content").unwrap();
     let new_content = "New content";
-    edit_file(test_file.to_string(), new_content.to_string());
-    let read = fs::read_to_string(test_file).expect("File should exist after overwrite");
+    edit_file(tmp.path().to_string_lossy().to_string(), new_content.to_string()).unwrap();
+    let read = read_file(tmp.path());
     assert_eq!(read, new_content, "File content mismatch after overwrite");
-    cleanup(test_file);
 }
 
 #[test]
 fn test_edit_file_from_to_middle() {
-    let test_file = "test_from_to_middle.txt";
-    cleanup(test_file);
-    fs::write(test_file, "abcdefg").expect("Failed to write initial content");
-    edit_file_from_to(test_file.to_string(), "XY".to_string(), 2, 4);
-    let read = fs::read_to_string(test_file).expect("File should exist after from_to");
-    assert_eq!(
-        read, "abXYefg",
-        "File content mismatch after from_to_middle"
-    );
-    cleanup(test_file);
+    let mut tmp = NamedTempFile::new().unwrap();
+    write!(tmp, "abcdefg").unwrap();
+    edit_file_from_to(tmp.path().to_string_lossy().to_string(), "XY".to_string(), 2, 4).unwrap();
+    let read = read_file(tmp.path());
+    assert_eq!(read, "abXYefg", "File content mismatch after from_to_middle");
 }
 
 #[test]
 fn test_edit_file_from_to_out_of_bounds() {
-    let test_file = "test_from_to_out_of_bounds.txt";
-    cleanup(test_file);
-    fs::write(test_file, "abc").expect("Failed to write initial content");
-    edit_file_from_to(test_file.to_string(), "XYZ".to_string(), 1, 10);
-    let read =
-        fs::read_to_string(test_file).expect("File should exist after from_to out of bounds");
-    assert_eq!(
-        read, "aXYZ",
-        "File content mismatch after from_to_out_of_bounds"
-    );
-    cleanup(test_file);
+    let mut tmp = NamedTempFile::new().unwrap();
+    write!(tmp, "abc").unwrap();
+    edit_file_from_to(tmp.path().to_string_lossy().to_string(), "XYZ".to_string(), 1, 10).unwrap();
+    let read = read_file(tmp.path());
+    assert_eq!(read, "aXYZ", "File content mismatch after from_to_out_of_bounds");
 }
 
 #[test]
 fn test_edit_file_from_to_on_new_file() {
-    let test_file = "test_from_to_new_file.txt";
-    cleanup(test_file);
-    edit_file_from_to(test_file.to_string(), "Hello".to_string(), 0, 0);
-    let read = fs::read_to_string(test_file).expect("File should exist after from_to on new file");
-    assert_eq!(
-        read, "Hello",
-        "File content mismatch after from_to_on_new_file"
-    );
-    cleanup(test_file);
+    let tmp = NamedTempFile::new().unwrap();
+    edit_file_from_to(tmp.path().to_string_lossy().to_string(), "Hello".to_string(), 0, 0).unwrap();
+    let read = read_file(tmp.path());
+    assert_eq!(read, "Hello", "File content mismatch after from_to_on_new_file");
+}
+
+#[test]
+fn test_edit_file_line_col_range_middle() {
+    let mut tmp = NamedTempFile::new().unwrap();
+    write!(tmp, "abc\ndef\nghi\n").unwrap();
+    // Replace "d" in "def" (line 1, col 0) with "XYZ"
+    edit_file_line_col_range(
+        tmp.path().to_string_lossy().to_string(),
+        "XYZ".to_string(),
+        1, 0, 1, 1,
+    )
+    .unwrap();
+    let read = read_file(tmp.path());
+    assert_eq!(read, "abc\nXYZef\nghi\n", "File content mismatch after line_col_range");
+}
+
+#[test]
+fn test_edit_file_line_col_range_multiline() {
+    let mut tmp = NamedTempFile::new().unwrap();
+    write!(tmp, "abc\ndef\nghi\n").unwrap();
+    edit_file_line_col_range(
+        tmp.path().to_string_lossy().to_string(),
+        "123".to_string(),
+        1, 1, 2, 2,
+    )
+    .unwrap();
+    let read = read_file(tmp.path());
+    assert_eq!(read, "abc\nd123i\n", "File content mismatch after multiline line_col_range");
+}
+
+#[test]
+fn test_edit_file_line_col_range_on_new_file() {
+    let tmp = NamedTempFile::new().unwrap();
+    edit_file_line_col_range(
+        tmp.path().to_string_lossy().to_string(),
+        "Hello\nWorld".to_string(),
+        0, 0, 0, 0,
+    )
+    .unwrap();
+    let read = read_file(tmp.path());
+    assert_eq!(read, "Hello\nWorld", "File content mismatch after line_col_range on new file");
 }
