@@ -83,7 +83,6 @@ pub struct Choice {
 
 #[derive(Debug, Serialize, Deserialize)]
 ///AI Response
-
 pub struct TokenDetail {
     /// When using Predicted Outputs, the number of tokens in the prediction that appeared in the completion.
     pub accepted_prediction_tokens: i32,
