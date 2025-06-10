@@ -26,7 +26,10 @@ fn parses_only_toolcalls_to_completionkind() {
     match completion_kind {
         Completion::ToolCalls(tc) => {
             assert_eq!(tc[0].function.name, "get_current_weather");
-            assert_eq!(tc[0].function.arguments["location"].as_str(), Some("Boston, MA"));
+            assert_eq!(
+                tc[0].function.arguments["location"].as_str(),
+                Some("Boston, MA")
+            );
         }
         _ => panic!("Did not parse ToolCalls correctly!"),
     }
