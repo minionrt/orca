@@ -56,7 +56,7 @@ pub struct Tool {
 pub struct Function {
     pub name: String,
     pub description: String,
-    ///Felixble for json values
+    ///Flexible for json values
     pub parameters: serde_json::Value,
 }
 
