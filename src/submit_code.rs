@@ -59,4 +59,11 @@ impl CodeSubmission {
 
     }
 
+    pub fn submit_changes(&self) -> io::Result {
+        self.add_changes()?;
+        self.commit_changes()?;
+        self.push_changes()?;
+        Ok(())
+    }
+
 }
