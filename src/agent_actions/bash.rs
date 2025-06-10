@@ -1,5 +1,5 @@
-use std::process::{Command, Stdio};
 use std::io;
+use std::process::{Command, Stdio};
 
 /// Executes the given bash code and returns the output (stdout and stderr).
 ///
