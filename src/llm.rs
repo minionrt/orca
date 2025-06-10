@@ -181,6 +181,12 @@ pub struct LLM {
     client: Option<reqwest::blocking::Client>,
 }
 
+impl Default for LLM {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl LLM {
     /// create a new LLM with an uninitialized configuration
     pub fn new() -> Self {
