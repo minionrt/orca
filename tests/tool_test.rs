@@ -11,7 +11,7 @@ fn parses_only_toolcalls_to_completionkind() {
                 "type": "function",
                 "function": {
                     "name": "get_current_weather",
-                    "arguments": "{\"location\": \"Boston, MA\"}"
+                    "arguments": { "location": "Boston, MA" }
                 }
             }
         ]
@@ -26,7 +26,7 @@ fn parses_only_toolcalls_to_completionkind() {
     match completion_kind {
         Completion::ToolCalls(tc) => {
             assert_eq!(tc[0].function.name, "get_current_weather");
-            assert_eq!(tc[0].function.arguments, "{\"location\": \"Boston, MA\"}");
+            assert_eq!(tc[0].function.arguments["location"].as_str(), Some("Boston, MA"));
         }
         _ => panic!("Did not parse ToolCalls correctly!"),
     }
