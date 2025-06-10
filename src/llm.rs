@@ -29,10 +29,10 @@ impl TryFrom<openai::Choice> for Completion {
             (Some(content), None) => Ok(Self::Text(content)),
             // if content and tool calls is provided
             (Some(_content), Some(tool_calls)) => {
-                //Tool calls is more likely to be important
+                // Tool calls is more likely to be important
                 Ok(Self::ToolCalls(tool_calls))
             }
-            //Error - missing content and
+            // Error - missing content and
             (None, None) => Err(LLMAPIError::UnknownError(
                 "Neither content nor tool_calls present in OpenAI response".to_owned(),
             )),

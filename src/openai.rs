@@ -29,7 +29,7 @@ pub struct ChatCompletionMessage {
 /// AI Response - Tool call requested by LLM
 pub struct ToolCall {
     pub id: String,
-    //The type of the tool. Currently, only function is supported.
+    // The type of the tool. Currently, only function is supported.
     #[serde(rename = "type")]
     pub tool_type: String,
     pub function: ResponseFunction,
@@ -44,7 +44,7 @@ pub struct ResponseFunction {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 /// AI Request - Tool definition sent to LLM
 pub struct Tool {
-    ///The Function name
+    /// The Function name
     pub function: Function,
 
     #[serde(rename = "type")]
@@ -56,7 +56,7 @@ pub struct Tool {
 pub struct Function {
     pub name: String,
     pub description: String,
-    ///Flexible for json values
+    /// Flexible for json values
     pub parameters: serde_json::Value,
 }
 
@@ -80,7 +80,7 @@ pub struct Choice {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-///AI Response
+/// AI Response
 pub struct TokenDetail {
     /// When using Predicted Outputs, the number of tokens in the prediction that appeared in the completion.
     pub accepted_prediction_tokens: i32,
@@ -112,7 +112,7 @@ pub struct UsageStatistic {
     // TODO
     // - prompt_tokens_details
 }
-///AI Request
+/// AI Request
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum ToolChoice {
     /// Dynamic tool calls - the model chooses wheter to use tools
@@ -122,12 +122,12 @@ pub enum ToolChoice {
     /// Disallow tools calls
     #[serde(rename = "none")]
     None,
-    //#[serde(rename="required")]
-    //Required,
+    // #[serde(rename="required")]
+    // Required,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-///AI Response
+/// AI Response
 pub struct Completion {
     /// A list of chat completion choices. Can be more than one if `n` is greater than 1.
     pub choices: Vec<Choice>,
@@ -153,7 +153,7 @@ pub struct Completion {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-///AI Request
+/// AI Request
 pub struct Message {
     /// The contents of the message
     pub content: String,
@@ -175,7 +175,7 @@ pub struct Message {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-///AI Request
+/// AI Request
 pub struct CompletionBody {
     /// A list of messages comprising the conversation so far
     pub messages: Vec<Message>,
