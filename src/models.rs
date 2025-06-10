@@ -8,11 +8,12 @@ const SMART_COHERE_MODEL: &str = "cohere/command-a-03-2025";
 const BASIC_COHERE_MODEL: &str = "cohere/command-a-03-2025";
 const GEMINI: &str = "google-gemini/gemini-2.5-flash-preview-05-20";
 const TEST_MODEL: &str = "test-model"; //no functionality yet
+
 pub enum Model {
     Smart,
     Basic,
     Gemini,
-    //TestModel
+    Test,
 }
 
 impl From<Model> for String {
@@ -21,7 +22,7 @@ impl From<Model> for String {
             Model::Smart => SMART_COHERE_MODEL.to_string(),
             Model::Basic => BASIC_COHERE_MODEL.to_string(),
             Model::Gemini => GEMINI.to_string(),
-            //Model::TestModel => TEST_MODEL.to_string()
+            Model::Test => TEST_MODEL.to_string(),
         }
     }
 }
