@@ -1,3 +1,4 @@
+pub mod agent_actions;
 pub mod fetch_task;
 pub mod llm;
 pub mod memory;
