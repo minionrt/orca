@@ -82,12 +82,12 @@ impl From<Message> for openai::Message {
 /// The response of a LLM containing a chain of completion-responses
 #[derive(Debug)]
 pub struct PromptResponse {
-    pub completions: Vec<Completion>,
+    pub completion: Completion,
 }
 
 impl PromptResponse {
-    pub fn new(completions: Vec<Completion>) -> Self {
-        PromptResponse { completions }
+    pub fn new(completion: Completion) -> Self {
+        PromptResponse { completion }
     }
 }
 
@@ -95,22 +95,14 @@ impl PromptResponse {
 impl TryFrom<openai::Completion> for PromptResponse {
     type Error = LLMAPIError;
     fn try_from(completion: openai::Completion) -> Result<Self> {
-        let checked_completions = completion
-            .choices
-            .iter()
-            .map(|c| c.clone().try_into())
-            .collect::<Vec<_>>();
-
-        if let Some(err) = checked_completions.iter().find(|c| c.is_err()) {
-            Err(err.clone().unwrap_err())
-        } else {
-            Ok(Self {
-                completions: checked_completions
-                    .iter()
-                    .map(|c| c.clone().unwrap())
-                    .collect(),
-            })
-        }
+        let only_completion = completion.choices
+                .into_iter()
+                .next()
+                .ok_or(LLMAPIError::UnknownError(
+                    "No choices present in OpenAI completion response".to_owned(),
+                ))?;
+        let completion = only_completion.try_into()?;
+        Ok(Self{completion})
     }
 }
 
@@ -329,7 +321,8 @@ impl LLM {
             stream: None,
             frequency_penalty: None,
             presence_penalty: None,
-            n: None,
+            // we can't handle more than one response at once
+            n: Some(1),
             logit_bias: None,
             logprobs: None,
             max_completion_tokens: self.max_tokens,
