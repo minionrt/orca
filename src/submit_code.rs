@@ -15,7 +15,6 @@ impl CodeSubmission {
 
     /// this function will create a command "git add ." which adds every change the agent made to the repo
     pub fn add_changes(&self) -> io::Result<()> {
-     println!("git adding changed files...");
         let status = Command::new("git")
             .arg("add")
             .arg(".")
@@ -43,10 +42,8 @@ impl CodeSubmission {
     }
 
     /// pushes the previously committed changes
-    /// origin is main-connection to the remote repository
     /// HEAD is the symbolic pointer to the current branch
-    /// this should work on all branches
-    // please create an issue, if this causes an error
+    /// so this should work on all branches
     pub fn push_changes(&self) -> io::Result<()> {
         
         let status = Command::new("git")
