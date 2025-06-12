@@ -31,7 +31,7 @@ fn main() {
     let response = task_handler.run(&task);
 
     let _response = match response {
-        TaskOutcome::Complete(a) => match &a[1] {
+        TaskOutcome::Complete(a) => match &a {
             // If the completion is Text, clone the text
             Completion::Text(txt) => txt.clone(),
             // If the completion is ToolCalls, format it as a string
