@@ -43,7 +43,7 @@ impl TaskHandler {
         }
     }
 
-    pub fn new_set_model(api_key: &str, base_url: &Url, model: Model,) -> Self {
+    pub fn new_set_model(api_key: &str, base_url: &Url, model: Model) -> Self {
         TaskHandler {
             llm: LLM::full(
                 api_key.to_string(),

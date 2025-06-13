@@ -95,14 +95,16 @@ impl PromptResponse {
 impl TryFrom<openai::Completion> for PromptResponse {
     type Error = LLMAPIError;
     fn try_from(completion: openai::Completion) -> Result<Self> {
-        let only_completion = completion.choices
+        let only_completion =
+            completion
+                .choices
                 .into_iter()
                 .next()
                 .ok_or(LLMAPIError::UnknownError(
                     "No choices present in OpenAI completion response".to_owned(),
                 ))?;
         let completion = only_completion.try_into()?;
-        Ok(Self{completion})
+        Ok(Self { completion })
     }
 }
 
