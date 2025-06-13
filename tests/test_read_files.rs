@@ -1,6 +1,6 @@
 use std::io::Write;
-use tempfile::NamedTempFile;
 use teamprojekt_agents::agent_actions::read_files::read_file;
+use tempfile::NamedTempFile;
 
 #[test]
 fn test_read_file_existing() {
