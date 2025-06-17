@@ -81,7 +81,7 @@ impl Memory {
         // prompts a (ideally) really basic model for a summary of the previous
         // history and the new additional interaction messages and stores this summary in self.history
         self.history = match self.llm.prompt_unwrapped(content, MessageRole::User) {
-            Ok(r) => match &r.completion {
+            Ok(r) => match &r {
                 Completion::Text(content) => content.clone(),
                 Completion::ToolCalls(_) => panic!("Expected text completion, got tool call!"),
             },

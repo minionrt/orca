@@ -39,6 +39,22 @@ impl TryFrom<openai::Choice> for Completion {
         }
     }
 }
+/// Conversion from the underlying OpenAI interface
+impl TryFrom<openai::Completion> for Completion {
+    type Error = LLMAPIError;
+    fn try_from(completion: openai::Completion) -> Result<Self> {
+        let only_completion =
+            completion
+                .choices
+                .into_iter()
+                .next()
+                .ok_or(LLMAPIError::UnknownError(
+                    "No choices present in OpenAI completion response".to_owned(),
+                ))?;
+        let completion = only_completion.try_into()?;
+        Ok(completion)
+    }
+}
 
 /// One message that can be sent to the LLM in a chain of other messages
 #[derive(Clone)]
@@ -76,35 +92,6 @@ impl From<Message> for openai::Message {
             role: m.role.into(),
             name: m.name,
         }
-    }
-}
-
-/// The response of a LLM containing a chain of completion-responses
-#[derive(Debug)]
-pub struct PromptResponse {
-    pub completion: Completion,
-}
-
-impl PromptResponse {
-    pub fn new(completion: Completion) -> Self {
-        PromptResponse { completion }
-    }
-}
-
-/// Conversion from the underlying OpenAI interface
-impl TryFrom<openai::Completion> for PromptResponse {
-    type Error = LLMAPIError;
-    fn try_from(completion: openai::Completion) -> Result<Self> {
-        let only_completion =
-            completion
-                .choices
-                .into_iter()
-                .next()
-                .ok_or(LLMAPIError::UnknownError(
-                    "No choices present in OpenAI completion response".to_owned(),
-                ))?;
-        let completion = only_completion.try_into()?;
-        Ok(Self { completion })
     }
 }
 
@@ -265,7 +252,7 @@ impl LLM {
     }
 
     /// prompt the LLM with a chain of `Message`
-    pub fn prompt(&self, messages: &[Message]) -> Result<PromptResponse> {
+    pub fn prompt(&self, messages: &[Message]) -> Result<Completion> {
         let client = self.client.clone().unwrap_or(self.default_client());
 
         let completion = openai::fetch_completion(
@@ -295,12 +282,12 @@ impl LLM {
     }
 
     /// prompt the LLM with a single `Message`
-    pub fn prompt_single(&self, message: Message) -> Result<PromptResponse> {
+    pub fn prompt_single(&self, message: Message) -> Result<Completion> {
         self.prompt(&[message])
     }
 
     /// prompt the LLM with a single `Message` which is created over the given parameters
-    pub fn prompt_unwrapped(&self, content: String, role: MessageRole) -> Result<PromptResponse> {
+    pub fn prompt_unwrapped(&self, content: String, role: MessageRole) -> Result<Completion> {
         self.prompt_single(Message::new(content, role))
     }
 
@@ -310,7 +297,7 @@ impl LLM {
         content: String,
         role: MessageRole,
         name: String,
-    ) -> Result<PromptResponse> {
+    ) -> Result<Completion> {
         self.prompt_single(Message::new_named(content, role, name))
     }
 

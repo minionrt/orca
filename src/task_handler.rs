@@ -99,7 +99,7 @@ impl TaskHandler {
         let response = self.llm.prompt(&messages);
 
         match response {
-            Ok(r) => TaskOutcome::Complete(r.completion),
+            Ok(r) => TaskOutcome::Complete(r),
             Err(_) => TaskOutcome::Failure,
         }
     }
