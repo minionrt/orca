@@ -102,7 +102,7 @@ pub enum LLMAPIError {
     NetworkError(String),
     UnknownError(String),
     MissingConfig(String),
-    EmptyChoice(String)
+    EmptyChoice(String),
 }
 
 impl std::error::Error for LLMAPIError {}
