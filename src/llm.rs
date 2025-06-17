@@ -32,7 +32,7 @@ impl TryFrom<openai::Choice> for Completion {
                 // Tool calls is more likely to be important
                 Ok(Self::ToolCalls(tool_calls))
             }
-            // Error - missing content and
+            // Error - missing content and tool_calls
             (None, None) => Err(LLMAPIError::UnknownError(
                 "Neither content nor tool_calls present in OpenAI response".to_owned(),
             )),
@@ -48,7 +48,7 @@ impl TryFrom<openai::Completion> for Completion {
                 .choices
                 .into_iter()
                 .next()
-                .ok_or(LLMAPIError::UnknownError(
+                .ok_or(LLMAPIError::EmptyChoice(
                     "No choices present in OpenAI completion response".to_owned(),
                 ))?;
         let completion = only_completion.try_into()?;
@@ -102,6 +102,7 @@ pub enum LLMAPIError {
     NetworkError(String),
     UnknownError(String),
     MissingConfig(String),
+    EmptyChoice(String)
 }
 
 impl std::error::Error for LLMAPIError {}
@@ -121,6 +122,7 @@ impl fmt::Display for LLMAPIError {
                 "The config option \"{}\" is missing, but needed for prompting",
                 err
             ),
+            LLMAPIError::EmptyChoice(err) => write!(f, "Empty Choice Error: {}", err),
         }
     }
 }
