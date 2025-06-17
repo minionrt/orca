@@ -1,18 +1,17 @@
 #![allow(dead_code)]
 
-use crate::openai;
+use crate::openai::{self, ToolCall};
 use std::fmt;
 
-/// One completion-response of a LLM
+///Enum to choose between content and tool_calls
 #[derive(Clone, Debug)]
-
-//struct containing the content of the response
-pub struct Completion {
-    pub content: String,
+pub enum Completion {
+    Text(String),
+    ToolCalls(Vec<ToolCall>),
 }
 impl Completion {
     pub fn new(content: String, _role: MessageRole) -> Self {
-        Completion { content }
+        Completion::Text(content)
     }
 }
 
@@ -21,15 +20,23 @@ impl TryFrom<openai::Choice> for Completion {
     type Error = LLMAPIError;
 
     fn try_from(choice: openai::Choice) -> std::result::Result<Self, Self::Error> {
-        Ok(Self {
-            content: choice.message.content.ok_or_else(|| {
-                if choice.message.refusal.is_some() {
-                    LLMAPIError::RefusedCompletion(choice.message.refusal.unwrap())
-                } else {
-                    LLMAPIError::UnknownError("Empty completion".to_owned())
-                }
-            })?,
-        })
+        let message = choice.message;
+
+        match (message.content, message.tool_calls) {
+            // Only tool_calls
+            (None, Some(tool_calls)) => Ok(Self::ToolCalls(tool_calls)),
+            // Only content
+            (Some(content), None) => Ok(Self::Text(content)),
+            // if content and tool calls is provided
+            (Some(_content), Some(tool_calls)) => {
+                // Tool calls is more likely to be important
+                Ok(Self::ToolCalls(tool_calls))
+            }
+            // Error - missing content and
+            (None, None) => Err(LLMAPIError::UnknownError(
+                "Neither content nor tool_calls present in OpenAI response".to_owned(),
+            )),
+        }
     }
 }
 
@@ -179,6 +186,8 @@ pub struct LLM {
 
     max_tokens: Option<i32>,
     client: Option<reqwest::blocking::Client>,
+    pub tools: Option<Vec<openai::Tool>>,
+    pub tool_choice: Option<openai::ToolChoice>,
 }
 
 impl Default for LLM {
@@ -196,14 +205,24 @@ impl LLM {
             model: None,
             max_tokens: None,
             client: None,
+            tools: None,
+            tool_choice: None,
         }
     }
     /// create a new LLM with all configuration necessary for prompting (API key, base URL and model)
-    pub fn full(api_key: String, base_url: reqwest::Url, model: String) -> Self {
+    pub fn full(
+        api_key: String,
+        base_url: reqwest::Url,
+        model: String,
+        tools: Option<Vec<openai::Tool>>,
+        tool_choice: Option<openai::ToolChoice>,
+    ) -> Self {
         Self::new()
             .with_api_key(api_key)
             .with_base_url(base_url)
             .with_model(model)
+            .with_tools(tools)
+            .with_tool_choice(tool_choice)
             .clone()
     }
 
@@ -238,6 +257,16 @@ impl LLM {
     /// set a custom `reqwest::blocking::Client` which is then used to query the LLM endpoint
     pub fn with_client(&mut self, client: reqwest::blocking::Client) -> &mut Self {
         self.client = Some(client);
+        self
+    }
+    /// set available tools       
+    pub fn with_tools(&mut self, tools: Option<Vec<openai::Tool>>) -> &mut Self {
+        self.tools = tools;
+        self
+    }
+    /// set how the tool chooses tools
+    pub fn with_tool_choice(&mut self, tool_choice: Option<openai::ToolChoice>) -> &mut Self {
+        self.tool_choice = tool_choice;
         self
     }
 
@@ -306,6 +335,8 @@ impl LLM {
             max_completion_tokens: self.max_tokens,
             max_tokens: self.max_tokens,
             user: None,
+            tools: self.tools.clone(),
+            tool_choice: self.tool_choice.clone(),
         }
     }
 
