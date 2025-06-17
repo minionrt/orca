@@ -30,6 +30,7 @@ fn parses_only_toolcalls_to_completionkind() {
                 tc[0].function.arguments["location"].as_str(),
                 Some("Boston, MA")
             );
+            assert_eq!(tc[0].tool_type, "function");
         }
         _ => panic!("Did not parse ToolCalls correctly!"),
     }
