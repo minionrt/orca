@@ -1,5 +1,4 @@
-use serde_json::{json, Value};
-
+use serde_json::Value;
 use crate::agent_actions::{edit_files, read_files};
 
 /// Struct to represent a tool in the format expected by the LLM
