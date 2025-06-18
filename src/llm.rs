@@ -32,11 +32,27 @@ impl TryFrom<openai::Choice> for Completion {
                 // Tool calls is more likely to be important
                 Ok(Self::ToolCalls(tool_calls))
             }
-            // Error - missing content and
+            // Error - missing content and tool_calls
             (None, None) => Err(LLMAPIError::UnknownError(
                 "Neither content nor tool_calls present in OpenAI response".to_owned(),
             )),
         }
+    }
+}
+/// Conversion from the underlying OpenAI interface
+impl TryFrom<openai::Completion> for Completion {
+    type Error = LLMAPIError;
+    fn try_from(completion: openai::Completion) -> Result<Self> {
+        let only_completion =
+            completion
+                .choices
+                .into_iter()
+                .next()
+                .ok_or(LLMAPIError::EmptyChoice(
+                    "No choices present in OpenAI completion response".to_owned(),
+                ))?;
+        let completion = only_completion.try_into()?;
+        Ok(completion)
     }
 }
 
@@ -79,41 +95,6 @@ impl From<Message> for openai::Message {
     }
 }
 
-/// The response of a LLM containing a chain of completion-responses
-#[derive(Debug)]
-pub struct PromptResponse {
-    pub completions: Vec<Completion>,
-}
-
-impl PromptResponse {
-    pub fn new(completions: Vec<Completion>) -> Self {
-        PromptResponse { completions }
-    }
-}
-
-/// Conversion from the underlying OpenAI interface
-impl TryFrom<openai::Completion> for PromptResponse {
-    type Error = LLMAPIError;
-    fn try_from(completion: openai::Completion) -> Result<Self> {
-        let checked_completions = completion
-            .choices
-            .iter()
-            .map(|c| c.clone().try_into())
-            .collect::<Vec<_>>();
-
-        if let Some(err) = checked_completions.iter().find(|c| c.is_err()) {
-            Err(err.clone().unwrap_err())
-        } else {
-            Ok(Self {
-                completions: checked_completions
-                    .iter()
-                    .map(|c| c.clone().unwrap())
-                    .collect(),
-            })
-        }
-    }
-}
-
 /// All possible errors that can be returned in a Result
 #[derive(Clone, Debug)]
 pub enum LLMAPIError {
@@ -121,6 +102,7 @@ pub enum LLMAPIError {
     NetworkError(String),
     UnknownError(String),
     MissingConfig(String),
+    EmptyChoice(String),
 }
 
 impl std::error::Error for LLMAPIError {}
@@ -140,6 +122,7 @@ impl fmt::Display for LLMAPIError {
                 "The config option \"{}\" is missing, but needed for prompting",
                 err
             ),
+            LLMAPIError::EmptyChoice(err) => write!(f, "Empty Choice Error: {}", err),
         }
     }
 }
@@ -271,7 +254,7 @@ impl LLM {
     }
 
     /// prompt the LLM with a chain of `Message`
-    pub fn prompt(&self, messages: &[Message]) -> Result<PromptResponse> {
+    pub fn prompt(&self, messages: &[Message]) -> Result<Completion> {
         let client = self.client.clone().unwrap_or(self.default_client());
 
         let completion = openai::fetch_completion(
@@ -301,12 +284,12 @@ impl LLM {
     }
 
     /// prompt the LLM with a single `Message`
-    pub fn prompt_single(&self, message: Message) -> Result<PromptResponse> {
+    pub fn prompt_single(&self, message: Message) -> Result<Completion> {
         self.prompt(&[message])
     }
 
     /// prompt the LLM with a single `Message` which is created over the given parameters
-    pub fn prompt_unwrapped(&self, content: String, role: MessageRole) -> Result<PromptResponse> {
+    pub fn prompt_unwrapped(&self, content: String, role: MessageRole) -> Result<Completion> {
         self.prompt_single(Message::new(content, role))
     }
 
@@ -316,7 +299,7 @@ impl LLM {
         content: String,
         role: MessageRole,
         name: String,
-    ) -> Result<PromptResponse> {
+    ) -> Result<Completion> {
         self.prompt_single(Message::new_named(content, role, name))
     }
 
@@ -329,7 +312,8 @@ impl LLM {
             stream: None,
             frequency_penalty: None,
             presence_penalty: None,
-            n: None,
+            // we can't handle more than one response at once
+            n: Some(1),
             logit_bias: None,
             logprobs: None,
             max_completion_tokens: self.max_tokens,

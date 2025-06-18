@@ -11,7 +11,7 @@ You are connected to a Linux-based development environment. You are in the
 project directory. Your current task is as follows:"#;
 
 pub enum TaskOutcome {
-    Complete(Vec<Completion>),
+    Complete(Completion),
     Failure,
 }
 
@@ -99,7 +99,7 @@ impl TaskHandler {
         let response = self.llm.prompt(&messages);
 
         match response {
-            Ok(r) => TaskOutcome::Complete(r.completions),
+            Ok(r) => TaskOutcome::Complete(r),
             Err(_) => TaskOutcome::Failure,
         }
     }
