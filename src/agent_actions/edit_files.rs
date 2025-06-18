@@ -1,7 +1,7 @@
+use anyhow::{Result, anyhow};
+use serde_json::{Value, json};
 use std::fs;
 use std::io;
-use serde_json::{json, Value};
-use anyhow::{Result, anyhow};
 
 /// Overwrites the entire contents of a file with the provided content.
 ///
@@ -134,7 +134,6 @@ pub fn edit_file_line_col_range(
 
     fs::write(&path, file_content)
 }
-
 
 /// Returns the JSON Schema for the parameters of the `edit_files` tool.
 pub fn parameters_schema() -> Value {

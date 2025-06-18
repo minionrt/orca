@@ -1,6 +1,6 @@
-use std::fs;
-use serde_json::{json, Value};
 use anyhow::{Result, anyhow};
+use serde_json::{Value, json};
+use std::fs;
 
 /// Reads the contents of a file and returns it as a `String`.
 ///

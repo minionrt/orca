@@ -1,5 +1,5 @@
-use serde_json::Value;
 use crate::agent_actions::{edit_files, read_files};
+use serde_json::Value;
 
 /// Struct to represent a tool in the format expected by the LLM
 #[derive(Debug, Clone)]
@@ -19,7 +19,7 @@ pub fn get_tools() -> Vec<Tool> {
             name: "edit_files",
             description: "Edits the content of files in the project directory.",
         },
-        // here, tools can be added 
+        // here, tools can be added
     ]
 }
 
@@ -32,4 +32,3 @@ pub fn call_tool(tool_name: &str, args: Value) -> Result<Value, anyhow::Error> {
         _ => Err(anyhow::anyhow!("Tool '{}' not found.", tool_name)),
     }
 }
-
