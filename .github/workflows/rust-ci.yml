@@ -2,9 +2,9 @@ name: Rust CI
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: ["main", "develop"]
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: ["main", "develop"]
 
 env:
   CARGO_TERM_COLOR: always
@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Cache dependencies *and* build artifacts
+      # Cache dependencies and build artifacts
       - name: Cache Cargo dependencies and build
         uses: actions/cache@v4
         with:
