@@ -1,5 +1,7 @@
 use std::fs;
 use std::io;
+use serde_json::{json, Value};
+use anyhow::{Result, anyhow};
 
 /// Overwrites the entire contents of a file with the provided content.
 ///
@@ -131,4 +133,42 @@ pub fn edit_file_line_col_range(
     file_content.replace_range(start_byte..end_byte, &content);
 
     fs::write(&path, file_content)
+}
+
+
+/// Returns the JSON Schema for the parameters of the `edit_files` tool.
+pub fn parameters_schema() -> Value {
+    json!({
+        "type": "object",
+        "properties": {
+            "path": {
+                "type": "string",
+                "description": "Path to the file to edit or create."
+            },
+            "content": {
+                "type": "string",
+                "description": "New content to write to the file."
+            }
+        },
+        "required": ["path", "content"]
+    })
+}
+
+/// Executes the `edit_files` tool using JSON arguments.
+/// Expected arguments: { "path": "<path-to-file>", "content": "<file-content>" }
+pub fn run(args: Value) -> Result<Value> {
+    let path = args
+        .get("path")
+        .and_then(Value::as_str)
+        .ok_or_else(|| anyhow!("Missing or invalid 'path' parameter"))?;
+
+    let content = args
+        .get("content")
+        .and_then(Value::as_str)
+        .ok_or_else(|| anyhow!("Missing or invalid 'content' parameter"))?;
+
+    edit_file(path.to_string(), content.to_string())
+        .map_err(|e| anyhow!("Failed to edit file '{}': {}", path, e))?;
+
+    Ok(json!({ "status": "success" }))
 }
