@@ -9,8 +9,14 @@ impl BashTool {
         BashTool
     }
 }
-
-/// Executes the given bash code and returns the output (stdout and stderr).
+///
+/// # Arguments
+///
+/// * `code` - The bash code to execute.
+///
+/// # Returns
+///
+/// Returns a Result containing the combined stdout and stderr output, or an error if execution fails.
 pub fn run_bash(code: &str) -> io::Result<String> {
     let output = Command::new("bash")
         .arg("-c")
