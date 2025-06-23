@@ -10,6 +10,7 @@ impl BashTool {
     }
 }
 
+/// Executes the given bash code and returns the output (stdout and stderr).
 /// # Arguments
 ///
 /// * `code` - The bash code to execute.
