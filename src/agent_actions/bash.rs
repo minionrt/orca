@@ -1,7 +1,7 @@
+use crate::openai;
+use crate::tools_interface::ToolInstance;
 use std::io;
 use std::process::{Command, Stdio};
-use crate::tools_interface::ToolInstance;
-use crate::openai;
 pub struct BashTool;
 
 impl BashTool {
@@ -25,6 +25,12 @@ pub fn run_bash(code: &str) -> io::Result<String> {
     Ok(result)
 }
 
+impl Default for BashTool {
+    fn default() -> Self {
+        BashTool::new()
+    }
+}
+
 impl ToolInstance for BashTool {
     fn run(&self, params: Vec<String>) -> Result<String, Box<dyn std::error::Error>> {
         if params.is_empty() {
@@ -35,8 +41,8 @@ impl ToolInstance for BashTool {
         Ok(output)
     }
 
-   fn return_choice() -> openai::Tool {
-    openai::Tool {
+    fn return_choice() -> openai::Tool {
+        openai::Tool {
         function: openai::Function {
             name: "bash".to_string(),
             description: "Executes bash code and returns the output (stdout and stderr). The first parameter is the bash code to execute.".to_string(),
@@ -53,5 +59,5 @@ impl ToolInstance for BashTool {
         },
         tool_type: "function".to_string(),
     }
-}
+    }
 }

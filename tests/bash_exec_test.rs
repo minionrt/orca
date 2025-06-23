@@ -7,7 +7,11 @@ mod tests {
     fn test_bash_tool_run_echo() {
         let tool = BashTool::new();
         let output = tool.run(vec!["echo hello".to_string()]).unwrap();
-        assert!(output.contains("hello"), "Expected output to contain 'hello', got: {}", output);
+        assert!(
+            output.contains("hello"),
+            "Expected output to contain 'hello', got: {}",
+            output
+        );
     }
 
     #[test]
@@ -16,7 +20,8 @@ mod tests {
         let output = tool.run(vec!["ls /nonexistent_path".to_string()]).unwrap();
         assert!(
             output.contains("No such file") || output.contains("cannot access"),
-            "Expected error message in output, got: {}", output
+            "Expected error message in output, got: {}",
+            output
         );
     }
 
