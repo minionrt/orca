@@ -9,7 +9,7 @@ impl BashTool {
         BashTool
     }
 }
-///
+
 /// # Arguments
 ///
 /// * `code` - The bash code to execute.
