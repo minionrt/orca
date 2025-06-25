@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::error::Error;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+/// AI Response - Message content from LLM
 pub struct ChatCompletionMessage {
     /// The contents of the message.
     #[serde(default)]
@@ -17,12 +18,50 @@ pub struct ChatCompletionMessage {
 
     /// The role of the author of this message.
     pub role: String,
+
+    /// Whether the Model wants to use a tool and if so, which tool.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tool_calls: Option<Vec<ToolCall>>,
     // TODO
     // - annotations
-    // - tool_calls
+}
+#[derive(Clone, Debug, Serialize, Deserialize)]
+/// AI Response - Tool call requested by LLM
+pub struct ToolCall {
+    pub id: String,
+    // The type of the tool. Currently, only function is supported.
+    #[serde(rename = "type")]
+    pub tool_type: String,
+    pub function: ResponseFunction,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+/// AI Response - Function that LLM wants to call
+pub struct ResponseFunction {
+    pub name: String,
+    pub arguments: serde_json::Value,
+}
+#[derive(Clone, Debug, Serialize, Deserialize)]
+/// AI Request - Tool definition sent to LLM
+pub struct Tool {
+    /// The Function name
+    pub function: Function,
+
+    #[serde(rename = "type")]
+    pub tool_type: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+/// AI Request - Available functions for tools
+pub struct Function {
+    pub name: String,
+    pub description: String,
+    /// Flexible for json values
+    pub parameters: serde_json::Value,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+/// AI Response - One possible answer choice from LLM
 pub struct Choice {
     /// The reason the model stopped generating tokens. This will be `stop` if the model hit
     /// a natural stop point or a provided stop sequence, `length` if the maximum number of
@@ -41,6 +80,7 @@ pub struct Choice {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+/// AI Response
 pub struct TokenDetail {
     /// When using Predicted Outputs, the number of tokens in the prediction that appeared in the completion.
     pub accepted_prediction_tokens: i32,
@@ -55,6 +95,7 @@ pub struct TokenDetail {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+/// AI Response - Usage statistics for billing/monitoring  
 pub struct UsageStatistic {
     /// Number of tokens in the generated completion.
     pub completion_tokens: i32,
@@ -71,8 +112,22 @@ pub struct UsageStatistic {
     // TODO
     // - prompt_tokens_details
 }
+/// AI Request
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum ToolChoice {
+    /// Dynamic tool calls - the model chooses wheter to use tools
+    /// and which tool is used
+    #[serde(rename = "auto")]
+    Auto,
+    /// Disallow tools calls
+    #[serde(rename = "none")]
+    None,
+    // #[serde(rename="required")]
+    // Required,
+}
 
 #[derive(Debug, Serialize, Deserialize)]
+/// AI Response
 pub struct Completion {
     /// A list of chat completion choices. Can be more than one if `n` is greater than 1.
     pub choices: Vec<Choice>,
@@ -98,6 +153,7 @@ pub struct Completion {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+/// AI Request
 pub struct Message {
     /// The contents of the message
     pub content: String,
@@ -119,12 +175,20 @@ pub struct Message {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+/// AI Request
 pub struct CompletionBody {
     /// A list of messages comprising the conversation so far
     pub messages: Vec<Message>,
 
     /// Model ID used to generate the response
     pub model: String,
+
+    /// Optional List of Tools
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tools: Option<Vec<Tool>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_choice: Option<ToolChoice>,
 
     /// Sampling temperature to use (higher values mean more randomness).
     /// Range: 0.0 to 2.0.

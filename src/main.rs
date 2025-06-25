@@ -4,6 +4,7 @@ mod models;
 mod openai;
 mod task_handler;
 
+use llm::Completion;
 use std::env;
 use task_handler::{Task, TaskHandler, TaskOutcome};
 use url::Url;
@@ -28,8 +29,14 @@ fn main() {
         request: "Please write a simple FizzBuzz program.".to_string(),
     };
     let response = task_handler.run(&task);
+
     let _response = match response {
-        TaskOutcome::Complete(a) => a[1].content.clone(),
+        TaskOutcome::Complete(a) => match &a {
+            // If the completion is Text, clone the text
+            Completion::Text(txt) => txt.clone(),
+            // If the completion is ToolCalls, format it as a string
+            Completion::ToolCalls(tc) => format!("ToolCalls: {:?}", tc),
+        },
         TaskOutcome::Failure => "didn't work, sorry".to_string(),
     };
 

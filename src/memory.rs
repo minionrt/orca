@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::llm::{LLM, MessageRole};
+use crate::llm::{Completion, LLM, MessageRole};
 use crate::models::Model;
 use url::Url;
 
@@ -35,7 +35,13 @@ impl Memory {
     pub fn new(api_key: &str, base_url: &Url) -> Self {
         Memory {
             history: "".to_string(),
-            llm: LLM::full(api_key.to_string(), base_url.clone(), Model::Basic.into()), //TODO replace model with one from model enum
+            llm: LLM::full(
+                api_key.to_string(),
+                base_url.clone(),
+                Model::Basic.into(),
+                None,
+                None,
+            ), //TODO replace model with one from model enum
             api_key: api_key.to_string(),
             base_url: base_url.clone(),
         }
@@ -52,7 +58,13 @@ impl Memory {
     ///(re-)sets the current model to the given one
     pub fn with_model(mut self, model: Model) -> Self {
         //TODO change Model to model type
-        self.llm = LLM::full(self.api_key.clone(), self.base_url.clone(), model.into()); //add model.into() here
+        self.llm = LLM::full(
+            self.api_key.clone(),
+            self.base_url.clone(),
+            model.into(),
+            None,
+            None,
+        ); //add model.into() here
         self
     }
 
@@ -69,7 +81,10 @@ impl Memory {
         // prompts a (ideally) really basic model for a summary of the previous
         // history and the new additional interaction messages and stores this summary in self.history
         self.history = match self.llm.prompt_unwrapped(content, MessageRole::User) {
-            Ok(r) => r.completions[0].content.clone(),
+            Ok(r) => match &r {
+                Completion::Text(content) => content.clone(),
+                Completion::ToolCalls(_) => panic!("Expected text completion, got tool call!"),
+            },
             Err(_e) => panic!("Something went wrong with summarizing the memory."),
         };
     }

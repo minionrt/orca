@@ -1,18 +1,17 @@
 #![allow(dead_code)]
 
-use crate::openai;
+use crate::openai::{self, ToolCall};
 use std::fmt;
 
-/// One completion-response of a LLM
+///Enum to choose between content and tool_calls
 #[derive(Clone, Debug)]
-
-//struct containing the content of the response
-pub struct Completion {
-    pub content: String,
+pub enum Completion {
+    Text(String),
+    ToolCalls(Vec<ToolCall>),
 }
 impl Completion {
     pub fn new(content: String, _role: MessageRole) -> Self {
-        Completion { content }
+        Completion::Text(content)
     }
 }
 
@@ -21,15 +20,39 @@ impl TryFrom<openai::Choice> for Completion {
     type Error = LLMAPIError;
 
     fn try_from(choice: openai::Choice) -> std::result::Result<Self, Self::Error> {
-        Ok(Self {
-            content: choice.message.content.ok_or_else(|| {
-                if choice.message.refusal.is_some() {
-                    LLMAPIError::RefusedCompletion(choice.message.refusal.unwrap())
-                } else {
-                    LLMAPIError::UnknownError("Empty completion".to_owned())
-                }
-            })?,
-        })
+        let message = choice.message;
+
+        match (message.content, message.tool_calls) {
+            // Only tool_calls
+            (None, Some(tool_calls)) => Ok(Self::ToolCalls(tool_calls)),
+            // Only content
+            (Some(content), None) => Ok(Self::Text(content)),
+            // if content and tool calls is provided
+            (Some(_content), Some(tool_calls)) => {
+                // Tool calls is more likely to be important
+                Ok(Self::ToolCalls(tool_calls))
+            }
+            // Error - missing content and tool_calls
+            (None, None) => Err(LLMAPIError::UnknownError(
+                "Neither content nor tool_calls present in OpenAI response".to_owned(),
+            )),
+        }
+    }
+}
+/// Conversion from the underlying OpenAI interface
+impl TryFrom<openai::Completion> for Completion {
+    type Error = LLMAPIError;
+    fn try_from(completion: openai::Completion) -> Result<Self> {
+        let only_completion =
+            completion
+                .choices
+                .into_iter()
+                .next()
+                .ok_or(LLMAPIError::EmptyChoice(
+                    "No choices present in OpenAI completion response".to_owned(),
+                ))?;
+        let completion = only_completion.try_into()?;
+        Ok(completion)
     }
 }
 
@@ -72,41 +95,6 @@ impl From<Message> for openai::Message {
     }
 }
 
-/// The response of a LLM containing a chain of completion-responses
-#[derive(Debug)]
-pub struct PromptResponse {
-    pub completions: Vec<Completion>,
-}
-
-impl PromptResponse {
-    pub fn new(completions: Vec<Completion>) -> Self {
-        PromptResponse { completions }
-    }
-}
-
-/// Conversion from the underlying OpenAI interface
-impl TryFrom<openai::Completion> for PromptResponse {
-    type Error = LLMAPIError;
-    fn try_from(completion: openai::Completion) -> Result<Self> {
-        let checked_completions = completion
-            .choices
-            .iter()
-            .map(|c| c.clone().try_into())
-            .collect::<Vec<_>>();
-
-        if let Some(err) = checked_completions.iter().find(|c| c.is_err()) {
-            Err(err.clone().unwrap_err())
-        } else {
-            Ok(Self {
-                completions: checked_completions
-                    .iter()
-                    .map(|c| c.clone().unwrap())
-                    .collect(),
-            })
-        }
-    }
-}
-
 /// All possible errors that can be returned in a Result
 #[derive(Clone, Debug)]
 pub enum LLMAPIError {
@@ -114,6 +102,7 @@ pub enum LLMAPIError {
     NetworkError(String),
     UnknownError(String),
     MissingConfig(String),
+    EmptyChoice(String),
 }
 
 impl std::error::Error for LLMAPIError {}
@@ -133,6 +122,7 @@ impl fmt::Display for LLMAPIError {
                 "The config option \"{}\" is missing, but needed for prompting",
                 err
             ),
+            LLMAPIError::EmptyChoice(err) => write!(f, "Empty Choice Error: {}", err),
         }
     }
 }
@@ -179,6 +169,8 @@ pub struct LLM {
 
     max_tokens: Option<i32>,
     client: Option<reqwest::blocking::Client>,
+    pub tools: Option<Vec<openai::Tool>>,
+    pub tool_choice: Option<openai::ToolChoice>,
 }
 
 impl Default for LLM {
@@ -196,14 +188,24 @@ impl LLM {
             model: None,
             max_tokens: None,
             client: None,
+            tools: None,
+            tool_choice: None,
         }
     }
     /// create a new LLM with all configuration necessary for prompting (API key, base URL and model)
-    pub fn full(api_key: String, base_url: reqwest::Url, model: String) -> Self {
+    pub fn full(
+        api_key: String,
+        base_url: reqwest::Url,
+        model: String,
+        tools: Option<Vec<openai::Tool>>,
+        tool_choice: Option<openai::ToolChoice>,
+    ) -> Self {
         Self::new()
             .with_api_key(api_key)
             .with_base_url(base_url)
             .with_model(model)
+            .with_tools(tools)
+            .with_tool_choice(tool_choice)
             .clone()
     }
 
@@ -240,9 +242,19 @@ impl LLM {
         self.client = Some(client);
         self
     }
+    /// set available tools       
+    pub fn with_tools(&mut self, tools: Option<Vec<openai::Tool>>) -> &mut Self {
+        self.tools = tools;
+        self
+    }
+    /// set how the tool chooses tools
+    pub fn with_tool_choice(&mut self, tool_choice: Option<openai::ToolChoice>) -> &mut Self {
+        self.tool_choice = tool_choice;
+        self
+    }
 
     /// prompt the LLM with a chain of `Message`
-    pub fn prompt(&self, messages: &[Message]) -> Result<PromptResponse> {
+    pub fn prompt(&self, messages: &[Message]) -> Result<Completion> {
         let client = self.client.clone().unwrap_or(self.default_client());
 
         let completion = openai::fetch_completion(
@@ -272,12 +284,12 @@ impl LLM {
     }
 
     /// prompt the LLM with a single `Message`
-    pub fn prompt_single(&self, message: Message) -> Result<PromptResponse> {
+    pub fn prompt_single(&self, message: Message) -> Result<Completion> {
         self.prompt(&[message])
     }
 
     /// prompt the LLM with a single `Message` which is created over the given parameters
-    pub fn prompt_unwrapped(&self, content: String, role: MessageRole) -> Result<PromptResponse> {
+    pub fn prompt_unwrapped(&self, content: String, role: MessageRole) -> Result<Completion> {
         self.prompt_single(Message::new(content, role))
     }
 
@@ -287,7 +299,7 @@ impl LLM {
         content: String,
         role: MessageRole,
         name: String,
-    ) -> Result<PromptResponse> {
+    ) -> Result<Completion> {
         self.prompt_single(Message::new_named(content, role, name))
     }
 
@@ -300,12 +312,15 @@ impl LLM {
             stream: None,
             frequency_penalty: None,
             presence_penalty: None,
-            n: None,
+            // we can't handle more than one response at once
+            n: Some(1),
             logit_bias: None,
             logprobs: None,
             max_completion_tokens: self.max_tokens,
             max_tokens: self.max_tokens,
             user: None,
+            tools: self.tools.clone(),
+            tool_choice: self.tool_choice.clone(),
         }
     }
 
