@@ -39,13 +39,19 @@ impl Default for BashTool {
 }
 
 impl ToolInstance for BashTool {
-    fn run(&self, params: Vec<String>) -> Result<String, Box<dyn std::error::Error>> {
-        if params.is_empty() {
-            return Err("No bash code provided".into());
-        }
-        let code = &params[0];
+    fn run(
+        &self,
+        params: serde_json::Value,
+    ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+        let code = match params.get("code") {
+            None => {
+                return Err("The parameter \"code\" doesn't exist in the given tool call".into());
+            }
+            Some(serde_json::Value::String(s)) => s,
+            Some(_) => return Err("The parameter \"code\" isn't given as string.".into()),
+        };
         let output = run_bash(code)?;
-        Ok(output)
+        Ok(serde_json::Value::String(output))
     }
 
     fn return_choice() -> openai::Tool {

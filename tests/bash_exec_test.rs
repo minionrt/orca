@@ -1,12 +1,17 @@
 #[cfg(test)]
 mod tests {
+    use serde_json::{Value, json};
     use teamprojekt_agents::agent_actions::bash::BashTool;
     use teamprojekt_agents::tools_interface::ToolInstance;
 
     #[test]
     fn test_bash_tool_run_echo() {
         let tool = BashTool::new();
-        let output = tool.run(vec!["echo hello".to_string()]).unwrap();
+        let output = tool.run(json!({ "code": "echo hello" })).unwrap();
+        let output = match output {
+            Value::String(s) => s,
+            _ => "an error! The return value wasn't a Value::String".to_string(),
+        };
         assert!(
             output.contains("hello"),
             "Expected output to contain 'hello', got: {}",
@@ -17,7 +22,11 @@ mod tests {
     #[test]
     fn test_bash_tool_run_stderr() {
         let tool = BashTool::new();
-        let output = tool.run(vec!["ls /nonexistent_path".to_string()]).unwrap();
+        let output = tool.run(json!({"code": "ls /nonexistent_path"})).unwrap();
+        let output = match output {
+            Value::String(s) => s,
+            _ => "an error! The return value wasn't a Value::String".to_string(),
+        };
         assert!(
             output.contains("No such file") || output.contains("cannot access"),
             "Expected error message in output, got: {}",
