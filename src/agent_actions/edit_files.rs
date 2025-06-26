@@ -4,6 +4,7 @@ use serde_json::json;
 use std::fs;
 use std::io;
 
+
 pub struct EditFilesTool;
 
 impl EditFilesTool {
@@ -91,46 +92,34 @@ impl EditFilesTool {
 }
 
 impl ToolInstance for EditFilesTool {
-    fn run(&self, params: Vec<String>) -> Result<String, Box<dyn std::error::Error>> {
-        // Expects path and content as must-have
-        let path = params.get(0).ok_or("Missing 'path' parameter")?;
-        let content = params.get(1).ok_or("Missing 'content' parameter")?;
+    fn run(&self, params: serde_json::Value) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+        let path = params.get("path")
+            .and_then(|v| v.as_str())
+            .ok_or("Missing or invalid 'path' parameter")?;
 
-        // optional: parameter for from/to or line/col range parsen
-        // expectation: optional more parameters can be added/followed, e.g.
-        // params[2] = from (usize) or start_line
-        // params[3] = to (usize) or start_col
-        // params[4] = end_line
-        // params[5] = end_col
+        let content = params.get("content")
+            .and_then(|v| v.as_str())
+            .ok_or("Missing or invalid 'content' parameter")?;
 
-        // call different methods depending on the number and type of parameters
+        let from = params.get("from").and_then(|v| v.as_u64()).map(|v| v as usize);
+        let to = params.get("to").and_then(|v| v.as_u64()).map(|v| v as usize);
 
-        match params.len() {
-            2 => {
-                // only path + content => overwrites whole file
-                self.edit_file(path, content)?;
-            }
-            4 => {
-                // path, content, from, to => replace byte range 
-                let from = params[2].parse::<usize>()?;
-                let to = params[3].parse::<usize>()?;
-                self.edit_file_from_to(path, content, from, to)?;
-            }
-            6 => {
-                // path, content, start_line, start_col, end_line, end_col => replace line/col range 
-                let start_line = params[2].parse::<usize>()?;
-                let start_col = params[3].parse::<usize>()?;
-                let end_line = params[4].parse::<usize>()?;
-                let end_col = params[5].parse::<usize>()?;
-                self.edit_file_line_col_range(path, content, start_line, start_col, end_line, end_col)?;
-            }
-            _ => {
-                return Err("Invalid number of parameters for edit_files".into());
-            }
+        let start_line = params.get("start_line").and_then(|v| v.as_u64()).map(|v| v as usize);
+        let start_col = params.get("start_col").and_then(|v| v.as_u64()).map(|v| v as usize);
+        let end_line = params.get("end_line").and_then(|v| v.as_u64()).map(|v| v as usize);
+        let end_col = params.get("end_col").and_then(|v| v.as_u64()).map(|v| v as usize);
+
+        if let (Some(from), Some(to)) = (from, to) {
+            self.edit_file_from_to(path, content, from, to)?;
+        } else if let (Some(start_line), Some(start_col), Some(end_line), Some(end_col)) =
+            (start_line, start_col, end_line, end_col)
+        {
+            self.edit_file_line_col_range(path, content, start_line, start_col, end_line, end_col)?;
+        } else {
+            self.edit_file(path, content)?;
         }
 
-        let result = json!({ "status": "success" });
-        Ok(result.to_string())
+        Ok(json!({ "status": "success" }))
     }
 
     fn return_choice() -> Tool {

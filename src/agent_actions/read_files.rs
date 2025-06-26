@@ -14,13 +14,14 @@ impl ReadFilesTool {
 
 
 impl ToolInstance for ReadFilesTool {
-    fn run(&self, params: Vec<String>) -> Result<String, Box<dyn std::error::Error>> {
-        let path = params.get(0)
+    fn run(&self, params: serde_json::Value) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+        let path = params.get("path")
+            .and_then(|v| v.as_str())
             .ok_or("Missing 'path' parameter")?;
 
-        let content = self.read_file(path)?;
-        let result = json!({ "content": content });
-        Ok(result.to_string())
+        let content = self.read_file(path)?; // ← hier wird sie verwendet
+
+        Ok(serde_json::json!({ "content": content }))
     }
 
     fn return_choice() -> Tool {
@@ -51,16 +52,17 @@ impl ReadFilesTool {
             .and_then(|v| v.as_str())
             .ok_or_else(|| anyhow::anyhow!("Missing or invalid 'path' parameter"))?;
 
-        // Tool-Instanz anlegen
         let tool = ReadFilesTool;
 
-        // run mit Vec<String> aufrufen
-        let output = tool.run(vec![path.to_string()])
+        // Übergib ein Objekt mit dem "path"-Feld
+        let input = serde_json::json!({ "path": path });
+
+        let output = tool.run(input)
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
-        // JSON-String in Value parsen
-        let result: serde_json::Value = serde_json::from_str(&output)?;
-        Ok(result)
+        // Kein from_str mehr nötig – output ist bereits ein serde_json::Value
+        Ok(output)
     }
 }
+
 
