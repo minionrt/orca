@@ -6,7 +6,6 @@ use tempfile::NamedTempFile;
 fn read_file(path: String) -> Option<String> {
     let tool = ReadFilesTool;
     tool.read_file(&path).ok()
-
 }
 
 #[test]

@@ -4,7 +4,6 @@ use serde_json::json;
 use std::fs;
 use std::io;
 
-
 pub struct EditFilesTool;
 
 impl EditFilesTool {
@@ -12,7 +11,13 @@ impl EditFilesTool {
         fs::write(path, content)
     }
 
-    pub fn edit_file_from_to(&self, path: &str, content: &str, from: usize, to: usize) -> io::Result<()> {
+    pub fn edit_file_from_to(
+        &self,
+        path: &str,
+        content: &str,
+        from: usize,
+        to: usize,
+    ) -> io::Result<()> {
         let mut file_content = match fs::read_to_string(path) {
             Ok(data) => data,
             Err(e) if e.kind() == io::ErrorKind::NotFound => String::new(),
@@ -92,22 +97,45 @@ impl EditFilesTool {
 }
 
 impl ToolInstance for EditFilesTool {
-    fn run(&self, params: serde_json::Value) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
-        let path = params.get("path")
+    fn run(
+        &self,
+        params: serde_json::Value,
+    ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+        let path = params
+            .get("path")
             .and_then(|v| v.as_str())
             .ok_or("Missing or invalid 'path' parameter")?;
 
-        let content = params.get("content")
+        let content = params
+            .get("content")
             .and_then(|v| v.as_str())
             .ok_or("Missing or invalid 'content' parameter")?;
 
-        let from = params.get("from").and_then(|v| v.as_u64()).map(|v| v as usize);
-        let to = params.get("to").and_then(|v| v.as_u64()).map(|v| v as usize);
+        let from = params
+            .get("from")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as usize);
+        let to = params
+            .get("to")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as usize);
 
-        let start_line = params.get("start_line").and_then(|v| v.as_u64()).map(|v| v as usize);
-        let start_col = params.get("start_col").and_then(|v| v.as_u64()).map(|v| v as usize);
-        let end_line = params.get("end_line").and_then(|v| v.as_u64()).map(|v| v as usize);
-        let end_col = params.get("end_col").and_then(|v| v.as_u64()).map(|v| v as usize);
+        let start_line = params
+            .get("start_line")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as usize);
+        let start_col = params
+            .get("start_col")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as usize);
+        let end_line = params
+            .get("end_line")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as usize);
+        let end_col = params
+            .get("end_col")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as usize);
 
         if let (Some(from), Some(to)) = (from, to) {
             self.edit_file_from_to(path, content, from, to)?;
@@ -149,22 +177,39 @@ impl ToolInstance for EditFilesTool {
 
 impl EditFilesTool {
     pub fn run_from_value(args: serde_json::Value) -> Result<serde_json::Value, anyhow::Error> {
-        let path = args.get("path")
+        let path = args
+            .get("path")
             .and_then(|v| v.as_str())
             .ok_or_else(|| anyhow::anyhow!("Missing or invalid 'path' parameter"))?;
 
-        let content = args.get("content")
+        let content = args
+            .get("content")
             .and_then(|v| v.as_str())
             .ok_or_else(|| anyhow::anyhow!("Missing or invalid 'content' parameter"))?;
 
         // Versuche optionale Parameter auszulesen
-        let from = args.get("from").and_then(|v| v.as_u64()).map(|v| v as usize);
+        let from = args
+            .get("from")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as usize);
         let to = args.get("to").and_then(|v| v.as_u64()).map(|v| v as usize);
 
-        let start_line = args.get("start_line").and_then(|v| v.as_u64()).map(|v| v as usize);
-        let start_col = args.get("start_col").and_then(|v| v.as_u64()).map(|v| v as usize);
-        let end_line = args.get("end_line").and_then(|v| v.as_u64()).map(|v| v as usize);
-        let end_col = args.get("end_col").and_then(|v| v.as_u64()).map(|v| v as usize);
+        let start_line = args
+            .get("start_line")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as usize);
+        let start_col = args
+            .get("start_col")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as usize);
+        let end_line = args
+            .get("end_line")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as usize);
+        let end_col = args
+            .get("end_col")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as usize);
 
         let tool = EditFilesTool;
 
@@ -172,7 +217,9 @@ impl EditFilesTool {
         let output = if let (Some(from), Some(to)) = (from, to) {
             tool.edit_file_from_to(path, content, from, to)?;
             json!({ "status": "success" }).to_string()
-        } else if let (Some(start_line), Some(start_col), Some(end_line), Some(end_col)) = (start_line, start_col, end_line, end_col) {
+        } else if let (Some(start_line), Some(start_col), Some(end_line), Some(end_col)) =
+            (start_line, start_col, end_line, end_col)
+        {
             tool.edit_file_line_col_range(path, content, start_line, start_col, end_line, end_col)?;
             json!({ "status": "success" }).to_string()
         } else {

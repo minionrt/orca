@@ -3,7 +3,6 @@ use crate::openai::Tool;
 use crate::tools_interface::ToolInstance;
 use anyhow::Result;
 
-
 /// Returns all available tools expected by the LLM
 pub fn get_tools() -> Option<Vec<Tool>> {
     let tools = vec![
