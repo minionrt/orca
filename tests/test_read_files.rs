@@ -5,10 +5,8 @@ use tempfile::NamedTempFile;
 // helperfuncion for reading a file by ReadFilesTool
 fn read_file(path: String) -> Option<String> {
     let tool = ReadFilesTool;
-    match tool.read_file(&path) {
-        Ok(content) => Some(content),
-        Err(_) => None,
-    }
+    tool.read_file(&path).ok()
+
 }
 
 #[test]
