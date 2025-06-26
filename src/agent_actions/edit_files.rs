@@ -8,11 +8,11 @@ use std::io;
 pub struct EditFilesTool;
 
 impl EditFilesTool {
-    fn edit_file(&self, path: &str, content: &str) -> io::Result<()> {
+    pub fn edit_file(&self, path: &str, content: &str) -> io::Result<()> {
         fs::write(path, content)
     }
 
-    fn edit_file_from_to(&self, path: &str, content: &str, from: usize, to: usize) -> io::Result<()> {
+    pub fn edit_file_from_to(&self, path: &str, content: &str, from: usize, to: usize) -> io::Result<()> {
         let mut file_content = match fs::read_to_string(path) {
             Ok(data) => data,
             Err(e) if e.kind() == io::ErrorKind::NotFound => String::new(),
@@ -35,7 +35,7 @@ impl EditFilesTool {
         fs::write(path, file_content)
     }
 
-    fn edit_file_line_col_range(
+    pub fn edit_file_line_col_range(
         &self,
         path: &str,
         content: &str,

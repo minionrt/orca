@@ -7,7 +7,7 @@ use std::fs;
 pub struct ReadFilesTool;
 
 impl ReadFilesTool {
-    fn read_file(&self, path: &str) -> std::io::Result<String> {
+    pub fn read_file(&self, path: &str) -> std::io::Result<String> {
         fs::read_to_string(path)
     }
 }
