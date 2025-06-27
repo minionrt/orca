@@ -86,8 +86,7 @@ impl Default for GitSubmissionTool {
 /// Implements the ToolInstance trait for GitSubmissionTool, allowing it to be used
 /// as a dynamic tool
 impl ToolInstance for GitSubmissionTool {
-    fn run(
-        /// runs the requested git action based in the parameters provided.
+     /// runs the requested git action based in the parameters provided.
         /// 
         /// # Parameters
         /// * `params`: a serde::json::Value containing the following keys:
@@ -95,6 +94,7 @@ impl ToolInstance for GitSubmissionTool {
         ///     - "commit_message": String (technically optional, but highly encuraged). Used for "commit" and "submit".
         /// # Returns
         /// Returns a JSON String describing the outcome or an error.
+    fn run(
         &self,
         params: Value,
     ) -> Result<Value, Box<dyn std::error::Error>> {
