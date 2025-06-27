@@ -4,13 +4,18 @@ use serde_json::json;
 use std::fs;
 use std::io;
 
+/// Tool for editing files with different methods: full replacement,
+/// byte-range replacement, or line-column range replacement
 pub struct EditFilesTool;
 
 impl EditFilesTool {
+    /// Replaces the entire contents of a file with the given content
     pub fn edit_file(&self, path: &str, content: &str) -> io::Result<()> {
         fs::write(path, content)
     }
 
+    /// Replaces a part of the file between byte indices `from` and `to`
+    /// with the provided content. If the file does not exist, it is created
     pub fn edit_file_from_to(
         &self,
         path: &str,
@@ -18,16 +23,19 @@ impl EditFilesTool {
         from: usize,
         to: usize,
     ) -> io::Result<()> {
+        // Read existing file contents, or start with empty content if the file doesn't exist
         let mut file_content = match fs::read_to_string(path) {
             Ok(data) => data,
             Err(e) if e.kind() == io::ErrorKind::NotFound => String::new(),
             Err(e) => return Err(e),
         };
 
+        // Clamp the indices to valid bounds within the file
         let file_len = file_content.len();
         let from_idx = from.clamp(0, file_len);
         let to_idx = to.clamp(from_idx, file_len);
 
+        // Ensure indices are at valid UTF-8 character boundaries
         if !file_content.is_char_boundary(from_idx) || !file_content.is_char_boundary(to_idx) {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
@@ -35,11 +43,14 @@ impl EditFilesTool {
             ));
         }
 
+        // Replace the byte range with the new content
         file_content.replace_range(from_idx..to_idx, content);
 
         fs::write(path, file_content)
     }
 
+    /// Replaces a part of the file determined by a line-column range with the given content
+    /// Line and column numbers are 0-based
     pub fn edit_file_line_col_range(
         &self,
         path: &str,
@@ -49,17 +60,20 @@ impl EditFilesTool {
         end_line: usize,
         end_col: usize,
     ) -> io::Result<()> {
+        // Read existing file contents, or start with empty content if the file doesn't exist
         let mut file_content = match fs::read_to_string(path) {
             Ok(data) => data,
             Err(e) if e.kind() == io::ErrorKind::NotFound => String::new(),
             Err(e) => return Err(e),
         };
 
+        // Split the file into lines
         let lines: Vec<&str> = file_content.lines().collect();
 
         let start_line = start_line.min(lines.len());
         let end_line = end_line.min(lines.len());
 
+        // Calculate byte offsets for the start and end positions
         let mut start_byte = 0;
         let mut end_byte = 0;
 
@@ -72,6 +86,7 @@ impl EditFilesTool {
             }
         }
 
+        // Add columns within the start and end lines
         if start_line < lines.len() {
             let line = lines[start_line];
             let col = start_col.min(line.chars().count());
@@ -83,6 +98,7 @@ impl EditFilesTool {
             end_byte += line.chars().take(col).map(|c| c.len_utf8()).sum::<usize>();
         }
 
+        // Ensure the byte offsets are valid UTF-8 character boundaries
         if !file_content.is_char_boundary(start_byte) || !file_content.is_char_boundary(end_byte) {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
@@ -96,6 +112,10 @@ impl EditFilesTool {
     }
 }
 
+/// Runs the tool based on JSON parameters. Supports:
+/// - Full file replacement,
+/// - Byte-range replacement,
+/// - Line-column range replacement.
 impl ToolInstance for EditFilesTool {
     fn run(
         &self,
@@ -150,6 +170,7 @@ impl ToolInstance for EditFilesTool {
         Ok(json!({ "status": "success" }))
     }
 
+    /// Returns the tool definition with a JSON schema for LLM integration
     fn return_choice() -> Tool {
         Tool {
             tool_type: "function".to_string(),
@@ -172,62 +193,5 @@ impl ToolInstance for EditFilesTool {
                 }),
             },
         }
-    }
-}
-
-impl EditFilesTool {
-    pub fn run_from_value(args: serde_json::Value) -> Result<serde_json::Value, anyhow::Error> {
-        let path = args
-            .get("path")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow::anyhow!("Missing or invalid 'path' parameter"))?;
-
-        let content = args
-            .get("content")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow::anyhow!("Missing or invalid 'content' parameter"))?;
-
-        // Versuche optionale Parameter auszulesen
-        let from = args
-            .get("from")
-            .and_then(|v| v.as_u64())
-            .map(|v| v as usize);
-        let to = args.get("to").and_then(|v| v.as_u64()).map(|v| v as usize);
-
-        let start_line = args
-            .get("start_line")
-            .and_then(|v| v.as_u64())
-            .map(|v| v as usize);
-        let start_col = args
-            .get("start_col")
-            .and_then(|v| v.as_u64())
-            .map(|v| v as usize);
-        let end_line = args
-            .get("end_line")
-            .and_then(|v| v.as_u64())
-            .map(|v| v as usize);
-        let end_col = args
-            .get("end_col")
-            .and_then(|v| v.as_u64())
-            .map(|v| v as usize);
-
-        let tool = EditFilesTool;
-
-        // call different run methods according to parameters
-        let output = if let (Some(from), Some(to)) = (from, to) {
-            tool.edit_file_from_to(path, content, from, to)?;
-            json!({ "status": "success" }).to_string()
-        } else if let (Some(start_line), Some(start_col), Some(end_line), Some(end_col)) =
-            (start_line, start_col, end_line, end_col)
-        {
-            tool.edit_file_line_col_range(path, content, start_line, start_col, end_line, end_col)?;
-            json!({ "status": "success" }).to_string()
-        } else {
-            tool.edit_file(path, content)?;
-            json!({ "status": "success" }).to_string()
-        };
-
-        let result: serde_json::Value = serde_json::from_str(&output)?;
-        Ok(result)
     }
 }

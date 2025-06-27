@@ -24,7 +24,7 @@ impl ToolInstance for ReadFilesTool {
 
         let content = self.read_file(path)?;
 
-        Ok(serde_json::json!({ "content": content }))
+        Ok(json!({ "content": content }))
     }
 
     fn return_choice() -> Tool {
@@ -45,27 +45,5 @@ impl ToolInstance for ReadFilesTool {
                 }),
             },
         }
-    }
-}
-
-impl ReadFilesTool {
-    pub fn run_from_value(args: serde_json::Value) -> Result<serde_json::Value, anyhow::Error> {
-        // extracts "path" from JSON
-        let path = args
-            .get("path")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| anyhow::anyhow!("Missing or invalid 'path' parameter"))?;
-
-        let tool = ReadFilesTool;
-
-        // transfer an object with the "path"-field
-        let input = serde_json::json!({ "path": path });
-
-        let output = tool
-            .run(input)
-            .map_err(|e| anyhow::anyhow!(e.to_string()))?;
-
-        // no from_str necessary as I've done in past – output is already a serde_json::Value
-        Ok(output)
     }
 }
