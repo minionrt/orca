@@ -75,7 +75,7 @@ impl Memory {
     ///add new interaction to history, expects the latest user input and the latest llm answer
     pub fn add(&mut self, user_input: String, llm_answer: String) {
         let content = format!(
-            "{}\n History: {} \n User Input: {}\n The ansnwer of the LLM: {}",
+            "{}\n History: {} \n User/Tool Input: {}\n The answer of the LLM: {}",
             SUMMARIZE_INTRO, self.history, user_input, llm_answer
         );
         // prompts a (ideally) really basic model for a summary of the previous

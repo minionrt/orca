@@ -2,17 +2,27 @@
 
 use url::Url;
 
-use crate::llm::{Completion, LLM, Message, MessageRole};
+use crate::llm::{Completion, LLM, LLMAPIError, Message, MessageRole};
+use crate::memory::Memory;
 use crate::models::Model;
+use crate::openai::ToolCall;
+use crate::report::{self, TaskFailureReason};
+use crate::tools::collection::{self, get_tools};
 
 const INTRO_1: &str = r#"You are an autonomous agent that solves coding tasks. 
-You keep your explanations as concise as possible.
+You should use the given tools to solve the given task.
 You are connected to a Linux-based development environment. You are in the 
 project directory. Your current task is as follows:"#;
 
+const MESSAGE_TOOL_RESPONSE: &str = r#"You are an autonomous agent that solves coding tasks. 
+You should use the given tools to solve the given task.
+You are connected to a Linux-based development environment. You are in the 
+project directory. If you think your task is done please don't call a tool and just tell me what you did.
+The response of your last tool call is the following:"#;
+
 pub enum TaskOutcome {
-    Complete(Completion),
-    Failure,
+    Complete(String),
+    Failure(String, Option<TaskFailureReason>), //one field for a description, one for a reason
 }
 
 pub struct Task {
@@ -25,6 +35,7 @@ pub struct Task {
 /// * `run()` handles interaction with LLM and expects a Task
 pub struct TaskHandler {
     llm: LLM,
+    memory: Memory,
 }
 
 /// Responsible to handle the interaction with the LLM
@@ -37,9 +48,10 @@ impl TaskHandler {
                 api_key.to_string(),
                 base_url.clone(),
                 Model::Smart.into(),
-                None,
+                get_tools(),
                 None,
             ),
+            memory: Memory::new(api_key, base_url),
         }
     }
 
@@ -49,9 +61,10 @@ impl TaskHandler {
                 api_key.to_string(),
                 base_url.clone(),
                 String::from(model),
-                None,
+                get_tools(),
                 None,
             ),
+            memory: Memory::new(api_key, base_url),
         }
     }
     pub fn new_set_model_and_tools(
@@ -69,24 +82,74 @@ impl TaskHandler {
                 tools,
                 tool_choice,
             ),
+            memory: Memory::new(api_key, base_url),
         }
     }
 
     /// runs interaction with the llm for a given task
-    pub fn run(&self, task: &Task) -> TaskOutcome {
+    pub fn run(&mut self, task: &Task) -> TaskOutcome {
         //we might have to add a container here if we want to use the result
 
-        //we cann add interaction loop here @Frodo
-        self.single_request(&task.request)
+        let mut input = task.request.clone();
+        let mut response = self.single_request(&task.request);
+
+        let mut ctr: i8 = 0;
+
+        loop {
+            //match response, if there was an error, propagate to user
+            let completion = match &response {
+                Ok(c) => c.clone(),
+                Err(e) => {
+                    return TaskOutcome::Failure(
+                        e.to_string(),
+                        Some(TaskFailureReason::TechnicalIssues),
+                    );
+                }
+            };
+
+            //if llm returns a text I expect the task to be done
+            if let Completion::Text(value) = completion {
+                return TaskOutcome::Complete(value);
+            } else if let Completion::ToolCalls(value) = completion {
+                //if LLM returns a tool call, extract the tool name and arguments and call tool
+                let tool_name = TaskHandler::get_tool_name(&value[0]);
+                let args = TaskHandler::get_tool_arguments(&value[0]);
+                let tool_result = collection::call_tool(&tool_name, args.clone());
+
+                //add the new interaction to the memory
+                self.memory.add(
+                    input,
+                    format!("You called the tool \"{tool_name}\" with the Arguments: {args}"),
+                );
+
+                //make string from tool return
+                input = match &tool_result {
+                    Ok(value) => value.clone().to_string(),
+                    Err(e) => e.to_string(),
+                };
+
+                //give returned value of the tool to the llm
+                response = self.send_tool_answer(&input, self.memory.read());
+            }
+
+            //stop the loop after x runs
+            ctr += 1;
+            if ctr >= 10 {
+                return TaskOutcome::Failure(
+                    "The interaction loop run too long, the agent can't top yappin..".to_string(),
+                    Some(TaskFailureReason::ProblemSolving),
+                );
+            }
+        }
     }
 
     /// send single code task request without memory
-    fn single_request(&self, request: &str) -> TaskOutcome {
-        let history = "no history".to_string();
+    fn single_request(&self, request: &str) -> Result<Completion, LLMAPIError> {
+        let history = self.memory.read();
         self.send_request(request, &history)
     }
     /// send code task request with memory - meant for longer interaction loops
-    fn send_request(&self, request: &str, history: &str) -> TaskOutcome {
+    fn send_request(&self, request: &str, history: &str) -> Result<Completion, LLMAPIError> {
         //dev message so user cannot mess with LLM
         let dev_message = Message::new(INTRO_1.to_string(), MessageRole::Developer);
         //history posted as Assistant to make the LLM know what happened before
@@ -96,11 +159,26 @@ impl TaskHandler {
         let messages = vec![dev_message, history_message, user_message];
 
         //send all the messages to the LLM and take result
-        let response = self.llm.prompt(&messages);
+        self.llm.prompt(&messages)
+    }
 
-        match response {
-            Ok(r) => TaskOutcome::Complete(r),
-            Err(_) => TaskOutcome::Failure,
-        }
+    fn send_tool_answer(&self, request: &str, history: &str) -> Result<Completion, LLMAPIError> {
+        //dev message so user cannot mess with LLM
+        let dev_message = Message::new(MESSAGE_TOOL_RESPONSE.to_string(), MessageRole::Developer);
+        //history posted as Assistant to make the LLM know what happened before
+        let history_message = Message::new(history.to_string(), MessageRole::Assistant);
+        //build user request as Message
+        let user_message = Message::new(request.to_string(), MessageRole::User);
+        let messages = vec![dev_message, history_message, user_message];
+
+        //send all the messages to the LLM and take result
+        self.llm.prompt(&messages)
+    }
+
+    fn get_tool_name(toolcall: &ToolCall) -> String {
+        toolcall.function.name.clone()
+    }
+    fn get_tool_arguments(toolcall: &ToolCall) -> serde_json::Value {
+        toolcall.function.arguments.clone()
     }
 }
