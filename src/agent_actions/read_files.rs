@@ -14,7 +14,7 @@ pub fn read_file(path: String) -> Option<String> {
     match fs::read_to_string(&path) {
         Ok(content) => Some(content),
         Err(e) => {
-            eprintln!("Failed to read file '{}': {}", path, e);
+            eprintln!("Failed to read file '{path}': {e}");
             None
         }
     }

@@ -35,7 +35,7 @@ fn main() {
             // If the completion is Text, clone the text
             Completion::Text(txt) => txt.clone(),
             // If the completion is ToolCalls, format it as a string
-            Completion::ToolCalls(tc) => format!("ToolCalls: {:?}", tc),
+            Completion::ToolCalls(tc) => format!("ToolCalls: {tc:?}"),
         },
         TaskOutcome::Failure => "didn't work, sorry".to_string(),
     };
