@@ -1,10 +1,13 @@
+mod agent_actions;
 mod llm;
 mod memory;
 mod models;
 mod openai;
 mod task_handler;
+mod tools;
+mod tools_interface;
 
-use llm::Completion;
+//use llm::Completion;
 use std::env;
 use task_handler::{Task, TaskHandler, TaskOutcome};
 use url::Url;

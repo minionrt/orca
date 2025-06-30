@@ -6,7 +6,7 @@ use crate::llm::{Completion, LLM, LLMAPIError, Message, MessageRole};
 use crate::memory::Memory;
 use crate::models::Model;
 use crate::openai::ToolCall;
-use crate::report::{self, TaskFailureReason};
+use crate::report::TaskFailureReason;
 use crate::tools::collection::{self, get_tools};
 
 const INTRO_1: &str = r#"You are an autonomous agent that solves coding tasks. 
@@ -146,7 +146,7 @@ impl TaskHandler {
     /// send single code task request without memory
     fn single_request(&self, request: &str) -> Result<Completion, LLMAPIError> {
         let history = self.memory.read();
-        self.send_request(request, &history)
+        self.send_request(request, history)
     }
     /// send code task request with memory - meant for longer interaction loops
     fn send_request(&self, request: &str, history: &str) -> Result<Completion, LLMAPIError> {
