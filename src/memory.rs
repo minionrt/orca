@@ -34,7 +34,7 @@ impl Memory {
     /// Creates new Memory instance with empty history and predefined model
     pub fn new(api_key: &str, base_url: &Url) -> Self {
         Memory {
-            history: "".to_string(),
+            history: "empty".to_string(),
             llm: LLM::full(
                 api_key.to_string(),
                 base_url.clone(),
