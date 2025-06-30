@@ -20,7 +20,7 @@ fn parses_only_toolcalls_to_completionkind() {
     let tool_calls: Vec<ToolCall> = serde_json::from_str(json).unwrap();
     let completion_kind = Completion::ToolCalls(tool_calls.clone());
     // run cargo test -- --nocapture to see actual parsing.
-    println!("{:?}", completion_kind);
+    println!("{completion_kind:?}");
 
     // checking if it was parsed right
     match completion_kind {
