@@ -181,11 +181,10 @@ impl TaskHandler {
     fn get_tool_arguments(toolcall: &ToolCall) -> serde_json::Value {
         //I somehow receive a serde_json::Value of a String that contains the actual serde_json::Value, this is my fix
         let double_encoded_string = toolcall.function.arguments.clone();
-        let parsed = if let Some(s) = double_encoded_string.as_str() {
-        serde_json::from_str::<serde_json::Value>(s).unwrap()
+        if let Some(s) = double_encoded_string.as_str() {
+            serde_json::from_str::<serde_json::Value>(s).unwrap()
         } else {
             double_encoded_string
-        };
-        parsed
+        }
     }
 }
