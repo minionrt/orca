@@ -1,4 +1,4 @@
-use crate::agent_actions::{edit_files, read_files};
+use crate::agent_actions::{bash, edit_files, read_files};
 use crate::openai::Tool;
 use crate::tools_interface::ToolInstance;
 use std::error::Error;
@@ -8,6 +8,7 @@ pub fn get_tools() -> Option<Vec<Tool>> {
     let tools = vec![
         read_files::ReadFilesTool::return_choice(),
         edit_files::EditFilesTool::return_choice(),
+        bash::BashTool::return_choice(),
         // more tools can be added here
     ];
 
@@ -27,6 +28,10 @@ pub fn call_tool(
         }
         "edit_files" => {
             let tool = edit_files::EditFilesTool;
+            tool.run(args)
+        }
+        "bash" => {
+            let tool = bash::BashTool;
             tool.run(args)
         }
         _ => Err(format!("Tool '{tool_name}' not found.").into()),
