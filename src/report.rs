@@ -24,7 +24,7 @@ impl fmt::Display for TaskFailureReason {
             TaskFailureReason::TaskIssues => "TaskIssues",
             TaskFailureReason::ProblemSolving => "ProblemSolving",
         };
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
 
