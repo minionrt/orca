@@ -29,6 +29,6 @@ pub fn call_tool(
             let tool = edit_files::EditFilesTool;
             tool.run(args)
         }
-        _ => Err(format!("Tool '{}' not found.", tool_name).into()),
+        _ => Err(format!("Tool '{tool_name}' not found.").into()),
     }
 }
