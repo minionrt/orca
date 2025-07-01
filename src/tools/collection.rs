@@ -31,7 +31,7 @@ pub fn call_tool(
             tool.run(args)
         }
         "bash" => {
-            let tool = bash::BashTool::default();
+            let tool = bash::BashTool;
             tool.run(args)
         }
         _ => Err(format!("Tool '{tool_name}' not found.").into()),
