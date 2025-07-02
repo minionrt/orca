@@ -1,7 +1,7 @@
-use crate::openai::{Function, Tool};
+use crate::openai;
 use crate::tools_interface::ToolInstance;
 use serde::Deserialize;
-use serde_json::json;
+use std::collections::HashMap;
 use std::fs;
 use std::io;
 
@@ -157,27 +157,49 @@ impl ToolInstance for EditFilesTool {
     }
 
     /// Returns the tool definition with a JSON schema for LLM integration
-    fn return_choice() -> Tool {
-        Tool {
-            tool_type: "function".to_string(),
-            function: Function {
-                name: "edit_files".to_string(),
-                description: "Edits the contents of a file, optionally by range.".to_string(),
-                parameters: json!({
-                    "type": "object",
-                    "properties": {
-                        "path": { "type": "string", "description": "Path to the file." },
-                        "content": { "type": "string", "description": "Content to write." },
-                        "from": { "type": "integer", "description": "Optional start byte index." },
-                        "to": { "type": "integer", "description": "Optional end byte index." },
-                        "start_line": { "type": "integer", "description": "Optional start line index (0-based)." },
-                        "start_col": { "type": "integer", "description": "Optional start column index (0-based)." },
-                        "end_line": { "type": "integer", "description": "Optional end line index (0-based)." },
-                        "end_col": { "type": "integer", "description": "Optional end column index (0-based)." }
-                    },
-                    "required": ["path", "content"]
-                }),
-            },
-        }
+    fn return_choice() -> openai::Tool {
+        openai::Tool::function(
+            "edit_files".to_owned(),
+            "Edits the contents of a file, optionally by range".to_owned(),
+            HashMap::from([
+                (
+                    "path".to_owned(),
+                    openai::FunctionParameter::new("string", "Path to the file."),
+                ),
+                (
+                    "content".to_owned(),
+                    openai::FunctionParameter::new("string", "Content to write"),
+                ),
+            ]),
+            HashMap::from([
+                (
+                    "from".to_owned(),
+                    openai::FunctionParameter::new("string", "Optional start byte index"),
+                ),
+                (
+                    "to".to_owned(),
+                    openai::FunctionParameter::new("string", "Optional end byte index"),
+                ),
+                (
+                    "start_line".to_owned(),
+                    openai::FunctionParameter::new("string", "Optional start line index (0-based)"),
+                ),
+                (
+                    "end_line".to_owned(),
+                    openai::FunctionParameter::new("string", "Optional end line index (0-based)"),
+                ),
+                (
+                    "start_col".to_owned(),
+                    openai::FunctionParameter::new(
+                        "string",
+                        "Optional start column index (0-based)",
+                    ),
+                ),
+                (
+                    "end_col".to_owned(),
+                    openai::FunctionParameter::new("string", "Optional end column index (0-based)"),
+                ),
+            ]),
+        )
     }
 }

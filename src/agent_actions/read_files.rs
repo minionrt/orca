@@ -1,7 +1,7 @@
-use crate::openai::{Function, Tool};
+use crate::openai;
 use crate::tools_interface::ToolInstance;
 use serde::Deserialize;
-use serde_json::json;
+use std::collections::HashMap;
 use std::fs;
 
 /// Tool to read the contents of a file from disk
@@ -31,23 +31,15 @@ impl ToolInstance for ReadFilesTool {
     }
 
     /// returns the tool's definition and JSON schema for LLM integration
-    fn return_choice() -> Tool {
-        Tool {
-            tool_type: "function".to_string(),
-            function: Function {
-                name: "read_files".to_string(),
-                description: "Reads the content of a file.".to_string(),
-                parameters: json!({
-                    "type": "object",
-                    "properties": {
-                        "path": {
-                            "type": "string",
-                            "description": "Path to the file to read."
-                        }
-                    },
-                    "required": ["path"]
-                }),
-            },
-        }
+    fn return_choice() -> openai::Tool {
+        openai::Tool::function(
+            "read_files".to_owned(),
+            "Reads the content of a file.".to_owned(),
+            HashMap::from([(
+                "path".to_owned(),
+                openai::FunctionParameter::new("string", "Path to the file to read"),
+            )]),
+            HashMap::new(),
+        )
     }
 }

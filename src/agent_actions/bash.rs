@@ -1,6 +1,7 @@
 use crate::openai;
 use crate::tools_interface::ToolInstance;
 use serde::Deserialize;
+use std::collections::HashMap;
 use std::io;
 use std::process::{Command, Stdio};
 
@@ -53,22 +54,12 @@ impl ToolInstance for BashTool {
     }
 
     fn return_choice() -> openai::Tool {
-        openai::Tool {
-        function: openai::Function {
-            name: "bash".to_string(),
-            description: "Executes bash code and returns the output (stdout and stderr). The first parameter is the bash code to execute.".to_string(),
-            parameters: serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "code": {
-                        "type": "string",
-                        "description": "The bash code to execute"
-                    }
-                },
-                "required": ["code"]
-            }),
-        },
-        tool_type: "function".to_string(),
-    }
+        openai::Tool::function("bash".to_owned(),
+            "Executes bash code and returns the output (stdout and stderr). The first parameter is the bash code to execute.".to_owned(),
+           HashMap::from([
+               ("code".to_owned(), openai::FunctionParameter::new("string", "The bash code to execute")),
+           ]),
+           HashMap::new(),
+        )
     }
 }
