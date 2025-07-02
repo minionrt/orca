@@ -26,7 +26,7 @@ impl ToolInstance for ReadFilesTool {
             .get("path")
             .and_then(|v| v.as_str())
             .ok_or("Missing 'path' parameter")?;
-      
+
         // read the file content
         let content = self.read_file(path)?;
 
