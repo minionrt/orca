@@ -142,7 +142,7 @@ impl ToolInstance for GitSubmissionTool {
                     "properties": {
                         "action": {
                             "type": "string",
-                            "description": "Which action? add, commit, push oder submit"
+                            "description": "Please choose one of these actions: \"add\", \"commit\", \"push\" or \"submit\""
                         },
                         "commit_message": {
                             "type": "string",
