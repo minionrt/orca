@@ -1,10 +1,13 @@
+mod agent_actions;
 mod llm;
 mod memory;
 mod models;
 mod openai;
 mod task_handler;
+mod tools;
+mod tools_interface;
 
-use llm::Completion;
+//use llm::Completion;
 use std::env;
 use task_handler::{Task, TaskHandler, TaskOutcome};
 use url::Url;
@@ -24,20 +27,15 @@ fn main() {
 
     //task handler interaction example
     //let task_handler = TaskHandler::new_set_model(&minion_token, &minion_api, models::Model::Smart);
-    let task_handler = TaskHandler::new_set_model(&minion_token, &minion_api, models::Model::Smart);
+    let mut task_handler = TaskHandler::new(&minion_token, &minion_api);
     let task = Task {
         request: "Please write a simple FizzBuzz program.".to_string(),
     };
     let response = task_handler.run(&task);
 
     let _response = match response {
-        TaskOutcome::Complete(a) => match &a {
-            // If the completion is Text, clone the text
-            Completion::Text(txt) => txt.clone(),
-            // If the completion is ToolCalls, format it as a string
-            Completion::ToolCalls(tc) => format!("ToolCalls: {tc:?}"),
-        },
-        TaskOutcome::Failure => "didn't work, sorry".to_string(),
+        TaskOutcome::Complete(a) => a,
+        TaskOutcome::Failure(_, _) => "didn't work, sorry".to_string(),
     };
 
     // The agent uses an HTTP API to fetch the task and report the result.
