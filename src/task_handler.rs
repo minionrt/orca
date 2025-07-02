@@ -5,7 +5,7 @@ use url::Url;
 use crate::llm::{Completion, LLM, LLMAPIError, Message, MessageRole};
 use crate::memory::Memory;
 use crate::models::Model;
-use crate::openai::ToolCall;
+use crate::openai::{ToolCall, ToolChoice};
 use crate::report::TaskFailureReason;
 use crate::tools::collection::{self, get_tools};
 
@@ -49,7 +49,7 @@ impl TaskHandler {
                 base_url.clone(),
                 Model::Smart.into(),
                 get_tools(),
-                None,
+                Some(ToolChoice::Auto),
             ),
             memory: Memory::new(api_key, base_url),
         }
@@ -61,7 +61,7 @@ impl TaskHandler {
                 api_key.to_string(),
                 base_url.clone(),
                 String::from(model),
-                get_tools(),
+                None,
                 None,
             ),
             memory: Memory::new(api_key, base_url),
@@ -71,7 +71,6 @@ impl TaskHandler {
         api_key: &str,
         base_url: &Url,
         model: Model,
-        tools: Option<Vec<crate::openai::Tool>>,
         tool_choice: Option<crate::openai::ToolChoice>,
     ) -> Self {
         TaskHandler {
@@ -79,7 +78,7 @@ impl TaskHandler {
                 api_key.to_string(),
                 base_url.clone(),
                 String::from(model),
-                tools,
+                get_tools(),
                 tool_choice,
             ),
             memory: Memory::new(api_key, base_url),
