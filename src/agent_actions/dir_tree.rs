@@ -1,12 +1,12 @@
 use crate::openai;
 use crate::tools_interface::ToolInstance;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fs;
 use std::path::Path;
 
 #[derive(Serialize, Deserialize)]
-pub struct DirEntry {   
+pub struct DirEntry {
     pub name: String,
     pub is_dir: bool,
     pub children: Option<Vec<DirEntry>>,
@@ -22,7 +22,8 @@ impl DirTreeTool {
     /// Recursively reads a directory and builds the tree structure.
     pub fn read_dir_tree<P: AsRef<Path>>(path: P) -> std::io::Result<DirEntry> {
         let path = path.as_ref();
-        let name = path.file_name()
+        let name = path
+            .file_name()
             .map(|n| n.to_string_lossy().to_string())
             .unwrap_or_else(|| path.display().to_string());
         if path.is_dir() {
@@ -31,9 +32,17 @@ impl DirTreeTool {
                 .map(|e| DirTreeTool::read_dir_tree(e.path()))
                 .filter_map(Result::ok)
                 .collect();
-            Ok(DirEntry { name, is_dir: true, children: Some(children) })
+            Ok(DirEntry {
+                name,
+                is_dir: true,
+                children: Some(children),
+            })
         } else {
-            Ok(DirEntry { name, is_dir: false, children: None })
+            Ok(DirEntry {
+                name,
+                is_dir: false,
+                children: None,
+            })
         }
     }
 }

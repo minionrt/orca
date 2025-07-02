@@ -1,7 +1,7 @@
-use teamprojekt_agents::agent_actions::dir_tree::{DirEntry, DirTreeTool};
-use teamprojekt_agents::tools_interface::ToolInstance; // Trait-Import für .run()
 use serde_json::json;
 use std::fs::{self, File};
+use teamprojekt_agents::agent_actions::dir_tree::{DirEntry, DirTreeTool};
+use teamprojekt_agents::tools_interface::ToolInstance; // Trait-Import für .run()
 
 #[test]
 fn test_dir_tree_tool_basic_structure() {
@@ -23,17 +23,35 @@ fn test_dir_tree_tool_basic_structure() {
     // Parse result as DirEntry
     let entry: DirEntry = serde_json::from_value(result).expect("deserialize failed");
 
-    assert_eq!(entry.is_dir, true);
+    assert!(entry.is_dir);
     assert!(entry.children.is_some());
 
     // Flatten children for easier checking
-    let mut names: Vec<_> = entry.children.as_ref().unwrap().iter().map(|c| &c.name).collect();
+    let mut names: Vec<_> = entry
+        .children
+        .as_ref()
+        .unwrap()
+        .iter()
+        .map(|c| &c.name)
+        .collect();
     names.sort();
     assert_eq!(names, &["alpha", "gamma.txt"]);
 
     // Check subdirectory structure
-    let alpha_entry = entry.children.as_ref().unwrap().iter().find(|c| c.name == "alpha").unwrap();
+    let alpha_entry = entry
+        .children
+        .as_ref()
+        .unwrap()
+        .iter()
+        .find(|c| c.name == "alpha")
+        .unwrap();
     assert!(alpha_entry.is_dir);
-    let beta_names: Vec<_> = alpha_entry.children.as_ref().unwrap().iter().map(|c| &c.name).collect();
+    let beta_names: Vec<_> = alpha_entry
+        .children
+        .as_ref()
+        .unwrap()
+        .iter()
+        .map(|c| &c.name)
+        .collect();
     assert_eq!(beta_names, &["beta.txt"]);
 }
