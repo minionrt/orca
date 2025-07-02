@@ -1,7 +1,9 @@
 use crate::openai;
 use crate::tools_interface::ToolInstance;
+use serde::Deserialize;
 use std::io;
 use std::process::{Command, Stdio};
+
 pub struct BashTool;
 
 impl BashTool {
@@ -38,20 +40,16 @@ impl Default for BashTool {
     }
 }
 
+#[derive(Deserialize)]
+pub(crate) struct BashToolArgs {
+    pub code: String,
+}
+
 impl ToolInstance for BashTool {
-    fn run(
-        &self,
-        params: serde_json::Value,
-    ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
-        let code = match params.get("code") {
-            None => {
-                return Err("The parameter \"code\" doesn't exist in the given tool call".into());
-            }
-            Some(serde_json::Value::String(s)) => s,
-            Some(_) => return Err("The parameter \"code\" isn't given as string.".into()),
-        };
-        let output = run_bash(code)?;
-        Ok(serde_json::Value::String(output))
+    type Args = BashToolArgs;
+    type Out = String;
+    fn run(args: Self::Args) -> Result<Self::Out, Box<dyn std::error::Error>> {
+        Ok(run_bash(&args.code)?)
     }
 
     fn return_choice() -> openai::Tool {

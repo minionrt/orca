@@ -21,19 +21,14 @@ pub fn call_tool(
     tool_name: &str,
     args: serde_json::Value,
 ) -> Result<serde_json::Value, Box<dyn Error>> {
-    match tool_name {
-        "read_files" => {
-            let tool = read_files::ReadFilesTool;
-            tool.run(args)
-        }
-        "edit_files" => {
-            let tool = edit_files::EditFilesTool;
-            tool.run(args)
-        }
-        "bash" => {
-            let tool = bash::BashTool;
-            tool.run(args)
-        }
-        _ => Err(format!("Tool '{tool_name}' not found.").into()),
-    }
+    Ok(match tool_name {
+        "read_files" => serde_json::to_value(read_files::ReadFilesTool::run(
+            serde_json::from_value(args)?,
+        )?)?,
+        "edit_files" => serde_json::to_value(edit_files::EditFilesTool::run(
+            serde_json::from_value(args)?,
+        )?)?,
+        "bash" => serde_json::to_value(bash::BashTool::run(serde_json::from_value(args)?)?)?,
+        _ => return Err(format!("Tool '{tool_name}' not found.").into()),
+    })
 }
