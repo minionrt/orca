@@ -16,7 +16,7 @@ impl ReadFilesTool {
 }
 
 #[derive(Deserialize)]
-pub(crate) struct ReadFilesToolArgs {
+pub struct ReadFilesToolArgs {
     pub path: String,
 }
 

@@ -42,7 +42,7 @@ impl Default for BashTool {
 }
 
 #[derive(Deserialize)]
-pub(crate) struct BashToolArgs {
+pub struct BashToolArgs {
     pub code: String,
 }
 

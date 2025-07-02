@@ -4,8 +4,7 @@ use tempfile::NamedTempFile;
 
 // helperfuncion for reading a file by ReadFilesTool
 fn read_file(path: String) -> Option<String> {
-    let tool = ReadFilesTool;
-    tool.read_file(&path).ok()
+    ReadFilesTool::read_file(&path).ok()
 }
 
 #[test]

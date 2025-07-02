@@ -11,34 +11,28 @@ mod tests {
 
     #[test]
     fn test_edit_file_creates_and_writes() {
-        let tool = EditFilesTool;
         let tmp = NamedTempFile::new().unwrap();
         let content = "Hello, world!";
-        tool.edit_file(tmp.path().to_str().unwrap(), content)
-            .unwrap();
+        EditFilesTool::edit_file(tmp.path().to_str().unwrap(), content).unwrap();
         let read = read_file(tmp.path());
         assert_eq!(read, content, "File content mismatch after create/write");
     }
 
     #[test]
     fn test_edit_file_overwrites() {
-        let tool = EditFilesTool;
         let mut tmp = NamedTempFile::new().unwrap();
         write!(tmp, "Old content").unwrap();
         let new_content = "New content";
-        tool.edit_file(tmp.path().to_str().unwrap(), new_content)
-            .unwrap();
+        EditFilesTool::edit_file(tmp.path().to_str().unwrap(), new_content).unwrap();
         let read = read_file(tmp.path());
         assert_eq!(read, new_content, "File content mismatch after overwrite");
     }
 
     #[test]
     fn test_edit_file_from_to_middle() {
-        let tool = EditFilesTool;
         let mut tmp = NamedTempFile::new().unwrap();
         write!(tmp, "abcdefg").unwrap();
-        tool.edit_file_from_to(tmp.path().to_str().unwrap(), "XY", 2, 4)
-            .unwrap();
+        EditFilesTool::edit_file_from_to(tmp.path().to_str().unwrap(), "XY", 2, 4).unwrap();
         let read = read_file(tmp.path());
         assert_eq!(
             read, "abXYefg",
@@ -48,11 +42,9 @@ mod tests {
 
     #[test]
     fn test_edit_file_from_to_out_of_bounds() {
-        let tool = EditFilesTool;
         let mut tmp = NamedTempFile::new().unwrap();
         write!(tmp, "abc").unwrap();
-        tool.edit_file_from_to(tmp.path().to_str().unwrap(), "XYZ", 1, 10)
-            .unwrap();
+        EditFilesTool::edit_file_from_to(tmp.path().to_str().unwrap(), "XYZ", 1, 10).unwrap();
         let read = read_file(tmp.path());
         assert_eq!(
             read, "aXYZ",
@@ -62,10 +54,8 @@ mod tests {
 
     #[test]
     fn test_edit_file_from_to_on_new_file() {
-        let tool = EditFilesTool;
         let tmp = NamedTempFile::new().unwrap();
-        tool.edit_file_from_to(tmp.path().to_str().unwrap(), "Hello", 0, 0)
-            .unwrap();
+        EditFilesTool::edit_file_from_to(tmp.path().to_str().unwrap(), "Hello", 0, 0).unwrap();
         let read = read_file(tmp.path());
         assert_eq!(
             read, "Hello",
@@ -75,11 +65,10 @@ mod tests {
 
     #[test]
     fn test_edit_file_line_col_range_middle() {
-        let tool = EditFilesTool;
         let mut tmp = NamedTempFile::new().unwrap();
         write!(tmp, "abc\ndef\nghi\n").unwrap();
         // Ersetze "d" in "def" (Zeile 1, Spalte 0) durch "XYZ"
-        tool.edit_file_line_col_range(tmp.path().to_str().unwrap(), "XYZ", 1, 0, 1, 1)
+        EditFilesTool::edit_file_line_col_range(tmp.path().to_str().unwrap(), "XYZ", 1, 0, 1, 1)
             .unwrap();
         let read = read_file(tmp.path());
         assert_eq!(
@@ -90,10 +79,9 @@ mod tests {
 
     #[test]
     fn test_edit_file_line_col_range_multiline() {
-        let tool = EditFilesTool;
         let mut tmp = NamedTempFile::new().unwrap();
         write!(tmp, "abc\ndef\nghi\n").unwrap();
-        tool.edit_file_line_col_range(tmp.path().to_str().unwrap(), "123", 1, 1, 2, 2)
+        EditFilesTool::edit_file_line_col_range(tmp.path().to_str().unwrap(), "123", 1, 1, 2, 2)
             .unwrap();
         let read = read_file(tmp.path());
         assert_eq!(
@@ -104,10 +92,16 @@ mod tests {
 
     #[test]
     fn test_edit_file_line_col_range_on_new_file() {
-        let tool = EditFilesTool;
         let tmp = NamedTempFile::new().unwrap();
-        tool.edit_file_line_col_range(tmp.path().to_str().unwrap(), "Hello\nWorld", 0, 0, 0, 0)
-            .unwrap();
+        EditFilesTool::edit_file_line_col_range(
+            tmp.path().to_str().unwrap(),
+            "Hello\nWorld",
+            0,
+            0,
+            0,
+            0,
+        )
+        .unwrap();
         let read = read_file(tmp.path());
         assert_eq!(
             read, "Hello\nWorld",

@@ -3,7 +3,7 @@
 use crate::openai;
 use serde::{Deserialize, Serialize};
 
-pub(crate) trait ToolInstance {
+pub trait ToolInstance {
     /// Input argument type, this should be a struct which can be parsed from the received JSON
     type Args: for<'a> Deserialize<'a>;
 

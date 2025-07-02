@@ -107,7 +107,7 @@ impl EditFilesTool {
 }
 
 #[derive(Deserialize)]
-pub(crate) struct EditFilesToolArgs {
+pub struct EditFilesToolArgs {
     path: String,
     content: String,
 

@@ -82,7 +82,6 @@ impl Tool {
 pub struct Function {
     pub name: String,
     pub description: String,
-    /// Flexible for json values
     pub parameters: FunctionParameters,
 }
 
