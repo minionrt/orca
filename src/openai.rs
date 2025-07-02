@@ -257,7 +257,7 @@ pub fn fetch_completion(
     body: &CompletionBody,
     client: reqwest::blocking::Client,
 ) -> Result<Completion, Box<dyn Error>> {
-    let authorization = format!("Bearer {}", api_key);
+    let authorization = format!("Bearer {api_key}");
     let json_body = serde_json::to_string(body)?;
 
     let mut url = base_url.clone();
@@ -275,6 +275,6 @@ pub fn fetch_completion(
         Ok(openai_response)
     } else {
         let error = response.text()?;
-        Err(format!("API Error: {}", error).into())
+        Err(format!("API Error: {error}").into())
     }
 }

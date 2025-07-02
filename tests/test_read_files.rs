@@ -6,7 +6,7 @@ use tempfile::NamedTempFile;
 fn test_read_file_existing() {
     let mut tmpfile = NamedTempFile::new().expect("Failed to create temp file");
     let content = "Test content for reading.";
-    write!(tmpfile, "{}", content).expect("Failed to write to temp file");
+    write!(tmpfile, "{content}").expect("Failed to write to temp file");
 
     let result = read_file(tmpfile.path().to_str().unwrap().to_string());
     assert_eq!(result, Some(content.to_string()), "Content mismatch");
