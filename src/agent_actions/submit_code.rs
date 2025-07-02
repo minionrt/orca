@@ -22,7 +22,7 @@ impl GitSubmissionTool {
             .arg(".")
             .status()?;
         if !status.success() {
-            return Err(io::Error::new(io::ErrorKind::Other, "git add failed"));
+            return Err(io::Error::other("git add failed"));
         }
         Ok(())
     }
@@ -41,7 +41,7 @@ impl GitSubmissionTool {
             .arg(c_message)
             .status()?;
         if !status.success() {
-            return Err(io::Error::new(io::ErrorKind::Other, "git commit failed"));
+            return Err(io::Error::other("git commit failed"));
         }
         Ok(())
     }
@@ -57,7 +57,7 @@ impl GitSubmissionTool {
             .arg("HEAD")
             .status()?;
         if !status.success() {
-            return Err(io::Error::new(io::ErrorKind::Other, "git push failed"));
+            return Err(io::Error::other("git push failed"));
         }
         Ok(())
     }
