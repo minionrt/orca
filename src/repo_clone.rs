@@ -41,7 +41,7 @@ impl GitRepository {
             .status()?;
 
         if !config_name.success() || !config_email.success() {
-            return Err(io::Error::new(io::ErrorKind::Other, "Git config failed"));
+            return Err(io::Error::other("Git config failed"));
         }
 
         Ok(())
@@ -58,7 +58,7 @@ impl GitRepository {
             .status()?;
         
         if !status.success() {
-            return Err(io::Error::new(io::ErrorKind::Other, "Git clone failed"));
+            return Err(io::Error::other("Git clone failed"));
         }
 
         Ok(())
@@ -74,7 +74,7 @@ impl GitRepository {
             .status()?;
 
         if !status.success() {
-            return Err(io::Error::new(io::ErrorKind::Other, "Git checkout failed"));
+            return Err(io::Error::other("Git checkout failed"));
         }
 
         Ok(())
