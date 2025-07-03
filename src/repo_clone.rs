@@ -1,5 +1,4 @@
-use std::process::{Command, Stdio};
-use std::fs;
+use std::process::{Command};
 use std::io;
 
 pub struct GitRepository {
