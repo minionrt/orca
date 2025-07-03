@@ -12,7 +12,7 @@ use url::Url;
 mod report;
 use report::try_report_failure;
 mod repo_clone;
-use crate::fetch_task::get_task;
+use crate::{fetch_task::get_task, repo_clone::GitRepository};
 
 fn main() {
     println!();
@@ -35,12 +35,39 @@ fn main() {
     //Fetch the raw task data 
     let raw_task = get_task(&minion_api, &minion_token, client);
 
-    //Match the raw task data to only get the description of the task.
-    let task = match raw_task{
-        Ok(res) =>  Task { request: res.description.to_string() },
-        Err(_res) => Task {request: "There has been an error on passing the task.".to_string()}
-    };
+    let (meta_data, description) = match &raw_task {
+        Ok(res) =>{
+            //Match the GitRepository data to get important information for repo_clone
+            let meta_data = GitRepository::new(
+                &res.git_repo_url,
+                &res.git_branch, 
+                &res.git_user_name, 
+                &res.git_user_email, 
+                "/github_in_here");
+                
+            //Match the raw task data to only get the description of the task.
+            let description = res.description.to_string();
+            (meta_data, description)
+        }
+        Err(_res) =>{
+            //Empty meta_data in case of Error
+            let meta_data = GitRepository::new("", "", "", "", "");
+            //Clarify to the Model, that there has been an error.
+            let description = "There has been an error while receiving the task".to_string();
+            (meta_data, description)
 
+
+        }
+    };
+    match meta_data.prepare_repository(){
+        Ok(()) => println!("Repository prepared successfully"),
+        Err(err)=> eprintln!("Preparing repository failed: {err}")
+    }
+
+    let path = format!("/n The path to the File you should work on is this one: {}", meta_data.target_dir);
+    let task = Task{
+        request: description + &path
+    };
     let response = task_handler.run(&task);
 
     let _response = match response {
