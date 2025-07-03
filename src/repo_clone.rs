@@ -1,8 +1,7 @@
-use std::process::{Command};
 use std::io;
+use std::process::Command;
 
 pub struct GitRepository {
-
     pub repo_url: String,
     pub branch: String,
     pub user_name: String,
@@ -11,9 +10,14 @@ pub struct GitRepository {
 }
 
 impl GitRepository {
-
     /// Initializes the GitRepository struct
-    pub fn new(repo_url: &str, branch: &str, user_name: &str, user_email: &str, target_dir: &str) -> Self {
+    pub fn new(
+        repo_url: &str,
+        branch: &str,
+        user_name: &str,
+        user_email: &str,
+        target_dir: &str,
+    ) -> Self {
         GitRepository {
             repo_url: repo_url.to_string(),
             branch: branch.to_string(),
@@ -25,7 +29,6 @@ impl GitRepository {
 
     /// Sets the git user name and email
     pub fn configure_git_user(&self) -> io::Result<()> {
-
         let config_name = Command::new("git")
             .arg("config")
             .arg("user.name")
@@ -56,7 +59,7 @@ impl GitRepository {
             .arg(&self.repo_url)
             .arg(&self.target_dir)
             .status()?;
-        
+
         if !status.success() {
             return Err(io::Error::other("Git clone failed"));
         }
@@ -66,7 +69,6 @@ impl GitRepository {
 
     /// Checks out the specified branch
     pub fn checkout_branch(&self) -> io::Result<()> {
-
         let status = Command::new("git")
             .arg("checkout")
             .arg(&self.branch)
@@ -82,7 +84,6 @@ impl GitRepository {
 
     /// Executes the complete setup flow: clone, configure, checkout
     pub fn prepare_repository(&self) -> io::Result<()> {
-
         self.clone_repo()?;
         self.configure_git_user()?;
         self.checkout_branch()?;
