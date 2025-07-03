@@ -112,17 +112,17 @@ impl fmt::Display for LLMAPIError {
         match self {
             LLMAPIError::RefusedCompletion(refusal) => write!(
                 f,
-                "The LLM refused completion with the following response: {}",
-                refusal
+                "The LLM refused completion with the following response: {refusal}"
             ),
-            LLMAPIError::NetworkError(err) => write!(f, "Network Error: {}", err),
-            LLMAPIError::UnknownError(err) => write!(f, "Unknown Error: {}", err),
+
+            LLMAPIError::NetworkError(err) => write!(f, "Network Error: {err}"),
+            LLMAPIError::UnknownError(err) => write!(f, "Unknown Error: {err}"),
             LLMAPIError::MissingConfig(err) => write!(
                 f,
-                "The config option \"{}\" is missing, but needed for prompting",
-                err
+                "The config option \"{err}\" is missing, but needed for prompting"
             ),
-            LLMAPIError::EmptyChoice(err) => write!(f, "Empty Choice Error: {}", err),
+
+            LLMAPIError::EmptyChoice(err) => write!(f, "Empty Choice Error: {err}"),
         }
     }
 }
@@ -275,7 +275,7 @@ impl LLM {
             client,
         );
 
-        println!("{:?}", completion);
+        println!("{completion:?}");
 
         match completion {
             Ok(ok) => ok.try_into(),

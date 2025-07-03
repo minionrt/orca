@@ -6,4 +6,5 @@ pub mod models;
 pub mod openai;
 pub mod report;
 pub mod task_handler;
+pub mod tools;
 pub mod tools_interface;

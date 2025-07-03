@@ -14,8 +14,7 @@ mod tests {
         };
         assert!(
             output.contains("hello"),
-            "Expected output to contain 'hello', got: {}",
-            output
+            "Expected output to contain 'hello', got: {output}"
         );
     }
 
@@ -29,8 +28,7 @@ mod tests {
         };
         assert!(
             output.contains("No such file") || output.contains("cannot access"),
-            "Expected error message in output, got: {}",
-            output
+            "Expected error message in output, got: {output}"
         );
     }
 
