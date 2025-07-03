@@ -40,9 +40,21 @@ fn main() {
 
     let (meta_data, description) = match &raw_task {
         Ok(res) => {
+            //Change Url for neccessary authing. 
+            let mut repo_url = res.git_repo_url.clone();
+            match Url::parse(&repo_url){
+                Ok(mut url)=>{
+                    url.set_username("x-access-token").unwrap();
+                    url.set_password(Some(minion_token.as_str())).unwrap();
+                    repo_url = url.to_string();
+                },
+                Err(e)=>{
+                    eprint!("No Valid URL: {e}")
+                }
+            };
             //Match the GitRepository data to get important information for repo_clone
             let meta_data = GitRepository::new(
-                &res.git_repo_url,
+                &repo_url,
                 &res.git_branch,
                 &res.git_user_name,
                 &res.git_user_email,
