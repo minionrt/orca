@@ -17,7 +17,7 @@ project directory. Your current task is as follows:"#;
 const MESSAGE_TOOL_RESPONSE: &str = r#"You are an autonomous agent that solves coding tasks. 
 You should use the given tools to solve the given task.
 You are connected to a Linux-based development environment. You are in the 
-project directory. If you think your task is done please don't call a tool and just tell me what you did.
+project directory. If you think your task is done please call the submit_code tool and in the next step just tell me what you did.
 The response of your last tool call is the following:"#;
 
 pub enum TaskOutcome {
@@ -135,7 +135,7 @@ impl TaskHandler {
             ctr += 1;
             if ctr >= 10 {
                 return TaskOutcome::Failure(
-                    "The interaction loop run too long, the agent can't top yappin..".to_string(),
+                    "The interaction loop run too long, the agent can't stop yappin..".to_string(),
                     Some(TaskFailureReason::ProblemSolving),
                 );
             }

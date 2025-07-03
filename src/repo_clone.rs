@@ -53,7 +53,7 @@ impl GitRepository {
     /// Clones the repository to the target directory
     pub fn clone_repo(&self) -> io::Result<()> {
         //println!("Cloning repo: {} into {}", self.repo_url, self.target_dir);
-        //For API-Key safety i decided to not print the url 
+        //For API-Key safety i decided to not print the url
         println!("Cloning repo into {}", self.target_dir);
         // The git command is build
         let status = Command::new("git")
