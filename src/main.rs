@@ -1,18 +1,22 @@
 mod agent_actions;
+mod fetch_task;
 mod llm;
 mod memory;
 mod models;
 mod openai;
+mod report;
 mod task_handler;
 mod tools;
 mod tools_interface;
 
 //use llm::Completion;
+use report::{try_report_failure, try_report_success};
+use reqwest::blocking::Client;
 use std::env;
 use task_handler::{Task, TaskHandler, TaskOutcome};
 use url::Url;
-mod report;
-use report::try_report_failure;
+mod repo_clone;
+use crate::{fetch_task::get_task, repo_clone::GitRepository};
 
 fn main() {
     println!();
@@ -25,30 +29,87 @@ fn main() {
     let minion_api: Url = env::var("MINION_API_BASE_URL").unwrap().parse().unwrap();
     let minion_token = env::var("MINION_API_TOKEN").unwrap();
 
-    //task handler interaction example
-    //let task_handler = TaskHandler::new_set_model(&minion_token, &minion_api, models::Model::Smart);
+    //Task handler interaction example
     let mut task_handler = TaskHandler::new(&minion_token, &minion_api);
+
+    //Create new Client for get_task
+    let client: Client = Client::new();
+
+    let http_client = reqwest::blocking::Client::new();
+
+    //Fetch the raw task data
+    let raw_task = get_task(&minion_api, &minion_token, client);
+
+    let (meta_data, description) = match &raw_task {
+        Ok(res) => {
+            //Change Url for neccessary authing.
+            let mut repo_url = res.git_repo_url.clone();
+            match Url::parse(&repo_url) {
+                Ok(mut url) => {
+                    url.set_username("x-access-token").unwrap();
+                    url.set_password(Some(minion_token.as_str())).unwrap();
+                    repo_url = url.to_string();
+                }
+                Err(e) => {
+                    eprint!("No Valid URL: {e}")
+                }
+            };
+            //Match the GitRepository data to get important information for repo_clone
+            let meta_data = GitRepository::new(
+                &repo_url,
+                &res.git_branch,
+                &res.git_user_name,
+                &res.git_user_email,
+                "/github_in_here",
+            );
+
+            //Match the raw task data to only get the description of the task.
+            let description = res.description.to_string();
+            (meta_data, description)
+        }
+        Err(_res) => {
+            //Empty meta_data in case of Error
+            //let meta_data = GitRepository::new("", "", "", "", "");
+            //Clarify to the Model, that there has been an error.
+            //let description = "There has been an error while receiving the task".to_string();
+            //(meta_data, description)
+            try_report_failure(
+                minion_api,
+                minion_token,
+                "There has been an error while receiving the task",
+                Some(report::TaskFailureReason::TaskIssues),
+                http_client,
+            );
+            return;
+        }
+    };
+
+    // clone git repo
+    match meta_data.prepare_repository() {
+        Ok(()) => println!("Repository prepared successfully"),
+        Err(err) => eprintln!("Preparing repository failed: {err}"),
+    }
+
+    let path = format!(
+        "/n The path to the File you should work on is this one: {}", //well, this is only the path to /github_in_here, that isn't even the repo
+        meta_data.target_dir                                          //<- = /gihub_in_here
+    );
+
     let task = Task {
-        request: "Please write a simple FizzBuzz program.".to_string(),
+        request: description + &path,
     };
     let response = task_handler.run(&task);
+    //let response = TaskOutcome::Complete("Test".to_string());  //you can use that if you just want to test the lifecycle
 
-    let _response = match response {
+    /*let _response = match response {
         TaskOutcome::Complete(a) => a,
         TaskOutcome::Failure(_, _) => "didn't work, sorry".to_string(),
+    };*/
+
+    match response {
+        TaskOutcome::Complete(a) => try_report_success(minion_api, minion_token, &a, http_client),
+        TaskOutcome::Failure(v, r) => {
+            try_report_failure(minion_api, minion_token, &v, r, http_client)
+        }
     };
-
-    // The agent uses an HTTP API to fetch the task and report the result.
-    // See https://github.com/autominion/spec/blob/main/spec/http.md
-    //
-    // This will exit the `minion` CLI.
-
-    let client = reqwest::blocking::Client::new();
-    try_report_failure(
-        minion_api,
-        minion_token,
-        "Not implemented yet",
-        None,
-        client,
-    );
 }

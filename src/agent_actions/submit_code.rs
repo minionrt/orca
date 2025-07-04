@@ -17,7 +17,11 @@ impl GitSubmissionTool {
     /// # Returns
     /// Returns an io::Result indicating either success or failure
     fn add_changes() -> io::Result<()> {
-        let status = Command::new("git").arg("add").arg(".").status()?;
+        let status = Command::new("git")
+            .arg("add")
+            .arg(".")
+            .current_dir("/github_in_here") //temporary workaround! TODO!
+            .status()?;
         if !status.success() {
             return Err(io::Error::other("git add failed"));
         }
@@ -36,6 +40,7 @@ impl GitSubmissionTool {
             .arg("commit")
             .arg("-m")
             .arg(c_message)
+            .current_dir("/github_in_here") //temporary workaround! TODO!
             .status()?;
         if !status.success() {
             return Err(io::Error::other("git commit failed"));
@@ -52,6 +57,7 @@ impl GitSubmissionTool {
             .arg("push")
             .arg("origin")
             .arg("HEAD")
+            .current_dir("/github_in_here") //temporary workaround! TODO!
             .status()?;
         if !status.success() {
             return Err(io::Error::other("git push failed"));
