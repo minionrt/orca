@@ -89,10 +89,13 @@ fn main() {
         Ok(()) => println!("Repository prepared successfully"),
         Err(err) => eprintln!("Preparing repository failed: {err}"),
     }
+    
+    // The target_dir is the directory that should be used as the working directory for all tools that interact with the repository
+    let working_dir = meta_data.target_dir.clone();
 
     let path = format!(
-        "/n The path to the File you should work on is this one: {}", //well, this is only the path to /github_in_here, that isn't even the repo
-        meta_data.target_dir                                          //<- = /gihub_in_here
+        "\nThe path to the File you should work on is this one: {}",
+        working_dir
     );
 
     let task = Task {
