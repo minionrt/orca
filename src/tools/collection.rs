@@ -36,7 +36,7 @@ pub fn call_tool(
             tool.run(args)
         }
         "git_submission" => {
-            let tool = submit_code::GitSubmissionTool;
+            let tool = submit_code::GitSubmissionTool::default();
             tool.run(args)
         }
         _ => Err(format!("Tool '{tool_name}' not found.").into()),

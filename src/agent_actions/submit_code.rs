@@ -4,43 +4,50 @@ use serde_json::Value;
 use std::io;
 use std::process::Command;
 
-/// a tool for automating git submissions
-pub struct GitSubmissionTool;
+/// A tool for automating git submissions.
+/// The working directory is configurable, allowing this tool to be used in any repository directory.
+pub struct GitSubmissionTool {
+    working_dir: String,
+}
 
 impl GitSubmissionTool {
-    pub fn new() -> Self {
-        GitSubmissionTool
+    /// Creates a new GitSubmissionTool for the specified working directory.
+    pub fn new(working_dir: impl Into<String>) -> Self {
+        GitSubmissionTool {
+            working_dir: working_dir.into(),
+        }
     }
 
-    /// all changes will be added, if possible
+    /// Adds all changes in the repository.
     ///
     /// # Returns
     /// Returns an io::Result indicating either success or failure
-    fn add_changes() -> io::Result<()> {
+    fn add_changes(&self) -> io::Result<()> {
         let status = Command::new("git")
             .arg("add")
             .arg(".")
-            .current_dir("/github_in_here") //temporary workaround! TODO!
+            .current_dir(&self.working_dir)
             .status()?;
         if !status.success() {
             return Err(io::Error::other("git add failed"));
         }
         Ok(())
     }
-    /// all added changes will be committed (if possible)
+
+    /// Commits all added changes.
     ///
     /// # Arguments
     /// * `commit_message` - The commit message, provided by the llm. If none is provided, it'll still work.
     ///
     /// # Returns
     /// Returns an io::Result indicating either success or failure
-    fn commit_changes(commit_message: Option<&str>) -> io::Result<()> {
+    fn commit_changes(&self, commit_message: Option<&str>) -> io::Result<()> {
         let c_message = commit_message.unwrap_or("No message :(");
         let status = Command::new("git")
             .arg("commit")
             .arg("-m")
             .arg(c_message)
-            .current_dir("/github_in_here") //temporary workaround! TODO!
+            .current_dir(&self.working_dir)
             .status()?;
         if !status.success() {
             return Err(io::Error::other("git commit failed"));
@@ -48,53 +55,55 @@ impl GitSubmissionTool {
         Ok(())
     }
 
-    /// all committed changes will be pushed
+    /// Pushes all committed changes.
     ///
     /// # Returns
     /// Returns an io::Result indicating success or failure
-    fn push_changes() -> io::Result<()> {
+    fn push_changes(&self) -> io::Result<()> {
         let status = Command::new("git")
             .arg("push")
             .arg("origin")
             .arg("HEAD")
-            .current_dir("/github_in_here") //temporary workaround! TODO!
+            .current_dir(&self.working_dir)
             .status()?;
         if !status.success() {
             return Err(io::Error::other("git push failed"));
         }
         Ok(())
     }
-    /// full action cycle of all commands. So it adds, commits and pushes all changes.
+
+    /// Full action cycle: adds, commits, and pushes all changes.
     ///
     /// # Arguments
     /// * `commit_message` - the commit messsage provided by the llm. If none is provided it'll still work.
     ///
     /// # Returns
     /// Returns an io::Result indicating either success or failure
-    fn submit_changes(commit_message: Option<&str>) -> io::Result<()> {
-        Self::add_changes()?;
-        Self::commit_changes(commit_message)?;
-        Self::push_changes()?;
+    fn submit_changes(&self, commit_message: Option<&str>) -> io::Result<()> {
+        self.add_changes()?;
+        self.commit_changes(commit_message)?;
+        self.push_changes()?;
         Ok(())
     }
 }
 
-// Implements Default trait for GitSubmissionTool, allowing creation with ::default()
+// Implements Default trait for GitSubmissionTool, defaulting to current directory.
 impl Default for GitSubmissionTool {
     fn default() -> Self {
-        GitSubmissionTool::new()
+        GitSubmissionTool::new(".")
     }
 }
 
-/// Implements the ToolInstance trait for GitSubmissionTool, allowing it to be used
-/// as a dynamic tool
+/// Implements the ToolInstance trait for GitSubmissionTool, allowing it to be used as a dynamic tool
 impl ToolInstance for GitSubmissionTool {
-    /// runs the requested git action based in the parameters provided.
+    /// Runs the requested git action based on the parameters provided.
     ///
-    /// # Parameters
-    /// * `params`: a serde::json::Value containing the following keys:
+    /// # Paramete  rs
+    /// * `params`: a serde_json::Value containing the following keys:
     ///     - "action": String. One of "add", "commit", "push" or "submit".
-    ///     - "commit_message": String (technically optional, but highly encuraged). Used for "commit" and "submit".
+    ///     - "commit_message": String (optional). Used for "commit" and "submit".
+    ///     - "working_dir": String (optional). Overrides the working directory for this invocation.
+    ///
     /// # Returns
     /// Returns a JSON String describing the outcome or an error.
     fn run(&self, params: Value) -> Result<Value, Box<dyn std::error::Error>> {
@@ -103,26 +112,39 @@ impl ToolInstance for GitSubmissionTool {
             .and_then(|v| v.as_str())
             .ok_or("Missing parameter: action")?;
         let commit_message = params.get("commit_message").and_then(|v| v.as_str());
+        // Allow override of working directory for this invocation
+        let working_dir = params
+            .get("working_dir")
+            .and_then(|v| v.as_str())
+            .unwrap_or(&self.working_dir)
+            .to_string();
+        // Create a temporary tool instance if override is used
+        let tool = if working_dir != self.working_dir {
+            GitSubmissionTool::new(working_dir)
+        } else {
+            GitSubmissionTool {
+                working_dir: self.working_dir.clone(),
+            }
+        };
 
-        // Match the action to the corresponding git operation.
         let result = match action {
             "add" => {
-                Self::add_changes()?;
+                tool.add_changes()?;
                 "git add . executed".to_string()
             }
             "commit" => {
-                Self::commit_changes(commit_message)?;
+                tool.commit_changes(commit_message)?;
                 format!(
                     "git commit executed with message: {:?}",
                     commit_message.unwrap_or("No message :(")
                 )
             }
             "push" => {
-                Self::push_changes()?;
+                tool.push_changes()?;
                 "git push origin HEAD executed".to_string()
             }
             "submit" => {
-                Self::submit_changes(commit_message)?;
+                tool.submit_changes(commit_message)?;
                 format!(
                     "submission successful (add, commit, push) with message: {:?}",
                     commit_message.unwrap_or("No message :(")
@@ -142,17 +164,21 @@ impl ToolInstance for GitSubmissionTool {
         openai::Tool {
             function: openai::Function {
                 name: "git_submission".to_string(),
-                description: "Executes the full git submission using add, commit and push. Please always provide commit message.".to_string(),
+                description: "Executes git add, commit, and push. Please always provide commit message. Optionally, set working_dir.".to_string(),
                 parameters: serde_json::json!({
                     "type": "object",
                     "properties": {
                         "action": {
                             "type": "string",
-                            "description": "Please choose one of these actions: \"add\", \"commit\", \"push\" or \"submit\""
+                            "description": "Choose one: \"add\", \"commit\", \"push\" or \"submit\""
                         },
                         "commit_message": {
                             "type": "string",
-                            "description": "Commit message, which summarizes the changes made."
+                            "description": "Commit message summarizing the changes."
+                        },
+                        "working_dir": {
+                            "type": "string",
+                            "description": "Directory where git commands are executed. Defaults to current directory."
                         }
                     },
                     "required": ["action"]
