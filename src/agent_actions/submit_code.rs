@@ -98,7 +98,7 @@ impl Default for GitSubmissionTool {
 impl ToolInstance for GitSubmissionTool {
     /// Runs the requested git action based on the parameters provided.
     ///
-    /// # Paramete  rs
+    /// # Parameters
     /// * `params`: a serde_json::Value containing the following keys:
     ///     - "action": String. One of "add", "commit", "push" or "submit".
     ///     - "commit_message": String (optional). Used for "commit" and "submit".
