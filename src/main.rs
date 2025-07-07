@@ -60,7 +60,7 @@ fn main() {
                 &res.git_branch,
                 &res.git_user_name,
                 &res.git_user_email,
-                "/github_in_here",
+                "/workspace",
             );
 
             //Match the raw task data to only get the description of the task.
