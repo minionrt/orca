@@ -110,9 +110,14 @@ impl TaskHandler {
             //if llm returns a text I expect the task to be done
             if let Completion::Text(value) = completion {
                 return TaskOutcome::Complete(value);
-            } else if let Completion::ToolCalls(value) = completion {
+            }
+            else if let Completion::ToolCalls(value) = completion {
                 //if LLM returns a tool call, extract the tool name and arguments and call tool
                 let tool_name = TaskHandler::get_tool_name(&value[0]);
+                let mut inquiry = false;
+                if tool_name == "ask_user".to_string(){
+                    inquiry = true;
+                }
                 let args = TaskHandler::get_tool_arguments(&value[0]);
                 let tool_result = collection::call_tool(&tool_name, args.clone());
 
@@ -127,9 +132,14 @@ impl TaskHandler {
                     Ok(value) => value.clone().to_string(),
                     Err(e) => e.to_string(),
                 };
-
-                //give returned value of the tool to the llm
-                response = self.send_tool_answer(&input, self.memory.read());
+                if !inquiry{
+                     //give returned value of the tool to the llm
+                    response = self.send_tool_answer(&input, self.memory.read());
+                }
+                else{
+                    return TaskOutcome::Complete(input);
+                }
+               
             }
 
             //stop the loop after x runs
