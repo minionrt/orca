@@ -11,8 +11,9 @@ use crate::tools::collection::{self, get_tools};
 
 const INTRO_1: &str = r#"You are an autonomous agent that solves coding tasks. 
 You should use the given tools to solve the given task.
-You are connected to a Linux-based development environment. You are in the 
-project directory. Your current task is as follows:"#;
+You are connected to a Linux-based development environment. 
+Use the ask_user tool if the task is not entirely clear to you!
+You are in the project directory. Your current task is as follows:"#;
 
 const MESSAGE_TOOL_RESPONSE: &str = r#"You are an autonomous agent that solves coding tasks. 
 You should use the given tools to solve the given task.

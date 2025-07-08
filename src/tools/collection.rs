@@ -1,4 +1,4 @@
-use crate::agent_actions::{bash, edit_files, read_files, submit_code};
+use crate::agent_actions::{ask_user, bash, edit_files, read_files, submit_code};
 use crate::openai::Tool;
 use crate::tools_interface::ToolInstance;
 use std::error::Error;
@@ -10,6 +10,7 @@ pub fn get_tools() -> Option<Vec<Tool>> {
         edit_files::EditFilesTool::return_choice(),
         bash::BashTool::return_choice(),
         submit_code::GitSubmissionTool::return_choice(),
+        ask_user::AskUserTool::return_choice(),
         // more tools can be added here
     ];
 
@@ -37,6 +38,10 @@ pub fn call_tool(
         }
         "git_submission" => {
             let tool = submit_code::GitSubmissionTool;
+            tool.run(args)
+        }
+        "ask_user" =>{
+            let tool = ask_user::AskUserTool;
             tool.run(args)
         }
         _ => Err(format!("Tool '{tool_name}' not found.").into()),
