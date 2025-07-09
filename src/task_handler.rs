@@ -9,10 +9,20 @@ use crate::openai::{ToolCall, ToolChoice};
 use crate::report::TaskFailureReason;
 use crate::tools::collection::{self, get_tools};
 
-const INTRO_1: &str = r#"You are an autonomous agent that solves coding tasks. 
-You should use the given tools to solve the given task.
-You are connected to a Linux-based development environment. You are in the 
-project directory. Your current task is as follows:"#;
+/// Returns the system prompt for the developer, including the working directory path.
+///
+/// # Arguments
+///
+/// * `path` - The path to be included in the prompt.
+fn intro_with_path(path: &str) -> String {
+    format!(
+        "You are an autonomous agent that solves coding tasks. \
+You should use the given tools to solve the given task. \
+You are connected to a Linux-based development environment. \
+You are in the project directory. The path to the file you should work on is: {path} \
+Your current task is as follows:"
+    )
+}
 
 const MESSAGE_TOOL_RESPONSE: &str = r#"You are an autonomous agent that solves coding tasks. 
 You should use the given tools to solve the given task.
@@ -20,13 +30,18 @@ You are connected to a Linux-based development environment. You are in the
 project directory. If you think your task is done please call the git_submission tool and in the next step just tell me what you did.
 The response of your last tool call is the following:"#;
 
+/// The possible outcomes of a task.
 pub enum TaskOutcome {
     Complete(String),
     Failure(String, Option<TaskFailureReason>), //one field for a description, one for a reason
 }
 
+/// Represents a task to be performed by the agent.
 pub struct Task {
+    /// The user request or task description.
     pub request: String,
+    /// The working directory relevant to the task.
+    pub working_dir: String,
 }
 
 /// Instance of TaskHandler contains the functions new and run.
@@ -41,9 +56,9 @@ pub struct TaskHandler {
 /// Responsible to handle the interaction with the LLM
 /// Use for sending tasks to llm and so interaction
 impl TaskHandler {
+    /// Creates a new TaskHandler with the default model and tools.
     pub fn new(api_key: &str, base_url: &Url) -> Self {
         TaskHandler {
-            //llm: LLM::full(api_key.to_string(), base_url.clone(), Model::Basic.into()),
             llm: LLM::full(
                 api_key.to_string(),
                 base_url.clone(),
@@ -55,6 +70,7 @@ impl TaskHandler {
         }
     }
 
+    /// Creates a new TaskHandler with a specified model.
     pub fn new_set_model(api_key: &str, base_url: &Url, model: Model) -> Self {
         TaskHandler {
             llm: LLM::full(
@@ -67,6 +83,8 @@ impl TaskHandler {
             memory: Memory::new(api_key, base_url),
         }
     }
+
+    /// Creates a new TaskHandler with a specified model and tool choice.
     pub fn new_set_model_and_tools(
         api_key: &str,
         base_url: &Url,
@@ -85,17 +103,16 @@ impl TaskHandler {
         }
     }
 
-    /// runs interaction with the llm for a given task
+    /// Runs the main interaction loop with the LLM for a given task.
+    /// The working directory path from the task is included in the system prompt.
     pub fn run(&mut self, task: &Task) -> TaskOutcome {
-        //we might have to add a container here if we want to use the result
-
         let mut input = task.request.clone();
-        let mut response = self.single_request(&task.request);
+        let mut response = self.single_request(&task.request, &task.working_dir);
 
         let mut ctr: i8 = 0;
 
         loop {
-            //match response, if there was an error, propagate to user
+            // match response, if there was an error, propagate to user
             let completion = match &response {
                 Ok(c) => c.clone(),
                 Err(e) => {
@@ -106,32 +123,32 @@ impl TaskHandler {
                 }
             };
 
-            //if llm returns a text I expect the task to be done
+            // if llm returns a text I expect the task to be done
             if let Completion::Text(value) = completion {
                 return TaskOutcome::Complete(value);
             } else if let Completion::ToolCalls(value) = completion {
-                //if LLM returns a tool call, extract the tool name and arguments and call tool
+                // if LLM returns a tool call, extract the tool name and arguments and call tool
                 let tool_name = TaskHandler::get_tool_name(&value[0]);
                 let args = TaskHandler::get_tool_arguments(&value[0]);
                 let tool_result = collection::call_tool(&tool_name, args.clone());
 
-                //add the new interaction to the memory
+                // add the new interaction to the memory
                 self.memory.add(
                     input,
                     format!("You called the tool \"{tool_name}\" with the Arguments: {args}"),
                 );
 
-                //make string from tool return
+                // make string from tool return
                 input = match &tool_result {
                     Ok(value) => value.clone().to_string(),
                     Err(e) => e.to_string(),
                 };
 
-                //give returned value of the tool to the llm
+                // give returned value of the tool to the llm
                 response = self.send_tool_answer(&input, self.memory.read());
             }
 
-            //stop the loop after x runs
+            // stop the loop after x runs
             ctr += 1;
             if ctr >= 10 {
                 return TaskOutcome::Failure(
@@ -142,43 +159,42 @@ impl TaskHandler {
         }
     }
 
-    /// send single code task request without memory
-    fn single_request(&self, request: &str) -> Result<Completion, LLMAPIError> {
+    /// Sends a single code task request to the LLM, including the working directory path in the system prompt.
+    fn single_request(&self, request: &str, path: &str) -> Result<Completion, LLMAPIError> {
         let history = self.memory.read();
-        self.send_request(request, history)
+        self.send_request(request, history.as_str(), path)
     }
-    /// send code task request with memory - meant for longer interaction loops
-    fn send_request(&self, request: &str, history: &str) -> Result<Completion, LLMAPIError> {
-        //dev message so user cannot mess with LLM
-        let dev_message = Message::new(INTRO_1.to_string(), MessageRole::Developer);
-        //history posted as Assistant to make the LLM know what happened before
+
+    /// Sends a code task request with memory and a custom system prompt with the working directory.
+    fn send_request(&self, request: &str, history: &str, path: &str) -> Result<Completion, LLMAPIError> {
+        // dev message includes the working directory path
+        let dev_message = Message::new(intro_with_path(path), MessageRole::Developer);
+        // history posted as Assistant to make the LLM know what happened before
         let history_message = Message::new(history.to_string(), MessageRole::Assistant);
-        //build user request as Message
+        // build user request as Message
         let user_message = Message::new(request.to_string(), MessageRole::User);
         let messages = vec![dev_message, history_message, user_message];
 
-        //send all the messages to the LLM and take result
         self.llm.prompt(&messages)
     }
 
+    /// Sends the tool's output as the next user message, using the static tool response prompt.
     fn send_tool_answer(&self, request: &str, history: &str) -> Result<Completion, LLMAPIError> {
-        //dev message so user cannot mess with LLM
         let dev_message = Message::new(MESSAGE_TOOL_RESPONSE.to_string(), MessageRole::Developer);
-        //history posted as Assistant to make the LLM know what happened before
         let history_message = Message::new(history.to_string(), MessageRole::Assistant);
-        //build user request as Message
         let user_message = Message::new(request.to_string(), MessageRole::User);
         let messages = vec![dev_message, history_message, user_message];
 
-        //send all the messages to the LLM and take result
         self.llm.prompt(&messages)
     }
 
+    /// Extracts the tool name from a ToolCall.
     fn get_tool_name(toolcall: &ToolCall) -> String {
         toolcall.function.name.clone()
     }
+
+    /// Extracts and decodes the tool arguments from a ToolCall.
     fn get_tool_arguments(toolcall: &ToolCall) -> serde_json::Value {
-        //I somehow receive a serde_json::Value of a String that contains the actual serde_json::Value, this is my fix
         let double_encoded_string = toolcall.function.arguments.clone();
         if let Some(s) = double_encoded_string.as_str() {
             serde_json::from_str::<serde_json::Value>(s).unwrap()

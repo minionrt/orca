@@ -93,11 +93,12 @@ fn main() {
     // The target_dir is the directory that should be used as the working directory for all tools that interact with the repository
     let working_dir = meta_data.target_dir.clone();
 
-    let path = format!("\nThe path to the File you should work on is this one: {working_dir}",);
-
+// No need to add path info to the user prompt; instead, pass it to the dev prompt via Task
     let task = Task {
-        request: description + &path,
+        request: description,
+        working_dir: working_dir.clone(),
     };
+
     let response = task_handler.run(&task);
     //let response = TaskOutcome::Complete("Test".to_string());  //you can use that if you just want to test the lifecycle
 
