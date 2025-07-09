@@ -55,7 +55,7 @@ fn main() {
                 }
             };
             //Match the GitRepository data to get important information for repo_clone
-            let meta_data = GitRepository::new(
+            let git_data = GitRepository::new(
                 &repo_url,
                 &res.git_branch,
                 &res.git_user_name,
@@ -65,7 +65,7 @@ fn main() {
 
             //Match the raw task data to only get the description of the task.
             let description = res.description.to_string();
-            (meta_data, description)
+            (git_data, description)
         }
         Err(_res) => {
             //Empty meta_data in case of Error
