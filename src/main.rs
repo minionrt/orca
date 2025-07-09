@@ -93,7 +93,7 @@ fn main() {
     // The target_dir is the directory that should be used as the working directory for all tools that interact with the repository
     let working_dir = meta_data.target_dir.clone();
 
-// No need to add path info to the user prompt; instead, pass it to the dev prompt via Task
+    // No need to add path info to the user prompt; instead, pass it to the dev prompt via Task
     let task = Task {
         request: description,
         working_dir: working_dir.clone(),

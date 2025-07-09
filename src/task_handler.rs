@@ -166,7 +166,12 @@ impl TaskHandler {
     }
 
     /// Sends a code task request with memory and a custom system prompt with the working directory.
-    fn send_request(&self, request: &str, history: &str, path: &str) -> Result<Completion, LLMAPIError> {
+    fn send_request(
+        &self,
+        request: &str,
+        history: &str,
+        path: &str,
+    ) -> Result<Completion, LLMAPIError> {
         // dev message includes the working directory path
         let dev_message = Message::new(intro_with_path(path), MessageRole::Developer);
         // history posted as Assistant to make the LLM know what happened before
