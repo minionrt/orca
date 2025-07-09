@@ -181,7 +181,7 @@ impl ToolInstance for GitSubmissionTool {
                             "description": "Directory where git commands are executed. Defaults to current directory."
                         }
                     },
-                    "required": ["action"]
+                    "required": ["action", "commit_message"]
                 }),
             },
             tool_type: "function".to_string(),
