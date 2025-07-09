@@ -42,7 +42,7 @@ fn main() {
 
     let (meta_data, description) = match &raw_task {
         Ok(res) => {
-            //Change Url for neccessary authing.
+            // Change Url for neccessary authing.
             let mut repo_url = res.git_repo_url.clone();
             match Url::parse(&repo_url) {
                 Ok(mut url) => {
@@ -54,7 +54,7 @@ fn main() {
                     eprint!("No Valid URL: {e}")
                 }
             };
-            //Match the GitRepository data to get important information for repo_clone
+            // Match the GitRepository data to get important information for repo_clone
             let meta_data = GitRepository::new(
                 &repo_url,
                 &res.git_branch,
@@ -63,16 +63,16 @@ fn main() {
                 "/github_in_here",
             );
 
-            //Match the raw task data to only get the description of the task.
+            // Match the raw task data to only get the description of the task.
             let description = res.description.to_string();
             (meta_data, description)
         }
         Err(_res) => {
-            //Empty meta_data in case of Error
-            //let meta_data = GitRepository::new("", "", "", "", "");
-            //Clarify to the Model, that there has been an error.
-            //let description = "There has been an error while receiving the task".to_string();
-            //(meta_data, description)
+            // Empty meta_data in case of Error
+            // let meta_data = GitRepository::new("", "", "", "", "");
+            // Clarify to the Model, that there has been an error.
+            // let description = "There has been an error while receiving the task".to_string();
+            // (meta_data, description)
             try_report_failure(
                 minion_api,
                 minion_token,
@@ -84,22 +84,22 @@ fn main() {
         }
     };
 
-    // clone git repo
+    // Clone git repo
     match meta_data.prepare_repository() {
         Ok(()) => println!("Repository prepared successfully"),
         Err(err) => eprintln!("Preparing repository failed: {err}"),
     }
 
     let path = format!(
-        "/n The path to the File you should work on is this one: {}", //well, this is only the path to /github_in_here, that isn't even the repo
-        meta_data.target_dir                                          //<- = /gihub_in_here
+        "/n The path to the File you should work on is this one: {}", // well, this is only the path to /github_in_here, that isn't even the repo
+        meta_data.target_dir                                          // <- = /gihub_in_here
     );
 
     let task = Task {
         request: description + &path,
     };
     let response = task_handler.run(&task);
-    //let response = TaskOutcome::Complete("Test".to_string());  //you can use that if you just want to test the lifecycle
+    // let response = TaskOutcome::Complete("Test".to_string());  // You can use that if you just want to test the lifecycle
 
     /*let _response = match response {
         TaskOutcome::Complete(a) => a,

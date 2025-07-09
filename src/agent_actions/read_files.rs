@@ -37,7 +37,7 @@ impl ToolInstance for ReadFilesTool {
         }))
     }
 
-    /// returns the tool's definition and JSON schema for LLM integration
+    /// Returns the tool's definition and JSON schema for LLM integration
     fn return_choice() -> Tool {
         Tool {
             tool_type: "function".to_string(),
