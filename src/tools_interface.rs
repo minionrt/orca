@@ -3,11 +3,11 @@
 use crate::openai;
 
 pub trait ToolInstance {
-    // runs the function with its parameters given as Vector of Strings
+    // Runs the function with its parameters given as Vector of Strings
     fn run(
         &self,
         params: serde_json::Value,
     ) -> Result<serde_json::Value, Box<dyn std::error::Error>>;
-    // returns the definition and description of the function as defined in openai::Tool
+    // Returns the definition and description of the function as defined in openai::Tool
     fn return_choice() -> openai::Tool;
 }
