@@ -17,7 +17,7 @@ pub struct DirTreeTool;
 
 #[derive(Deserialize)]
 pub struct DirTreeToolArgs {
-    path: String,
+    pub path: String,
 }
 
 impl ToolInstance for DirTreeTool {

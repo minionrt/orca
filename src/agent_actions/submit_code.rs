@@ -121,7 +121,7 @@ impl ToolInstance for GitSubmissionTool {
             }
             "commit" => {
                 Self::commit_changes(params.commit_message)?;
-                format!("git commit executed with message: {:?}", commit_message,)
+                format!("git commit executed with message: {commit_message:?}",)
             }
             "push" => {
                 Self::push_changes()?;
@@ -130,8 +130,7 @@ impl ToolInstance for GitSubmissionTool {
             "submit" => {
                 Self::submit_changes(params.commit_message)?;
                 format!(
-                    "submission successful (add, commit, push) with message: {:?}",
-                    commit_message,
+                    "submission successful (add, commit, push) with message: {commit_message:?}",
                 )
             }
             _ => {

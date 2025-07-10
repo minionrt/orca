@@ -30,7 +30,7 @@ pub fn call_tool(
         )?)?,
         "bash" => serde_json::to_value(bash::BashTool::run(serde_json::from_value(args)?)?)?,
         "git_submission" => serde_json::to_value(submit_code::GitSubmissionTool::run(
-            serde_json::from_value(args)?
+            serde_json::from_value(args)?,
         )?)?,
         _ => return Err(format!("Tool '{tool_name}' not found.").into()),
     })
