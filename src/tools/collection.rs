@@ -1,4 +1,4 @@
-use crate::agent_actions::{bash, edit_files, read_files};
+use crate::agent_actions::{bash, edit_files, read_files, submit_code};
 use crate::openai::Tool;
 use crate::tools_interface::ToolInstance;
 use std::error::Error;
@@ -29,6 +29,9 @@ pub fn call_tool(
             serde_json::from_value(args)?,
         )?)?,
         "bash" => serde_json::to_value(bash::BashTool::run(serde_json::from_value(args)?)?)?,
+        "git_submission" => serde_json::to_value(submit_code::GitSubmissionTool::run(
+            serde_json::from_value(args)?
+        )?)?,
         _ => return Err(format!("Tool '{tool_name}' not found.").into()),
     })
 }
