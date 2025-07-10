@@ -1,8 +1,6 @@
 use crate::openai;
-use crate::openai::Tool;
 use crate::tools_interface::ToolInstance;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
@@ -17,7 +15,8 @@ pub struct DirEntry {
 
 pub struct DirTreeTool;
 
-struct DirTreeToolArgs {
+#[derive(Deserialize)]
+pub struct DirTreeToolArgs {
     path: String,
 }
 
