@@ -178,8 +178,9 @@ pub enum ToolChoice {
     /// Disallow tools calls
     #[serde(rename = "none")]
     None,
-    // #[serde(rename="required")]
-    // Required,
+    /// Require tool calls
+    #[serde(rename = "required")]
+    Required,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

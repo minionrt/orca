@@ -132,15 +132,15 @@ type Result<T> = std::result::Result<T, LLMAPIError>;
 /// The roles a LLM thinks a message is sent from
 #[derive(Clone, Copy)]
 pub enum MessageRole {
-    /// specification on how the LLM should behave (newer version of system)
+    /// Specification on how the LLM should behave (newer version of system)
     Developer,
-    /// specification on how the LLM should behave
+    /// Specification on how the LLM should behave
     System,
-    /// normal prompt
+    /// Normal prompt
     User,
-    /// a message the LLM thinks it has done
+    /// A message the LLM thinks it has done
     Assistant,
-    /// responses from tools
+    /// Responses from tools
     Tool,
 }
 
@@ -180,7 +180,7 @@ impl Default for LLM {
 }
 
 impl LLM {
-    /// create a new LLM with an uninitialized configuration
+    /// Create a new LLM with an uninitialized configuration
     pub fn new() -> Self {
         LLM {
             api_key: None,
@@ -192,7 +192,7 @@ impl LLM {
             tool_choice: None,
         }
     }
-    /// create a new LLM with all configuration necessary for prompting (API key, base URL and model)
+    /// Create a new LLM with all configuration necessary for prompting (API key, base URL and model)
     pub fn full(
         api_key: String,
         base_url: reqwest::Url,
@@ -209,25 +209,25 @@ impl LLM {
             .clone()
     }
 
-    /// set the used API key
+    /// Set the used API key
     pub fn with_api_key(&mut self, api_key: String) -> &mut Self {
         self.api_key = Some(api_key);
         self
     }
 
-    /// set the base URL, this is *not* the URL of the LLM endpoint, but on which `/chat/completions` will be appended for the OpenAI API
+    /// Set the base URL, this is *not* the URL of the LLM endpoint, but on which `/chat/completions` will be appended for the OpenAI API
     pub fn with_base_url(&mut self, base_url: reqwest::Url) -> &mut Self {
         self.base_url = Some(base_url);
         self
     }
 
-    /// set the used model
+    /// Set the used model
     pub fn with_model(&mut self, model: String) -> &mut Self {
         self.model = Some(model);
         self
     }
 
-    /// limit the amount of tokens used in a prompt
+    /// Limit the amount of tokens used in a prompt
     pub fn with_max_tokens(&mut self, max_tokens: i32) -> &mut Self {
         self.max_tokens = Some(max_tokens);
         self
@@ -237,23 +237,23 @@ impl LLM {
         self.max_tokens = None;
         self
     }
-    /// set a custom `reqwest::blocking::Client` which is then used to query the LLM endpoint
+    /// Set a custom `reqwest::blocking::Client` which is then used to query the LLM endpoint
     pub fn with_client(&mut self, client: reqwest::blocking::Client) -> &mut Self {
         self.client = Some(client);
         self
     }
-    /// set available tools       
+    /// Set available tools       
     pub fn with_tools(&mut self, tools: Option<Vec<openai::Tool>>) -> &mut Self {
         self.tools = tools;
         self
     }
-    /// set how the tool chooses tools
+    /// Set how the tool chooses tools
     pub fn with_tool_choice(&mut self, tool_choice: Option<openai::ToolChoice>) -> &mut Self {
         self.tool_choice = tool_choice;
         self
     }
 
-    /// prompt the LLM with a chain of `Message`
+    /// Prompt the LLM with a chain of `Message`
     pub fn prompt(&self, messages: &[Message]) -> Result<Completion> {
         let client = self.client.clone().unwrap_or(self.default_client());
 
@@ -283,17 +283,17 @@ impl LLM {
         }
     }
 
-    /// prompt the LLM with a single `Message`
+    /// Prompt the LLM with a single `Message`
     pub fn prompt_single(&self, message: Message) -> Result<Completion> {
         self.prompt(&[message])
     }
 
-    /// prompt the LLM with a single `Message` which is created over the given parameters
+    /// Prompt the LLM with a single `Message` which is created over the given parameters
     pub fn prompt_unwrapped(&self, content: String, role: MessageRole) -> Result<Completion> {
         self.prompt_single(Message::new(content, role))
     }
 
-    /// prompt the LLM with a single `Message` which is created over the given parameters, also sets the name from which the LLM thinks the message was sent
+    /// Prompt the LLM with a single `Message` which is created over the given parameters, also sets the name from which the LLM thinks the message was sent
     pub fn prompt_unwrapped_named(
         &self,
         content: String,
@@ -312,7 +312,7 @@ impl LLM {
             stream: None,
             frequency_penalty: None,
             presence_penalty: None,
-            // we can't handle more than one response at once
+            // We can't handle more than one response at once
             n: Some(1),
             logit_bias: None,
             logprobs: None,
