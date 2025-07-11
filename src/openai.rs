@@ -52,6 +52,11 @@ pub struct Tool {
 }
 
 impl Tool {
+    /// Create a new function tool description
+    /// `name` - The name of the function
+    /// `description` - The description of the function
+    /// `required_parameters` - The required parameters of the function
+    /// `optional_parameters` - The optional parameters of the function
     pub fn function(
         name: String,
         description: String,
@@ -151,7 +156,7 @@ pub struct TokenDetail {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-/// AI Response - Usage statistics for billing/monitoring  
+/// AI Response - Usage statistics for billing/monitoring
 pub struct UsageStatistic {
     /// Number of tokens in the generated completion.
     pub completion_tokens: i32,

@@ -67,7 +67,7 @@ mod tests {
     fn test_edit_file_line_col_range_middle() {
         let mut tmp = NamedTempFile::new().unwrap();
         write!(tmp, "abc\ndef\nghi\n").unwrap();
-        // Ersetze "d" in "def" (Zeile 1, Spalte 0) durch "XYZ"
+        // Replace "d" in "def" (Zeile 1, Spalte 0) through "XYZ"
         EditFilesTool::edit_file_line_col_range(tmp.path().to_str().unwrap(), "XYZ", 1, 0, 1, 1)
             .unwrap();
         let read = read_file(tmp.path());
