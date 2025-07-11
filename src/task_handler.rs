@@ -112,7 +112,7 @@ impl TaskHandler {
         let mut ctr: i8 = 0;
 
         loop {
-            // match response, if there was an error, propagate to user
+            // Match response, if there was an error, propagate to user
             let completion = match &response {
                 Ok(c) => c.clone(),
                 Err(e) => {
@@ -123,32 +123,32 @@ impl TaskHandler {
                 }
             };
 
-            // if llm returns a text I expect the task to be done
+            // If llm returns a text I expect the task to be done
             if let Completion::Text(value) = completion {
                 return TaskOutcome::Complete(value);
             } else if let Completion::ToolCalls(value) = completion {
-                // if LLM returns a tool call, extract the tool name and arguments and call tool
+                // If LLM returns a tool call, extract the tool name and arguments and call tool
                 let tool_name = TaskHandler::get_tool_name(&value[0]);
                 let args = TaskHandler::get_tool_arguments(&value[0]);
                 let tool_result = collection::call_tool(&tool_name, args.clone());
 
-                // add the new interaction to the memory
+                // Add the new interaction to the memory
                 self.memory.add(
                     input,
                     format!("You called the tool \"{tool_name}\" with the Arguments: {args}"),
                 );
 
-                // make string from tool return
+                // Make string from tool return
                 input = match &tool_result {
                     Ok(value) => value.clone().to_string(),
                     Err(e) => e.to_string(),
                 };
 
-                // give returned value of the tool to the llm
+                // Give returned value of the tool to the llm
                 response = self.send_tool_answer(&input, self.memory.read());
             }
 
-            // stop the loop after x runs
+            // Stop the loop after x runs
             ctr += 1;
             if ctr >= 10 {
                 return TaskOutcome::Failure(
@@ -172,11 +172,11 @@ impl TaskHandler {
         history: &str,
         path: &str,
     ) -> Result<Completion, LLMAPIError> {
-        // dev message includes the working directory path
+        // Dev message includes the working directory path
         let dev_message = Message::new(intro_with_path(path), MessageRole::Developer);
-        // history posted as Assistant to make the LLM know what happened before
+        // History posted as Assistant to make the LLM know what happened before
         let history_message = Message::new(history.to_string(), MessageRole::Assistant);
-        // build user request as Message
+        // Build user request as Message
         let user_message = Message::new(request.to_string(), MessageRole::User);
         let messages = vec![dev_message, history_message, user_message];
 
