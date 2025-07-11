@@ -1,9 +1,7 @@
-use std::process::{Command, Stdio};
-use std::fs;
 use std::io;
+use std::process::Command;
 
 pub struct GitRepository {
-
     pub repo_url: String,
     pub branch: String,
     pub user_name: String,
@@ -12,9 +10,14 @@ pub struct GitRepository {
 }
 
 impl GitRepository {
-
     /// Initializes the GitRepository struct
-    pub fn new(repo_url: &str, branch: &str, user_name: &str, user_email: &str, target_dir: &str) -> Self {
+    pub fn new(
+        repo_url: &str,
+        branch: &str,
+        user_name: &str,
+        user_email: &str,
+        target_dir: &str,
+    ) -> Self {
         GitRepository {
             repo_url: repo_url.to_string(),
             branch: branch.to_string(),
@@ -26,7 +29,6 @@ impl GitRepository {
 
     /// Sets the git user name and email
     pub fn configure_git_user(&self) -> io::Result<()> {
-
         let config_name = Command::new("git")
             .arg("config")
             .arg("user.name")
@@ -42,7 +44,7 @@ impl GitRepository {
             .status()?;
 
         if !config_name.success() || !config_email.success() {
-            return Err(io::Error::new(io::ErrorKind::Other, "Git config failed"));
+            return Err(io::Error::other("Git config failed"));
         }
 
         Ok(())
@@ -50,16 +52,18 @@ impl GitRepository {
 
     /// Clones the repository to the target directory
     pub fn clone_repo(&self) -> io::Result<()> {
-        println!("Cloning repo: {} into {}", self.repo_url, self.target_dir);
+        // println!("Cloning repo: {} into {}", self.repo_url, self.target_dir);
+        // For API-Key safety i decided to not print the url
+        println!("Cloning repo into {}", self.target_dir);
         // The git command is build
         let status = Command::new("git")
             .arg("clone")
             .arg(&self.repo_url)
             .arg(&self.target_dir)
             .status()?;
-        
+
         if !status.success() {
-            return Err(io::Error::new(io::ErrorKind::Other, "Git clone failed"));
+            return Err(io::Error::other("Git clone failed"));
         }
 
         Ok(())
@@ -67,7 +71,6 @@ impl GitRepository {
 
     /// Checks out the specified branch
     pub fn checkout_branch(&self) -> io::Result<()> {
-
         let status = Command::new("git")
             .arg("checkout")
             .arg(&self.branch)
@@ -75,7 +78,7 @@ impl GitRepository {
             .status()?;
 
         if !status.success() {
-            return Err(io::Error::new(io::ErrorKind::Other, "Git checkout failed"));
+            return Err(io::Error::other("Git checkout failed"));
         }
 
         Ok(())
@@ -83,7 +86,6 @@ impl GitRepository {
 
     /// Executes the complete setup flow: clone, configure, checkout
     pub fn prepare_repository(&self) -> io::Result<()> {
-
         self.clone_repo()?;
         self.configure_git_user()?;
         self.checkout_branch()?;
