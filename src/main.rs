@@ -9,7 +9,6 @@ mod task_handler;
 mod tools;
 mod tools_interface;
 
-//use llm::Completion;
 use report::{try_report_failure, try_report_success};
 use reqwest::blocking::Client;
 use std::env;
@@ -29,20 +28,20 @@ fn main() {
     let minion_api: Url = env::var("MINION_API_BASE_URL").unwrap().parse().unwrap();
     let minion_token = env::var("MINION_API_TOKEN").unwrap();
 
-    //Task handler interaction example
+    // Task handler interaction example
     let mut task_handler = TaskHandler::new(&minion_token, &minion_api);
 
-    //Create new Client for get_task
+    // Create new Client for get_task
     let client: Client = Client::new();
 
     let http_client = reqwest::blocking::Client::new();
 
-    //Fetch the raw task data
+    // Fetch the raw task data
     let raw_task = get_task(&minion_api, &minion_token, client);
 
     let (meta_data, description) = match &raw_task {
         Ok(res) => {
-            //Change Url for neccessary authing.
+            // Change Url for neccessary authing.
             let mut repo_url = res.git_repo_url.clone();
             match Url::parse(&repo_url) {
                 Ok(mut url) => {
@@ -54,7 +53,7 @@ fn main() {
                     eprint!("No Valid URL: {e}")
                 }
             };
-            //Match the GitRepository data to get important information for repo_clone
+            // Match the GitRepository data to get important information for repo_clone
             let git_data = GitRepository::new(
                 &repo_url,
                 &res.git_branch,
@@ -63,16 +62,16 @@ fn main() {
                 "/workspace",
             );
 
-            //Match the raw task data to only get the description of the task.
+            // Match the raw task data to only get the description of the task.
             let description = res.description.to_string();
             (git_data, description)
         }
         Err(_res) => {
-            //Empty meta_data in case of Error
-            //let meta_data = GitRepository::new("", "", "", "", "");
-            //Clarify to the Model, that there has been an error.
-            //let description = "There has been an error while receiving the task".to_string();
-            //(meta_data, description)
+            // Empty meta_data in case of Error
+            // let meta_data = GitRepository::new("", "", "", "", "");
+            // Clarify to the Model, that there has been an error.
+            // let description = "There has been an error while receiving the task".to_string();
+            // (meta_data, description)
             try_report_failure(
                 minion_api,
                 minion_token,
@@ -100,7 +99,7 @@ fn main() {
     };
 
     let response = task_handler.run(&task);
-    //let response = TaskOutcome::Complete("Test".to_string());  //you can use that if you just want to test the lifecycle
+    // let response = TaskOutcome::Complete("Test".to_string());  //you can use that if you just want to test the lifecycle
 
     /*let _response = match response {
         TaskOutcome::Complete(a) => a,

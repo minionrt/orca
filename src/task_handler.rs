@@ -33,7 +33,7 @@ The response of your last tool call is the following:"#;
 /// The possible outcomes of a task.
 pub enum TaskOutcome {
     Complete(String),
-    Failure(String, Option<TaskFailureReason>), //one field for a description, one for a reason
+    Failure(String, Option<TaskFailureReason>), // one field for a description, one for a reason
 }
 
 /// Represents a task to be performed by the agent.
