@@ -99,7 +99,7 @@ fn main() {
     };
 
     let response = task_handler.run(&task);
-    // let response = TaskOutcome::Complete("Test".to_string());  //you can use that if you just want to test the lifecycle
+    // let response = TaskOutcome::Complete("Test".to_string());  // you can use that if you just want to test the lifecycle
 
     /*let _response = match response {
         TaskOutcome::Complete(a) => a,
