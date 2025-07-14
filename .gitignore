@@ -4,6 +4,10 @@
 # docker generated files
 docker
 
+# Log files
+logs/
+*.log
+
 # Allow .gitignore in root
 !.gitignore
 

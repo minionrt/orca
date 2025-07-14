@@ -1,5 +1,6 @@
 use std::io;
 use std::process::Command;
+use tracing::{debug, info};
 
 pub struct GitRepository {
     pub repo_url: String,
@@ -86,9 +87,19 @@ impl GitRepository {
 
     /// Executes the complete setup flow: clone, configure, checkout
     pub fn prepare_repository(&self) -> io::Result<()> {
+        info!("Starting repository preparation for: {}", self.repo_url);
+        debug!("Target directory: {}", self.target_dir);
+        debug!("Branch: {}", self.branch);
+        
         self.clone_repo()?;
+        info!("Repository cloned successfully");
+        
         self.configure_git_user()?;
+        info!("Git user configured successfully");
+        
         self.checkout_branch()?;
+        info!("Branch checked out successfully");
+        
         Ok(())
     }
 }

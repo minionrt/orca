@@ -1,6 +1,7 @@
 mod agent_actions;
 mod fetch_task;
 mod llm;
+mod logging;
 mod memory;
 mod models;
 mod openai;
@@ -16,17 +17,21 @@ use task_handler::{Task, TaskHandler, TaskOutcome};
 use url::Url;
 mod repo_clone;
 use crate::{fetch_task::get_task, repo_clone::GitRepository};
+use tracing::{info, error};
 
 fn main() {
-    println!();
-    println!();
-    println!("This is a message from the agent.");
-    println!();
-    println!();
+    // Initialize logging first thing
+    logging::init_logging();
+    
+    info!("Starting teamprojekt-agents");
+    info!("This is a message from the agent");
+    
     // The agent receives the HTTP API base url and token via the following environment variables.
     // See https://github.com/autominion/spec/blob/main/spec/runtime.md
     let minion_api: Url = env::var("MINION_API_BASE_URL").unwrap().parse().unwrap();
     let minion_token = env::var("MINION_API_TOKEN").unwrap();
+
+    info!("Connecting to minion API at: {}", minion_api);
 
     // Task handler interaction example
     let mut task_handler = TaskHandler::new(&minion_token, &minion_api);
@@ -37,10 +42,12 @@ fn main() {
     let http_client = reqwest::blocking::Client::new();
 
     // Fetch the raw task data
+    info!("Fetching task from API...");
     let raw_task = get_task(&minion_api, &minion_token, client);
 
     let (meta_data, description) = match &raw_task {
         Ok(res) => {
+            info!("Task fetched successfully: {}", res.description);
             // Change Url for neccessary authing.
             let mut repo_url = res.git_repo_url.clone();
             match Url::parse(&repo_url) {
@@ -66,7 +73,8 @@ fn main() {
             let description = res.description.to_string();
             (git_data, description)
         }
-        Err(_res) => {
+        Err(err) => {
+            error!("Failed to fetch task: {}", err);
             // Empty meta_data in case of Error
             // let meta_data = GitRepository::new("", "", "", "", "");
             // Clarify to the Model, that there has been an error.
@@ -84,9 +92,13 @@ fn main() {
     };
 
     // clone git repo
+    info!("Preparing repository...");
     match meta_data.prepare_repository() {
-        Ok(()) => println!("Repository prepared successfully"),
-        Err(err) => eprintln!("Preparing repository failed: {err}"),
+        Ok(()) => info!("Repository prepared successfully"),
+        Err(err) => {
+            error!("Preparing repository failed: {}", err);
+            return;
+        }
     }
 
     // The target_dir is the directory that should be used as the working directory for all tools that interact with the repository

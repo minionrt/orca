@@ -2,6 +2,7 @@ use crate::agent_actions::{bash, edit_files, read_files, submit_code};
 use crate::openai::Tool;
 use crate::tools_interface::ToolInstance;
 use std::error::Error;
+use tracing::{debug, error};
 
 /// Returns all available tools expected by the LLM
 pub fn get_tools() -> Option<Vec<Tool>> {
@@ -22,7 +23,9 @@ pub fn call_tool(
     tool_name: &str,
     args: serde_json::Value,
 ) -> Result<serde_json::Value, Box<dyn Error>> {
-    match tool_name {
+    debug!("Calling tool: {} with args: {:?}", tool_name, args);
+    
+    let result = match tool_name {
         "read_files" => {
             let tool = read_files::ReadFilesTool;
             tool.run(args)
@@ -39,6 +42,16 @@ pub fn call_tool(
             let tool = submit_code::GitSubmissionTool::default();
             tool.run(args)
         }
-        _ => Err(format!("Tool '{tool_name}' not found.").into()),
+        _ => {
+            error!("Unknown tool requested: {}", tool_name);
+            Err(format!("Tool '{tool_name}' not found.").into())
+        },
+    };
+    
+    match &result {
+        Ok(_) => debug!("Tool {} executed successfully", tool_name),
+        Err(e) => error!("Tool {} failed: {}", tool_name, e),
     }
+    
+    result
 }
