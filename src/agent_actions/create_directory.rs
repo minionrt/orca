@@ -40,7 +40,7 @@ impl ToolInstance for CreateDirectoryTool {
         params: serde_json::Value,
     ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
         //debug!("CreateDirectoryTool::run called with params: {:?}", params);
-        
+
         let path = match params.get("path") {
             None => {
                 return Err("The parameter \"path\" doesn't exist in the given tool call".into());
@@ -50,11 +50,13 @@ impl ToolInstance for CreateDirectoryTool {
                 return Err("The parameter \"path\" isn't given as string.".into());
             }
         };
-        
+
         //info!("Creating directory: {}", path);
         create_directory(path)?;
-        
-        Ok(serde_json::Value::String(format!("Directory created: {path}")))
+
+        Ok(serde_json::Value::String(format!(
+            "Directory created: {path}"
+        )))
     }
 
     fn return_choice() -> openai::Tool {
