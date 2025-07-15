@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
+use tracing::{debug, error, info, warn};
 use url::Url;
-use tracing::{debug, info, warn, error};
 
 use crate::llm::{Completion, LLM, LLMAPIError, Message, MessageRole};
 use crate::memory::Memory;
@@ -110,7 +110,7 @@ impl TaskHandler {
         info!("Starting task execution");
         debug!("Task request: {}", task.request);
         debug!("Working directory: {}", task.working_dir);
-        
+
         let mut input = task.request.clone();
         let mut response = self.single_request(&task.request, &task.working_dir);
 
@@ -119,7 +119,7 @@ impl TaskHandler {
         loop {
             ctr += 1;
             debug!("Interaction loop iteration: {}", ctr);
-            
+
             // Match response, if there was an error, propagate to user
             let completion = match &response {
                 Ok(c) => c.clone(),
@@ -140,7 +140,7 @@ impl TaskHandler {
                 // If LLM returns a tool call, extract the tool name and arguments and call tool
                 let tool_name = TaskHandler::get_tool_name(&value[0]);
                 let args = TaskHandler::get_tool_arguments(&value[0]);
-                
+
                 info!("Calling tool: {} with args: {:?}", tool_name, args);
                 let tool_result = collection::call_tool(&tool_name, args.clone());
 
@@ -155,11 +155,11 @@ impl TaskHandler {
                     Ok(value) => {
                         debug!("Tool execution successful: {}", value);
                         value.clone().to_string()
-                    },
+                    }
                     Err(e) => {
                         warn!("Tool execution failed: {}", e);
                         e.to_string()
-                    },
+                    }
                 };
 
                 // Give returned value of the tool to the llm

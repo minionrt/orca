@@ -3,8 +3,7 @@ use tracing_subscriber::EnvFilter;
 /// Initialize the tracing subscriber with console-only logging
 pub fn init_logging() {
     // Create a filter from environment variables (default to INFO level)
-    let env_filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new("info"));
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
 
     // Set up console logging with colors and pretty formatting
     tracing_subscriber::fmt()
@@ -15,4 +14,3 @@ pub fn init_logging() {
         .with_ansi(true)
         .init();
 }
-

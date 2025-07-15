@@ -56,7 +56,7 @@ impl GitRepository {
         // For API-Key safety, don't print the full URL with credentials
         info!("Cloning repository to {}", self.target_dir);
         debug!("Repository URL: {}", self.repo_url);
-        
+
         // The git command is built
         let status = Command::new("git")
             .arg("clone")
@@ -91,16 +91,16 @@ impl GitRepository {
         info!("Starting repository preparation for: {}", self.repo_url);
         debug!("Target directory: {}", self.target_dir);
         debug!("Branch: {}", self.branch);
-        
+
         self.clone_repo()?;
         info!("Repository cloned successfully");
-        
+
         self.configure_git_user()?;
         info!("Git user configured successfully");
-        
+
         self.checkout_branch()?;
         info!("Branch checked out successfully");
-        
+
         Ok(())
     }
 }

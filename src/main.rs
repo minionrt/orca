@@ -17,14 +17,14 @@ use task_handler::{Task, TaskHandler, TaskOutcome};
 use url::Url;
 mod repo_clone;
 use crate::{fetch_task::get_task, repo_clone::GitRepository};
-use tracing::{info, error};
+use tracing::{error, info};
 
 fn main() {
     // Initialize logging first thing
     logging::init_logging();
-    
+
     info!("Starting teamprojekt-agents");
-  
+
     // The agent receives the HTTP API base url and token via the following environment variables.
     // See https://github.com/autominion/spec/blob/main/spec/runtime.md
     let minion_api: Url = env::var("MINION_API_BASE_URL").unwrap().parse().unwrap();

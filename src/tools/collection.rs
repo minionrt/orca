@@ -24,7 +24,7 @@ pub fn call_tool(
     args: serde_json::Value,
 ) -> Result<serde_json::Value, Box<dyn Error>> {
     debug!("Calling tool: {} with args: {:?}", tool_name, args);
-    
+
     let result = match tool_name {
         "read_files" => {
             let tool = read_files::ReadFilesTool;
@@ -45,13 +45,13 @@ pub fn call_tool(
         _ => {
             error!("Unknown tool requested: {}", tool_name);
             Err(format!("Tool '{tool_name}' not found.").into())
-        },
+        }
     };
-    
+
     match &result {
         Ok(_) => debug!("Tool {} executed successfully", tool_name),
         Err(e) => error!("Tool {} failed: {}", tool_name, e),
     }
-    
+
     result
 }
