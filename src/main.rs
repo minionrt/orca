@@ -57,7 +57,7 @@ fn main() {
                     repo_url = url.to_string();
                 }
                 Err(e) => {
-                    eprint!("No Valid URL: {e}")
+                    error!("Invalid repository URL: {}", e);
                 }
             };
             // Match the GitRepository data to get important information for repo_clone
