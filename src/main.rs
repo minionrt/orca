@@ -24,8 +24,7 @@ fn main() {
     logging::init_logging();
     
     info!("Starting teamprojekt-agents");
-    info!("This is a message from the agent");
-    
+  
     // The agent receives the HTTP API base url and token via the following environment variables.
     // See https://github.com/autominion/spec/blob/main/spec/runtime.md
     let minion_api: Url = env::var("MINION_API_BASE_URL").unwrap().parse().unwrap();
