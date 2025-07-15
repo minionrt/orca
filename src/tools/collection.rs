@@ -1,3 +1,4 @@
+use crate::agent_actions::submit_code::GitSubmissionToolArgs;
 use crate::agent_actions::{bash, dir_tree, edit_files, read_files, submit_code};
 use crate::openai::Tool;
 use crate::tools_interface::ToolInstance;
@@ -30,9 +31,11 @@ pub fn call_tool(
             serde_json::from_value(args)?,
         )?)?,
         "bash" => serde_json::to_value(bash::BashTool::run(serde_json::from_value(args)?)?)?,
-        "git_submission" => serde_json::to_value(submit_code::GitSubmissionTool::run(
-            serde_json::from_value(args)?,
-        )?)?,
+        "git_submission" => {
+            // this implicitly sets "args.this" to the default
+            let args: GitSubmissionToolArgs = serde_json::from_value(args)?;
+            serde_json::to_value(submit_code::GitSubmissionTool::run(args)?)?
+        }
         "dir_tree" => {
             serde_json::to_value(dir_tree::DirTreeTool::run(serde_json::from_value(args)?)?)?
         }
