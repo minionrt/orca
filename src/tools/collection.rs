@@ -15,11 +15,7 @@ pub fn get_tools() -> Option<Vec<Tool>> {
         dir_tree::DirTreeTool::return_choice(),
     ];
 
-    if tools.is_empty() {
-        None
-    } else {
-        Some(tools)
-    }
+    if tools.is_empty() { None } else { Some(tools) }
 }
 
 /// Calls the specified tool by name with the given arguments
@@ -39,6 +35,7 @@ pub fn call_tool(
         )?)?,
         "bash" => serde_json::to_value(bash::BashTool::run(serde_json::from_value(args)?)?)?,
         "git_submission" => {
+            // this implicitly sets "args.this" to the default
             let args: GitSubmissionToolArgs = serde_json::from_value(args)?;
             serde_json::to_value(submit_code::GitSubmissionTool::run(args)?)?
         }
