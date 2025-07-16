@@ -242,7 +242,7 @@ impl LLM {
         self.client = Some(client);
         self
     }
-    /// Set available tools       
+    /// Set available tools
     pub fn with_tools(&mut self, tools: Option<Vec<openai::Tool>>) -> &mut Self {
         self.tools = tools;
         self

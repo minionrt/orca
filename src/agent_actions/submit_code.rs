@@ -1,6 +1,7 @@
 use crate::openai;
 use crate::tools_interface::ToolInstance;
-use serde_json::Value;
+use serde::Deserialize;
+use std::collections::HashMap;
 use std::io;
 use std::process::Command;
 
@@ -39,14 +40,13 @@ impl GitSubmissionTool {
     /// # Arguments
     /// * `commit_message` - The commit message, provided by the llm. If none is provided, it'll still work.
     ///
-    /// # Returns
+    /// # Return
     /// Returns an io::Result indicating either success or failure
-    fn commit_changes(&self, commit_message: Option<&str>) -> io::Result<()> {
-        let c_message = commit_message.unwrap_or("No message :(");
+    fn commit_changes(&self, commit_message: &str) -> io::Result<()> {
         let status = Command::new("git")
             .arg("commit")
             .arg("-m")
-            .arg(c_message)
+            .arg(commit_message)
             .current_dir(&self.working_dir)
             .status()?;
         if !status.success() {
@@ -57,7 +57,7 @@ impl GitSubmissionTool {
 
     /// Pushes all committed changes.
     ///
-    /// # Returns
+    /// # Return
     /// Returns an io::Result indicating success or failure
     fn push_changes(&self) -> io::Result<()> {
         let status = Command::new("git")
@@ -77,9 +77,9 @@ impl GitSubmissionTool {
     /// # Arguments
     /// * `commit_message` - the commit messsage provided by the llm. If none is provided it'll still work.
     ///
-    /// # Returns
+    /// # Return
     /// Returns an io::Result indicating either success or failure
-    fn submit_changes(&self, commit_message: Option<&str>) -> io::Result<()> {
+    fn submit_changes(&self, commit_message: &str) -> io::Result<()> {
         self.add_changes()?;
         self.commit_changes(commit_message)?;
         self.push_changes()?;
@@ -94,49 +94,49 @@ impl Default for GitSubmissionTool {
     }
 }
 
-/// Implements the ToolInstance trait for GitSubmissionTool, allowing it to be used as a dynamic tool
+#[derive(Deserialize)]
+pub struct GitSubmissionToolArgs {
+    action: String,
+    commit_message: String,
+    #[serde(default)]
+    working_dir: Option<String>,
+    #[serde(skip)]
+    this: GitSubmissionTool,
+}
+
+/// Implements the ToolInstance trait for GitSubmissionTool, allowing it to be used
+/// as a dynamic tool
 impl ToolInstance for GitSubmissionTool {
+    type Args = GitSubmissionToolArgs;
+    type Out = String;
+
     /// Runs the requested git action based on the parameters provided.
     ///
     /// # Parameters
     /// * `params`: a serde_json::Value containing the following keys:
     ///     - "action": String. One of "add", "commit", "push" or "submit".
-    ///     - "commit_message": String (optional). Used for "commit" and "submit".
+    ///     - "commit_message": String. Used for "commit" and "submit".
     ///     - "working_dir": String (optional). Overrides the working directory for this invocation.
-    ///
-    /// # Returns
+    /// # Return
     /// Returns a JSON String describing the outcome or an error.
-    fn run(&self, params: Value) -> Result<Value, Box<dyn std::error::Error>> {
-        let action = params
-            .get("action")
-            .and_then(|v| v.as_str())
-            .ok_or("Missing parameter: action")?;
-        let commit_message = params.get("commit_message").and_then(|v| v.as_str());
-        // Allow override of working directory for this invocation
-        let working_dir = params
-            .get("working_dir")
-            .and_then(|v| v.as_str())
-            .unwrap_or(&self.working_dir)
-            .to_string();
-        // Create a temporary tool instance if override is used
-        let tool = if working_dir != self.working_dir {
+    fn run(params: Self::Args) -> Result<Self::Out, Box<dyn std::error::Error>> {
+        // Match the action to the corresponding git operation.
+        let tool = if let Some(working_dir) = params.working_dir.clone() {
             GitSubmissionTool::new(working_dir)
         } else {
-            GitSubmissionTool {
-                working_dir: self.working_dir.clone(),
-            }
+            params.this
         };
 
-        let result = match action {
+        Ok(match params.action.as_str() {
             "add" => {
                 tool.add_changes()?;
                 "git add . executed".to_string()
             }
             "commit" => {
-                tool.commit_changes(commit_message)?;
+                tool.commit_changes(&params.commit_message)?;
                 format!(
                     "git commit executed with message: {:?}",
-                    commit_message.unwrap_or("No message :(")
+                    params.commit_message
                 )
             }
             "push" => {
@@ -144,10 +144,10 @@ impl ToolInstance for GitSubmissionTool {
                 "git push origin HEAD executed".to_string()
             }
             "submit" => {
-                tool.submit_changes(commit_message)?;
+                tool.submit_changes(&params.commit_message)?;
                 format!(
                     "submission successful (add, commit, push) with message: {:?}",
-                    commit_message.unwrap_or("No message :(")
+                    params.commit_message,
                 )
             }
             _ => {
@@ -155,36 +155,30 @@ impl ToolInstance for GitSubmissionTool {
                     "Incorrect action parameter. Allowed are: add, commit, push, submit.".into(),
                 );
             }
-        };
-        Ok(Value::String(result))
+        })
     }
 
     /// Returns the tool definition for this tool, including parameters and descriptions.
     fn return_choice() -> openai::Tool {
-        openai::Tool {
-            function: openai::Function {
-                name: "git_submission".to_string(),
-                description: "Executes git add, commit, and push. Please always provide commit message. Optionally, set working_dir.".to_string(),
-                parameters: serde_json::json!({
-                    "type": "object",
-                    "properties": {
-                        "action": {
-                            "type": "string",
-                            "description": "Choose one: \"add\", \"commit\", \"push\" or \"submit\""
-                        },
-                        "commit_message": {
-                            "type": "string",
-                            "description": "Commit message summarizing the changes."
-                        },
-                        "working_dir": {
-                            "type": "string",
-                            "description": "Directory where git commands are executed. Defaults to current directory."
-                        }
-                    },
-                    "required": ["action", "commit_message"]
-                }),
-            },
-            tool_type: "function".to_string(),
-        }
+        openai::Tool::function(
+            "git_submission".to_owned(),
+            "Executes the full git submission using add, commit and push. Please always provide commit message.".to_owned(),
+            HashMap::from([
+                (
+                    "action".to_owned(),
+                    openai::FunctionParameter::new("string", "Please choose one of these actions: \"add\", \"commit\", \"push\" or \"submit\"")
+                ),
+                (
+                    "commit_message".to_owned(),
+                    openai::FunctionParameter::new("string", "Commit message, which summarizes the changes made."),
+                ),
+            ]),
+            HashMap::from([
+                (
+                    "working_dir".to_owned(),
+                    openai::FunctionParameter::new("string", "Directory where git commands are executed. Defaults to current directory"),
+                )
+            ]),
+        )
     }
 }
