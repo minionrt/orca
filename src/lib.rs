@@ -1,6 +1,7 @@
 pub mod agent_actions;
 pub mod fetch_task;
 pub mod llm;
+pub mod logging;
 pub mod memory;
 pub mod models;
 pub mod openai;

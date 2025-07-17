@@ -2,6 +2,7 @@
 
 use crate::openai::{self, ToolCall};
 use std::fmt;
+use tracing::{debug, error, info};
 
 ///Enum to choose between content and tool_calls
 #[derive(Clone, Debug)]
@@ -255,6 +256,8 @@ impl LLM {
 
     /// Prompt the LLM with a chain of `Message`
     pub fn prompt(&self, messages: &[Message]) -> Result<Completion> {
+        debug!("Sending {} messages to LLM", messages.len());
+
         let client = self.client.clone().unwrap_or(self.default_client());
 
         let completion = openai::fetch_completion(
@@ -275,11 +278,17 @@ impl LLM {
             client,
         );
 
-        println!("{completion:?}");
+        debug!("LLM response: {:?}", completion);
 
         match completion {
-            Ok(ok) => ok.try_into(),
-            Err(err) => Err(LLMAPIError::NetworkError(err.to_string())),
+            Ok(ok) => {
+                info!("LLM request successful");
+                ok.try_into()
+            }
+            Err(err) => {
+                error!("LLM request failed: {}", err);
+                Err(LLMAPIError::NetworkError(err.to_string()))
+            }
         }
     }
 
