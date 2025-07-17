@@ -12,7 +12,7 @@ use crate::tools::collection::{self, get_tools};
 const INTRO_1: &str = r#"You are an autonomous agent that solves coding tasks. 
 You should use the given tools to solve the given task.
 You are connected to a Linux-based development environment. 
-Use the ask_user tool if the task is not entirely clear to you!
+!ALWAYS! use the ask_user tool if the task is not entirely clear to you!
 You are in the project directory. Your current task is as follows:"#;
 
 const MESSAGE_TOOL_RESPONSE: &str = r#"You are an autonomous agent that solves coding tasks. 
@@ -82,7 +82,7 @@ impl TaskHandler {
                 get_tools(),
                 tool_choice,
             ),
-            memory: Memory::new(api_key, base_url),
+            memory: Memory::new(api_key, base_url),          
         }
     }
 
@@ -114,10 +114,7 @@ impl TaskHandler {
             else if let Completion::ToolCalls(value) = completion {
                 //if LLM returns a tool call, extract the tool name and arguments and call tool
                 let tool_name = TaskHandler::get_tool_name(&value[0]);
-                let mut inquiry = false;
-                if tool_name == "ask_user".to_string(){
-                    inquiry = true;
-                }
+                    
                 let args = TaskHandler::get_tool_arguments(&value[0]);
                 let tool_result = collection::call_tool(&tool_name, args.clone());
 
@@ -132,13 +129,8 @@ impl TaskHandler {
                     Ok(value) => value.clone().to_string(),
                     Err(e) => e.to_string(),
                 };
-                if !inquiry{
-                     //give returned value of the tool to the llm
-                    response = self.send_tool_answer(&input, self.memory.read());
-                }
-                else{
-                    return TaskOutcome::Complete(input);
-                }
+                response = self.send_tool_answer(&input, self.memory.read());
+                
                
             }
 
