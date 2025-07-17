@@ -28,6 +28,7 @@ const MESSAGE_TOOL_RESPONSE: &str = r#"You are an autonomous agent that solves c
 You should use the given tools to solve the given task.
 You are connected to a Linux-based development environment. You are in the 
 project directory. If you think your task is done please call the git_submission tool and in the next step just tell me what you did.
+Don't try to use git via bash! Just call the git_submission tool.
 The response of your last tool call is the following:"#;
 
 /// The possible outcomes of a task.
@@ -150,7 +151,7 @@ impl TaskHandler {
 
             // Stop the loop after x runs
             ctr += 1;
-            if ctr >= 10 {
+            if ctr >= 25 {
                 return TaskOutcome::Failure(
                     "The interaction loop run too long, the agent can't stop yappin..".to_string(),
                     Some(TaskFailureReason::ProblemSolving),

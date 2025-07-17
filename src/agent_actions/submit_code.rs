@@ -30,7 +30,9 @@ impl GitSubmissionTool {
             .current_dir(&self.working_dir)
             .status()?;
         if !status.success() {
-            return Err(io::Error::other("git add failed"));
+            //return Err(io::Error::other("git add failed"));
+            return Err(io::Error::other(format!("git add failed{}", &self.working_dir)));
+
         }
         Ok(())
     }
@@ -124,7 +126,7 @@ impl ToolInstance for GitSubmissionTool {
         let tool = if let Some(working_dir) = params.working_dir.clone() {
             GitSubmissionTool::new(working_dir)
         } else {
-            params.this
+            params.this //<- we always chose this case, don't we?
         };
 
         Ok(match params.action.as_str() {
@@ -171,6 +173,10 @@ impl ToolInstance for GitSubmissionTool {
                 (
                     "commit_message".to_owned(),
                     openai::FunctionParameter::new("string", "Commit message, which summarizes the changes made."),
+                ),
+                (
+                    "working_directory".to_owned(),
+                    openai::FunctionParameter::new("string", "The directory that should be used for the git commands."),
                 ),
             ]),
             HashMap::from([
