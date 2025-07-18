@@ -3,6 +3,7 @@ use crate::agent_actions::{bash, dir_tree, edit_files, read_files, submit_code};
 use crate::openai::Tool;
 use crate::tools_interface::ToolInstance;
 use std::error::Error;
+use tracing::{debug, error};
 
 /// Returns all available tools expected by the LLM
 pub fn get_tools() -> Option<Vec<Tool>> {
@@ -24,6 +25,7 @@ pub fn call_tool(
     args: serde_json::Value,
     dir: &str,
 ) -> Result<serde_json::Value, Box<dyn Error>> {
+    debug!("Calling tool: {} with args: {:?}", tool_name, args);
     let result = Ok(match tool_name {
         "read_files" => serde_json::to_value(read_files::ReadFilesTool::run(
             serde_json::from_value(args)?,
@@ -49,9 +51,13 @@ pub fn call_tool(
         "dir_tree" => {
             serde_json::to_value(dir_tree::DirTreeTool::run(serde_json::from_value(args)?)?)?
         }
-        _ => return Err(format!("Tool '{tool_name}' not found.").into()),
+        _ => {
+            error!("Unknown tool requested: {}", tool_name);
+            return Err(format!("Tool '{tool_name}' not found.").into());
+        }
     });
 
+    debug!("Tool {} executed successfully", tool_name);
     match &result {
         // If a tool returns null, that's automatically interpreted as success, but please handle your tool returns correctly in the match above
         Ok(val) if val == &serde_json::Value::Null => {

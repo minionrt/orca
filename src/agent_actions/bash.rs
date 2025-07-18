@@ -4,6 +4,7 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::io;
 use std::process::{Command, Stdio};
+use tracing::{debug, info, warn};
 
 pub struct BashTool;
 
@@ -22,6 +23,8 @@ impl BashTool {
 ///
 /// Returns a Result containing the combined stdout and stderr output, or an error if execution fails.
 pub fn run_bash(code: &str) -> io::Result<String> {
+    debug!("Executing bash command: {}", code);
+
     let output = Command::new("bash")
         .arg("-c")
         .arg(code)
@@ -29,9 +32,21 @@ pub fn run_bash(code: &str) -> io::Result<String> {
         .stderr(Stdio::piped())
         .output()?;
 
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    if !stdout.is_empty() {
+        debug!("Command stdout: {}", stdout);
+    }
+    if !stderr.is_empty() {
+        warn!("Command stderr: {}", stderr);
+    }
+
     let mut result = String::new();
-    result.push_str(&String::from_utf8_lossy(&output.stdout));
-    result.push_str(&String::from_utf8_lossy(&output.stderr));
+    result.push_str(&stdout);
+    result.push_str(&stderr);
+
+    info!("Bash command completed with exit status: {}", output.status);
     Ok(result)
 }
 
@@ -49,17 +64,21 @@ pub struct BashToolArgs {
 impl ToolInstance for BashTool {
     type Args = BashToolArgs;
     type Out = String;
+
     fn run(args: Self::Args) -> Result<Self::Out, Box<dyn std::error::Error>> {
-        Ok(run_bash(&args.code)?)
+        debug!("BashTool::run called with code: {}", args.code);
+        let output = run_bash(&args.code)?;
+        Ok(output)
     }
 
     fn return_choice() -> openai::Tool {
-        openai::Tool::function("bash".to_owned(),
+        openai::Tool::function(
+            "bash".to_owned(),
             "Executes bash code and returns the output (stdout and stderr). The first parameter is the bash code to execute.".to_owned(),
-           HashMap::from([
-               ("code".to_owned(), openai::FunctionParameter::new("string", "The bash code to execute")),
-           ]),
-           HashMap::new(),
+            HashMap::from([
+                ("code".to_owned(), openai::FunctionParameter::new("string", "The bash code to execute")),
+            ]),
+            HashMap::new(),
         )
     }
 }
