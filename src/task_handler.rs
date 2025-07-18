@@ -30,7 +30,7 @@ const MESSAGE_TOOL_RESPONSE: &str = r#"You are an autonomous agent that solves c
 You should use the given tools to solve the given task.
 You are connected to a Linux-based development environment. You are in the 
 project directory. If you think your task is done please call the git_submission tool and in the next step just tell me what you did.
-Don't try to use git via bash! Just call the git_submission tool.
+Please ONLY use bash tool if none of the others offers what you want to do, don't use bash tool with \"cd\"!
 The response of your last tool call is the following:"#;
 
 /// The possible outcomes of a task.
@@ -130,7 +130,7 @@ impl TaskHandler {
             // If llm returns a text I expect the task to be done
             if let Completion::Text(value) = completion {
                 //if the agend doesn't submit we use that message and submit for it
-                if !submitted{
+                if !submitted {
                     let _ = GitSubmissionTool::new(&task.working_dir).submit_changes(&value);
                 }
                 return TaskOutcome::Complete(value);
@@ -138,12 +138,13 @@ impl TaskHandler {
                 // If LLM returns a tool call, extract the tool name and arguments and call tool
                 let tool_name = TaskHandler::get_tool_name(&value[0]);
                 let args = TaskHandler::get_tool_arguments(&value[0]);
-                let tool_result = collection::call_tool(&tool_name, args.clone(), &task.working_dir);
- 
-                if tool_name == "git_submission" {
-                    if matches!(&tool_result, Ok(serde_json::Value::String(s)) if s.starts_with("submission successful")) {
-                        submitted = true;
-                    }
+                let tool_result =
+                    collection::call_tool(&tool_name, args.clone(), &task.working_dir);
+
+                if tool_name == "git_submission"
+                    && matches!(&tool_result, Ok(serde_json::Value::String(s)) if s.starts_with("submission successful"))
+                {
+                    submitted = true;
                 }
 
                 // Add the new interaction to the memory

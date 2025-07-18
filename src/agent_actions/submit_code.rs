@@ -30,9 +30,7 @@ impl GitSubmissionTool {
             .current_dir(&self.working_dir)
             .status()?;
         if !status.success() {
-            //return Err(io::Error::other("git add failed"));
-            return Err(io::Error::other(format!("git add failed{}", &self.working_dir)));
-
+            return Err(io::Error::other("git add failed"));
         }
         Ok(())
     }
@@ -126,7 +124,7 @@ impl ToolInstance for GitSubmissionTool {
         let tool = if let Some(working_dir) = params.working_dir.clone() {
             GitSubmissionTool::new(working_dir)
         } else {
-            params.this //<- we always chose this case, don't we?
+            params.this // <- we could refactor this
         };
 
         Ok(match params.action.as_str() {

@@ -22,13 +22,15 @@ pub fn get_tools() -> Option<Vec<Tool>> {
 pub fn call_tool(
     tool_name: &str,
     args: serde_json::Value,
-    dir: &str
+    dir: &str,
 ) -> Result<serde_json::Value, Box<dyn Error>> {
     let result = Ok(match tool_name {
         "read_files" => serde_json::to_value(read_files::ReadFilesTool::run(
             serde_json::from_value(args)?,
         )?)?,
         "edit_files" => {
+            #[allow(clippy::let_unit_value)]
+            // Ignore that tool always returns null in case we change the edit_files return type
             let result = edit_files::EditFilesTool::run(serde_json::from_value(args)?)?;
             let value = serde_json::to_value(result)?;
             if value == serde_json::Value::Null {
@@ -36,10 +38,10 @@ pub fn call_tool(
             } else {
                 value
             }
-        },
+        }
         "bash" => serde_json::to_value(bash::BashTool::run(serde_json::from_value(args)?)?)?,
         "git_submission" => {
-            // this implicitly sets "args.this" to the default
+            // This implicitly sets "args.this" to the default
             let mut args: GitSubmissionToolArgs = serde_json::from_value(args)?;
             args.working_dir = Some(dir.to_string());
             serde_json::to_value(submit_code::GitSubmissionTool::run(args)?)?
@@ -56,5 +58,5 @@ pub fn call_tool(
             Ok(serde_json::to_value("The action was successful.")?)
         }
         _ => result,
-}
+    }
 }
