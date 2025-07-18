@@ -2,6 +2,7 @@
 
 use url::Url;
 
+use crate::agent_actions::submit_code::GitSubmissionTool;
 use crate::llm::{Completion, LLM, LLMAPIError, Message, MessageRole};
 use crate::memory::Memory;
 use crate::models::Model;
@@ -18,6 +19,7 @@ fn intro_with_path(path: &str) -> String {
     format!(
         "You are an autonomous agent that solves coding tasks. \
 You should use the given tools to solve the given task. \
+Please ONLY use bash tool if none of the others offers what you want to do, don't use bash tool with \"cd\"!\
 You are connected to a Linux-based development environment. \
 You are in the project directory. The path to the file you should work on is: {path} \
 Your current task is as follows:"
@@ -111,6 +113,7 @@ impl TaskHandler {
         let mut response = self.single_request(&task.request, &task.working_dir);
 
         let mut ctr: i8 = 0;
+        let mut submitted = false;
 
         loop {
             // Match response, if there was an error, propagate to user
@@ -126,12 +129,22 @@ impl TaskHandler {
 
             // If llm returns a text I expect the task to be done
             if let Completion::Text(value) = completion {
+                //if the agend doesn't submit we use that message and submit for it
+                if !submitted{
+                    let _ = GitSubmissionTool::new(&task.working_dir).submit_changes(&value);
+                }
                 return TaskOutcome::Complete(value);
             } else if let Completion::ToolCalls(value) = completion {
                 // If LLM returns a tool call, extract the tool name and arguments and call tool
                 let tool_name = TaskHandler::get_tool_name(&value[0]);
                 let args = TaskHandler::get_tool_arguments(&value[0]);
-                let tool_result = collection::call_tool(&tool_name, args.clone());
+                let tool_result = collection::call_tool(&tool_name, args.clone(), &task.working_dir);
+ 
+                if tool_name == "git_submission" {
+                    if matches!(&tool_result, Ok(serde_json::Value::String(s)) if s.starts_with("submission successful")) {
+                        submitted = true;
+                    }
+                }
 
                 // Add the new interaction to the memory
                 self.memory.add(
