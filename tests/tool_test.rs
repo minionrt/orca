@@ -3,7 +3,7 @@ use teamprojekt_agents::openai::ToolCall;
 
 #[test]
 fn parses_only_toolcalls_to_completionkind() {
-    //example response body for tools
+    // Example response body for tools
     let json = r#"
         [
             {
@@ -19,10 +19,10 @@ fn parses_only_toolcalls_to_completionkind() {
 
     let tool_calls: Vec<ToolCall> = serde_json::from_str(json).unwrap();
     let completion_kind = Completion::ToolCalls(tool_calls.clone());
-    // run cargo test -- --nocapture to see actual parsing.
+    // Run cargo test -- --nocapture to see actual parsing.
     println!("{completion_kind:?}");
 
-    // checking if it was parsed right
+    // Checking if it was parsed right
     match completion_kind {
         Completion::ToolCalls(tc) => {
             assert_eq!(tc[0].function.name, "get_current_weather");

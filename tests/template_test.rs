@@ -1,17 +1,17 @@
 #[cfg(test)]
 mod tests {
-    //use super::*; -> this imports parent modules
+    // Use super::*; -> this imports parent modules
 
     #[test]
     fn example_test() {
-        // setup
+        // Setup
         let a = 2;
         let b = 3;
 
-        // execute
+        // Execute
         let result = a + b;
 
-        // assert
+        // Assert
         assert_eq!(result, 5, "2 + 3 should equal 5");
     }
 }

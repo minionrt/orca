@@ -1,37 +1,46 @@
 use crate::openai;
+use serde::Deserialize;
 use crate::tools_interface::ToolInstance;
 use url::Url;
+use std::collections::HashMap;
 use std::env;
+use tracing::{debug, warn};
 
 pub struct AskUserTool;
 
 impl AskUserTool {
     pub fn new() -> Self {
         AskUserTool
-    }
+    }}
 
-    pub fn ask_user(&self, inquiry: &str) -> String {
-        let client = reqwest::blocking::Client::new();
-        let minion_api: Url = env::var("MINION_API_BASE_URL").unwrap().parse().unwrap();
-        let minion_token = env::var("MINION_API_TOKEN").unwrap();
-        let url = minion_api.join("agent/inquiry").unwrap();
-       
 
-        let response = client
-            .post(url)
-            .bearer_auth(minion_token.clone())
-            .json(&serde_json::json!({"inquiry": inquiry}) )
-            .send();
+pub fn ask_user(inquiry: &str) -> String {
+    let client = reqwest::blocking::Client::new();
+    let minion_api: Url = env::var("MINION_API_BASE_URL").unwrap().parse().unwrap();
+    let minion_token = env::var("MINION_API_TOKEN").unwrap();
+    let url: Url = minion_api.join("agent/inquiry").unwrap();
+    debug!("Sending inquiry to URL: {}", url); //is this fine considering security?
+    
 
-        match response {
-            Ok(resp) => match resp.text() {
-                Ok(text) => text,
-                Err(_) => "[ERROR] Could not read response body".to_string(),
-            },
-            Err(_) => "[ERROR] Could not contact CLI endpoint".to_string(),
-        }
+    let response = client
+        .post(url)
+        .bearer_auth(minion_token.clone())
+        .json(&serde_json::json!({"inquiry": inquiry}) )
+        .send();
+
+    match response {
+        Ok(resp) => match resp.text() {
+            Ok(text) => text,
+            Err(e) => {
+                warn!("Could not read response body: {}", e);
+                "[ERROR] Could not read response body".to_string()},
+        },
+        Err(e) =>{ 
+            warn!("Could not reach CLI enpoint:{}",e);
+            "[ERROR] Could not contact CLI endpoint".to_string()},
     }
 }
+
 
 impl Default for AskUserTool {
     fn default() -> Self {
@@ -39,39 +48,24 @@ impl Default for AskUserTool {
     }
 }
 
-impl ToolInstance for AskUserTool {
-    fn run(
-        &self,
-        params: serde_json::Value,
-    ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
-        let inquiry = match params.get("inquiry") {
-            None => {
-                return Err("The parameter \"inquiry\" doesn't exist in the given tool call".into());
-            }
-            Some(serde_json::Value::String(s)) => s,
-            Some(_) => return Err("The parameter \"inquiry\" isn't given as string.".into()),
-        };
-        let output = self.ask_user(inquiry);
-        Ok(serde_json::Value::String(output))
-    }
+#[derive(Deserialize)]
+pub struct AskUserArgs{
+    pub inquiry: String,
+}
 
+impl ToolInstance for AskUserTool{
+    type Args = AskUserArgs;
+    type Out = String;
+
+    fn run(input: Self::Args) -> Result<Self::Out, Box<dyn std::error::Error>> {
+        debug!("AskUserTool::run called with code: {}", input.inquiry);
+        let output = ask_user(&input.inquiry);
+        Ok(output)
+    }
     fn return_choice() -> openai::Tool {
-        openai::Tool {
-            function: openai::Function {
-                name: "ask_user".to_string(),
-                description: "a tool for clarification inquiries".to_string(),
-                parameters: serde_json::json!({
-                    "type": "object",
-                    "properties": {
-                        "inquiry": {
-                            "type": "string",
-                            "description": "the clarification request"
-                        }
-                    },
-                    "required": ["inquiry"]
-                }),
-            },
-            tool_type: "function".to_string()
-        }
+        openai::Tool::function("ask_user".to_owned(),
+             "a tool for clarification inquiries".to_owned(),
+             HashMap::from([("inquiry".to_owned(), openai::FunctionParameter::new("string", "the inquiry that shall be returned."))]),
+             HashMap::new())
     }
 }

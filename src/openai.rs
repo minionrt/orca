@@ -51,13 +51,74 @@ pub struct Tool {
     pub tool_type: String,
 }
 
+impl Tool {
+    /// Create a new function tool description
+    /// `name` - The name of the function
+    /// `description` - The description of the function
+    /// `required_parameters` - The required parameters of the function
+    /// `optional_parameters` - The optional parameters of the function
+    pub fn function(
+        name: String,
+        description: String,
+        required_parameters: HashMap<String, FunctionParameter>,
+        optional_parameters: HashMap<String, FunctionParameter>,
+    ) -> Self {
+        Self {
+            function: Function {
+                name,
+                description,
+                parameters: FunctionParameters {
+                    param_type: "object".to_owned(),
+                    properties: required_parameters
+                        .iter()
+                        .chain(optional_parameters.iter())
+                        .map(|(n, d)| (n.to_owned(), d.clone()))
+                        .collect::<HashMap<String, FunctionParameter>>(),
+                    required: required_parameters.into_keys().collect(),
+                },
+            },
+            tool_type: "function".to_owned(),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 /// AI Request - Available functions for tools
 pub struct Function {
     pub name: String,
     pub description: String,
-    /// Flexible for json values
-    pub parameters: serde_json::Value,
+    pub parameters: FunctionParameters,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct FunctionParameters {
+    #[serde(rename = "type")]
+    pub param_type: String,
+
+    /// A dictionary of parameter names to type and description
+    pub properties: HashMap<String, FunctionParameter>,
+
+    /// A list of the required parameter names
+    pub required: Vec<String>,
+}
+
+/// Helper struct for the function parameters
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct FunctionParameter {
+    #[serde(rename = "type")]
+    pub param_type: String,
+
+    /// A description of what the parameter means
+    pub description: String,
+}
+
+impl FunctionParameter {
+    pub fn new(param_type: &str, description: &str) -> Self {
+        Self {
+            param_type: param_type.to_owned(),
+            description: description.to_owned(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -95,7 +156,7 @@ pub struct TokenDetail {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-/// AI Response - Usage statistics for billing/monitoring  
+/// AI Response - Usage statistics for billing/monitoring
 pub struct UsageStatistic {
     /// Number of tokens in the generated completion.
     pub completion_tokens: i32,

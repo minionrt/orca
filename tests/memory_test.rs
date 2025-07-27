@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    //use super::*; -> this imports parent modules
+    // Use super::*; -> this imports parent modules
 
     use teamprojekt_agents::memory::Memory;
     use teamprojekt_agents::models::Model;
@@ -8,19 +8,19 @@ mod tests {
 
     #[test]
     fn test_memory_set_history() {
-        // setup
+        // Setup
         let expected_history = "Test history.".to_string();
         let memory = Memory::new(
             "test",
             &Url::parse("https://www.test.io/").expect("Invalid URL"),
         );
-        let memory = memory.with_model(Model::Test); //to prevent prompting a real model
+        let memory = memory.with_model(Model::Test); // To prevent prompting a real model
 
-        // execute
+        // Execute
         let new_memory = memory.with_history(&expected_history);
         let actual_history = new_memory.read();
 
-        // assert
+        // Assert
         assert_eq!(
             expected_history.clone(),
             actual_history.clone(),

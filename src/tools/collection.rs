@@ -1,7 +1,9 @@
-use crate::agent_actions::{ask_user, bash, edit_files, read_files, submit_code};
+use crate::agent_actions::submit_code::GitSubmissionToolArgs;
+use crate::agent_actions::{bash, dir_tree, edit_files, read_files, submit_code, ask_user};
 use crate::openai::Tool;
 use crate::tools_interface::ToolInstance;
 use std::error::Error;
+use tracing::{debug, error};
 
 /// Returns all available tools expected by the LLM
 pub fn get_tools() -> Option<Vec<Tool>> {
@@ -11,7 +13,7 @@ pub fn get_tools() -> Option<Vec<Tool>> {
         bash::BashTool::return_choice(),
         submit_code::GitSubmissionTool::return_choice(),
         ask_user::AskUserTool::return_choice(),
-        // more tools can be added here
+        dir_tree::DirTreeTool::return_choice(),
     ];
 
     if tools.is_empty() { None } else { Some(tools) }
@@ -23,27 +25,33 @@ pub fn call_tool(
     tool_name: &str,
     args: serde_json::Value,
 ) -> Result<serde_json::Value, Box<dyn Error>> {
-    match tool_name {
-        "read_files" => {
-            let tool = read_files::ReadFilesTool;
-            tool.run(args)
-        }
-        "edit_files" => {
-            let tool = edit_files::EditFilesTool;
-            tool.run(args)
-        }
-        "bash" => {
-            let tool = bash::BashTool;
-            tool.run(args)
-        }
+    debug!("Calling tool: {} with args: {:?}", tool_name, args);
+
+    let result = match tool_name {
+        "read_files" => serde_json::to_value(read_files::ReadFilesTool::run(
+            serde_json::from_value(args)?,
+        )?)?,
+        "edit_files" => serde_json::to_value(edit_files::EditFilesTool::run(
+            serde_json::from_value(args)?,
+        )?)?,
+        "bash" => serde_json::to_value(bash::BashTool::run(serde_json::from_value(args)?)?)?,
         "git_submission" => {
-            let tool = submit_code::GitSubmissionTool;
-            tool.run(args)
+            // this implicitly sets "args.this" to the default
+            let args: GitSubmissionToolArgs = serde_json::from_value(args)?;
+            serde_json::to_value(submit_code::GitSubmissionTool::run(args)?)?
+        }
+        "dir_tree" => {
+            serde_json::to_value(dir_tree::DirTreeTool::run(serde_json::from_value(args)?)?)?
         }
         "ask_user" =>{
-            let tool = ask_user::AskUserTool;
-            tool.run(args)
+            serde_json::to_value(ask_user::AskUserTool::run(serde_json::from_value(args)?)?)?
         }
-        _ => Err(format!("Tool '{tool_name}' not found.").into()),
-    }
+        _ => {
+            error!("Unknown tool requested: {}", tool_name);
+            return Err(format!("Tool '{tool_name}' not found.").into());
+        }
+    };
+
+    debug!("Tool {} executed successfully", tool_name);
+    Ok(result)
 }

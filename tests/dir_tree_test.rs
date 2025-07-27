@@ -1,6 +1,5 @@
-use serde_json::json;
 use std::fs::{self, File};
-use teamprojekt_agents::agent_actions::dir_tree::{DirEntry, DirTreeTool};
+use teamprojekt_agents::agent_actions::dir_tree::{DirTreeTool, DirTreeToolArgs};
 use teamprojekt_agents::tools_interface::ToolInstance; // Trait-Import für .run()
 
 #[test]
@@ -16,12 +15,10 @@ fn test_dir_tree_tool_basic_structure() {
     File::create(root.join("gamma.txt")).expect("failed to create gamma.txt");
 
     // Runs tool
-    let tool = DirTreeTool::new();
-    let params = json!({ "path": root });
-    let result = tool.run(params).expect("tool run failed");
-
-    // Parse result as DirEntry
-    let entry: DirEntry = serde_json::from_value(result).expect("deserialize failed");
+    let entry = DirTreeTool::run(DirTreeToolArgs {
+        path: root.to_string_lossy().to_string(),
+    })
+    .expect("tool run failed");
 
     assert!(entry.is_dir);
     assert!(entry.children.is_some());

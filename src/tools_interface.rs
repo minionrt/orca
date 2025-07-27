@@ -1,13 +1,18 @@
 #![allow(dead_code)]
 
 use crate::openai;
+use serde::{Deserialize, Serialize};
 
 pub trait ToolInstance {
-    // runs the function with its parameters given as Vector of Strings
-    fn run(
-        &self,
-        params: serde_json::Value,
-    ) -> Result<serde_json::Value, Box<dyn std::error::Error>>;
-    // returns the definition and description of the function as defined in openai::Tool
+    /// Input argument type, this should be a struct which can be parsed from the received JSON
+    type Args: for<'a> Deserialize<'a>;
+
+    /// Output type
+    type Out: Serialize;
+
+    /// Runs the function
+    fn run(input: Self::Args) -> Result<Self::Out, Box<dyn std::error::Error>>;
+
+    /// Returns the definition and description of the function as defined in openai::Tool
     fn return_choice() -> openai::Tool;
 }

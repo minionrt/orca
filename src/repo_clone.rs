@@ -1,5 +1,6 @@
 use std::io;
 use std::process::Command;
+use tracing::{debug, info};
 
 pub struct GitRepository {
     pub repo_url: String,
@@ -52,10 +53,11 @@ impl GitRepository {
 
     /// Clones the repository to the target directory
     pub fn clone_repo(&self) -> io::Result<()> {
-        //println!("Cloning repo: {} into {}", self.repo_url, self.target_dir);
-        //For API-Key safety i decided to not print the url
-        println!("Cloning repo into {}", self.target_dir);
-        // The git command is build
+        // For API-Key safety, don't print the full URL with credentials
+        info!("Cloning repository to {}", self.target_dir);
+        debug!("Repository URL: {}", self.repo_url);
+
+        // The git command is built
         let status = Command::new("git")
             .arg("clone")
             .arg(&self.repo_url)
@@ -86,9 +88,19 @@ impl GitRepository {
 
     /// Executes the complete setup flow: clone, configure, checkout
     pub fn prepare_repository(&self) -> io::Result<()> {
+        info!("Starting repository preparation for: {}", self.repo_url);
+        debug!("Target directory: {}", self.target_dir);
+        debug!("Branch: {}", self.branch);
+
         self.clone_repo()?;
+        info!("Repository cloned successfully");
+
         self.configure_git_user()?;
+        info!("Git user configured successfully");
+
         self.checkout_branch()?;
+        info!("Branch checked out successfully");
+
         Ok(())
     }
 }

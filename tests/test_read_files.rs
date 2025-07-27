@@ -2,10 +2,9 @@ use std::io::Write;
 use teamprojekt_agents::agent_actions::read_files::ReadFilesTool;
 use tempfile::NamedTempFile;
 
-// helperfuncion for reading a file by ReadFilesTool
+// Helperfunction for reading a file by ReadFilesTool
 fn read_file(path: String) -> Option<String> {
-    let tool = ReadFilesTool;
-    tool.read_file(&path).ok()
+    ReadFilesTool::read_file(&path).ok()
 }
 
 #[test]
@@ -20,7 +19,7 @@ fn test_read_file_existing() {
 
 #[test]
 fn test_read_file_nonexistent() {
-    // tempfile creates real files -> for nonexistent I simulate it with a fake-Pfad
+    // Tempfile creates real files -> for nonexistent I simulate it with a fake-Pfad
     let nonexistent_path = "/tmp/clearly_nonexistent_file_123456789.txt".to_string();
     let result = read_file(nonexistent_path);
     assert_eq!(result, None, "Expected None for nonexistent file");
