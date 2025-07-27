@@ -138,7 +138,7 @@ impl TaskHandler {
                 info!("Task completed with text response");
                 return TaskOutcome::Complete(value);
             } else if let Completion::ToolCalls(value) = completion {
-                //if LLM returns a tool call, extract the tool name and arguments and call tool
+                // If LLM returns a tool call, extract the tool name and arguments and call tool
                 let tool_name = TaskHandler::get_tool_name(&value[0]);
 
                 let args = TaskHandler::get_tool_arguments(&value[0]);
@@ -164,7 +164,7 @@ impl TaskHandler {
                     }
                 };
 
-                //give returned value of the tool to the llm
+                // Give returned value of the tool to the llm
                 response = self.send_tool_answer(&input, self.memory.read());
             }
 
