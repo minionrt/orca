@@ -101,7 +101,7 @@ impl TaskHandler {
                 get_tools(),
                 tool_choice,
             ),
-            memory: Memory::new(api_key, base_url),          
+            memory: Memory::new(api_key, base_url),
         }
     }
 
@@ -140,7 +140,7 @@ impl TaskHandler {
             } else if let Completion::ToolCalls(value) = completion {
                 //if LLM returns a tool call, extract the tool name and arguments and call tool
                 let tool_name = TaskHandler::get_tool_name(&value[0]);
-                    
+
                 let args = TaskHandler::get_tool_arguments(&value[0]);
 
                 info!("Calling tool: {} with args: {:?}", tool_name, args);
@@ -166,8 +166,6 @@ impl TaskHandler {
 
                 //give returned value of the tool to the llm
                 response = self.send_tool_answer(&input, self.memory.read());
-                
-               
             }
 
             // Stop the loop after x runs

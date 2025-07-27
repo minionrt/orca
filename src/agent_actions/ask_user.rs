@@ -1,31 +1,39 @@
 use crate::openai;
-use serde::Deserialize;
 use crate::tools_interface::ToolInstance;
-use url::Url;
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::env;
 use tracing::{debug, warn};
+use url::Url;
 
 pub struct AskUserTool;
 
 impl AskUserTool {
     pub fn new() -> Self {
         AskUserTool
-    }}
+    }
+}
 
-
+/// Sends the given inquiry to the CLI.
+/// Once its processed by the CLI it will return a String.
+/// #Arguments
+///
+/// * `inquiry` - The clarfication request send to the CLI by the Agent.
+///
+/// #Returns
+///
+/// Returns a String containing a clarification.
 pub fn ask_user(inquiry: &str) -> String {
     let client = reqwest::blocking::Client::new();
     let minion_api: Url = env::var("MINION_API_BASE_URL").unwrap().parse().unwrap();
     let minion_token = env::var("MINION_API_TOKEN").unwrap();
     let url: Url = minion_api.join("agent/inquiry").unwrap();
     debug!("Sending inquiry to URL: {}", url); //is this fine considering security?
-    
 
     let response = client
         .post(url)
         .bearer_auth(minion_token.clone())
-        .json(&serde_json::json!({"inquiry": inquiry}) )
+        .json(&serde_json::json!({"inquiry": inquiry}))
         .send();
 
     match response {
@@ -33,14 +41,15 @@ pub fn ask_user(inquiry: &str) -> String {
             Ok(text) => text,
             Err(e) => {
                 warn!("Could not read response body: {}", e);
-                "[ERROR] Could not read response body".to_string()},
+                "[ERROR] Could not read response body".to_string()
+            }
         },
-        Err(e) =>{ 
-            warn!("Could not reach CLI enpoint:{}",e);
-            "[ERROR] Could not contact CLI endpoint".to_string()},
+        Err(e) => {
+            warn!("Could not reach CLI enpoint:{}", e);
+            "[ERROR] Could not contact CLI endpoint".to_string()
+        }
     }
 }
-
 
 impl Default for AskUserTool {
     fn default() -> Self {
@@ -49,11 +58,11 @@ impl Default for AskUserTool {
 }
 
 #[derive(Deserialize)]
-pub struct AskUserArgs{
+pub struct AskUserArgs {
     pub inquiry: String,
 }
 
-impl ToolInstance for AskUserTool{
+impl ToolInstance for AskUserTool {
     type Args = AskUserArgs;
     type Out = String;
 
@@ -63,9 +72,14 @@ impl ToolInstance for AskUserTool{
         Ok(output)
     }
     fn return_choice() -> openai::Tool {
-        openai::Tool::function("ask_user".to_owned(),
-             "a tool for clarification inquiries".to_owned(),
-             HashMap::from([("inquiry".to_owned(), openai::FunctionParameter::new("string", "the inquiry that shall be returned."))]),
-             HashMap::new())
+        openai::Tool::function(
+            "ask_user".to_owned(),
+            "a tool for clarification inquiries".to_owned(),
+            HashMap::from([(
+                "inquiry".to_owned(),
+                openai::FunctionParameter::new("string", "the inquiry that shall be returned."),
+            )]),
+            HashMap::new(),
+        )
     }
 }

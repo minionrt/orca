@@ -1,5 +1,5 @@
 use crate::agent_actions::submit_code::GitSubmissionToolArgs;
-use crate::agent_actions::{bash, dir_tree, edit_files, read_files, submit_code, ask_user};
+use crate::agent_actions::{ask_user, bash, dir_tree, edit_files, read_files, submit_code};
 use crate::openai::Tool;
 use crate::tools_interface::ToolInstance;
 use std::error::Error;
@@ -43,7 +43,7 @@ pub fn call_tool(
         "dir_tree" => {
             serde_json::to_value(dir_tree::DirTreeTool::run(serde_json::from_value(args)?)?)?
         }
-        "ask_user" =>{
+        "ask_user" => {
             serde_json::to_value(ask_user::AskUserTool::run(serde_json::from_value(args)?)?)?
         }
         _ => {
