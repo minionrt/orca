@@ -1,6 +1,7 @@
-use mockito::Server;
+use mockito::{Server,Matcher};
 use std::env;
 use teamprojekt_agents::agent_actions::ask_user::ask_user;
+use serde_json::json;
 
 #[test]
 fn test_ask_user_success() {
@@ -19,7 +20,7 @@ fn test_ask_user_success() {
         .mock("POST", "/agent/inquiry")
         .match_header("authorization", "Bearer testtoken")
         .match_header("content-type", "application/json")
-        .match_body(r#"{"inquiry":"Testinquiry"}"#)
+        .match_body(Matcher::Json(json!({"inquiry": "Testinquiry"})))
         .with_status(200)
         .with_body("Mock-Server response")
         .create();
@@ -49,3 +50,4 @@ fn test_ask_user_error() {
     let response = ask_user("Failure");
     assert!(response.contains("[ERROR]"));
 }
+

@@ -37,15 +37,21 @@ pub fn ask_user(inquiry: &str) -> String {
         .send();
 
     match response {
-        Ok(resp) => match resp.text() {
-            Ok(text) => text,
-            Err(e) => {
-                warn!("Could not read response body: {}", e);
-                "[ERROR] Could not read response body".to_string()
+        Ok(resp) => {
+            if !resp.status().is_success() {
+                warn!("Received error status from CLI endpoint: {}", resp.status());
+                return "[ERROR] Received non-success status code".to_string();
             }
-        },
+            match resp.text() {
+                Ok(text) => text,
+                Err(e) => {
+                    warn!("Could not read response body: {}", e);
+                    "[ERROR] Could not read response body".to_string()
+                }
+            }
+        }
         Err(e) => {
-            warn!("Could not reach CLI enpoint:{}", e);
+            warn!("Could not contact CLI endpoint: {}", e);
             "[ERROR] Could not contact CLI endpoint".to_string()
         }
     }
