@@ -28,7 +28,7 @@ pub fn ask_user(inquiry: &str) -> String {
     let minion_api: Url = env::var("MINION_API_BASE_URL").unwrap().parse().unwrap();
     let minion_token = env::var("MINION_API_TOKEN").unwrap();
     let url: Url = minion_api.join("agent/inquiry").unwrap();
-    debug!("Sending inquiry to URL: {}", url); //is this fine considering security?
+    debug!("Sending inquiry to URL: {}", url); // Is this fine considering security?
 
     let response = client
         .post(url)
