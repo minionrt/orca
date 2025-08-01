@@ -1,4 +1,4 @@
-# Teamprojekt Agentic Software Engineering
+# Open Rust Coding Agent
 
 ## Quickstart
 
