@@ -140,7 +140,7 @@ impl ToolInstance for EditFilesTool {
     fn run(args: EditFilesToolArgs) -> Result<(), Box<dyn std::error::Error>> {
         let mut path = args.path.clone();
         let content = &args.content;
-        if !path.starts_with("/"){
+        if !path.starts_with("/") {
             path = format!("/{}", &path);
         }
 
@@ -185,7 +185,10 @@ impl ToolInstance for EditFilesTool {
                 ),
                 (
                     "start_line".to_owned(),
-                    openai::FunctionParameter::new("integer", "Optional start line index (0-based)"),
+                    openai::FunctionParameter::new(
+                        "integer",
+                        "Optional start line index (0-based)",
+                    ),
                 ),
                 (
                     "end_line".to_owned(),
@@ -200,7 +203,10 @@ impl ToolInstance for EditFilesTool {
                 ),
                 (
                     "end_col".to_owned(),
-                    openai::FunctionParameter::new("integer", "Optional end column index (0-based)"),
+                    openai::FunctionParameter::new(
+                        "integer",
+                        "Optional end column index (0-based)",
+                    ),
                 ),
             ]),
         )

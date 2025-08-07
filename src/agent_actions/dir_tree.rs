@@ -44,7 +44,7 @@ impl DirTreeTool {
         DirTreeTool
     }
 
-    pub fn read_dir_tree() -> std::io::Result<DirEntry>{
+    pub fn read_dir_tree() -> std::io::Result<DirEntry> {
         Self::read_dir_tree_inner(Path::new("/workspace"))
     }
 

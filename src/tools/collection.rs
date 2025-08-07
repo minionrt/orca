@@ -54,9 +54,7 @@ pub fn call_tool(
             args.working_dir = Some(dir.to_string());
             serde_json::to_value(submit_code::GitSubmissionTool::run(args)?)?
         }
-        "dir_tree" => {
-            serde_json::to_value(dir_tree::DirTreeTool::run(())?)?
-        }
+        "dir_tree" => serde_json::to_value(dir_tree::DirTreeTool::run(())?)?,
         _ => {
             error!("Unknown tool requested: {}", tool_name);
             return Err(format!("Tool '{tool_name}' not found.").into());
