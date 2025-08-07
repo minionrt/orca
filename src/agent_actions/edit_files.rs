@@ -138,19 +138,22 @@ impl ToolInstance for EditFilesTool {
     type Args = EditFilesToolArgs;
     type Out = ();
     fn run(args: EditFilesToolArgs) -> Result<(), Box<dyn std::error::Error>> {
-        let path = &args.path;
+        let mut path = args.path.clone();
         let content = &args.content;
+        if !path.starts_with("/"){
+            path = format!("/{}", &path);
+        }
 
         if let (Some(from), Some(to)) = (args.from, args.to) {
-            Self::edit_file_from_to(path, content, from, to)?;
+            Self::edit_file_from_to(&path, content, from, to)?;
         } else if let (Some(start_line), Some(start_col), Some(end_line), Some(end_col)) =
             (args.start_line, args.start_col, args.end_line, args.end_col)
         {
             Self::edit_file_line_col_range(
-                path, content, start_line, start_col, end_line, end_col,
+                &path, content, start_line, start_col, end_line, end_col,
             )?;
         } else {
-            Self::edit_file(path, content)?;
+            Self::edit_file(&path, content)?;
         }
 
         Ok(())
