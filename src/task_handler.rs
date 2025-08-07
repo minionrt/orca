@@ -138,7 +138,7 @@ impl TaskHandler {
 
             // If llm returns a text I expect the task to be done
             if let Completion::Text(value) = completion {
-                // If the agend doesn't submit we use that message and submit for it
+                // If the agent doesn't submit we use that message and submit for it
                 if !submitted {
                     let _ = GitSubmissionTool::new(&task.working_dir).submit_changes(&value);
                     debug!(
