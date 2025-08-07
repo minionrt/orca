@@ -1,3 +1,4 @@
+use crate::agent_actions::bash::BashToolArgs;
 use crate::agent_actions::submit_code::GitSubmissionToolArgs;
 use crate::agent_actions::{bash, dir_tree, edit_files, read_files, submit_code};
 use crate::openai::Tool;
@@ -41,7 +42,12 @@ pub fn call_tool(
                 value
             }
         }
-        "bash" => serde_json::to_value(bash::BashTool::run(serde_json::from_value(args)?)?)?,
+        "bash" => {
+            let mut args: BashToolArgs = serde_json::from_value(args)?;
+            // Give working_dir as arg
+            args.working_dir = dir.to_string();
+            serde_json::to_value(bash::BashTool::run(args)?)?
+        }
         "git_submission" => {
             // This implicitly sets "args.this" to the default
             let mut args: GitSubmissionToolArgs = serde_json::from_value(args)?;
@@ -49,7 +55,7 @@ pub fn call_tool(
             serde_json::to_value(submit_code::GitSubmissionTool::run(args)?)?
         }
         "dir_tree" => {
-            serde_json::to_value(dir_tree::DirTreeTool::run(serde_json::from_value(args)?)?)?
+            serde_json::to_value(dir_tree::DirTreeTool::run(())?)?
         }
         _ => {
             error!("Unknown tool requested: {}", tool_name);

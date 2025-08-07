@@ -15,13 +15,8 @@ pub struct DirEntry {
 
 pub struct DirTreeTool;
 
-#[derive(Deserialize)]
-pub struct DirTreeToolArgs {
-    pub path: String,
-}
-
 impl ToolInstance for DirTreeTool {
-    type Args = DirTreeToolArgs;
+    type Args = ();
     type Out = DirEntry;
 
     /// Runs the directory tree tool
@@ -29,8 +24,8 @@ impl ToolInstance for DirTreeTool {
     /// * `params`: serde_json::Value with optional "path" String (default: ".")
     /// # Return
     /// Returns a JSON representation of the directory tree or an error.
-    fn run(input: Self::Args) -> Result<Self::Out, Box<dyn Error>> {
-        Ok(Self::read_dir_tree(&input.path)?)
+    fn run(_: ()) -> Result<Self::Out, Box<dyn Error>> {
+        Ok(Self::read_dir_tree()?)
     }
 
     /// Returns the tool definition for this tool, including parameters and descriptions
@@ -38,13 +33,7 @@ impl ToolInstance for DirTreeTool {
         openai::Tool::function(
             "dir_tree".to_owned(),
             "Recursively returns the directory structure as JSON.".to_owned(),
-            HashMap::from([(
-                "path".to_owned(),
-                openai::FunctionParameter::new(
-                    "string",
-                    "The directory to scan (default: current directory \".\")",
-                ),
-            )]),
+            HashMap::new(),
             HashMap::new(),
         )
     }
@@ -55,8 +44,12 @@ impl DirTreeTool {
         DirTreeTool
     }
 
+    pub fn read_dir_tree() -> std::io::Result<DirEntry>{
+        Self::read_dir_tree_inner(Path::new("/workspace"))
+    }
+
     /// Recursively reads a directory and builds the tree structure.
-    pub fn read_dir_tree<P: AsRef<Path>>(path: P) -> std::io::Result<DirEntry> {
+    pub fn read_dir_tree_inner<P: AsRef<Path>>(path: P) -> std::io::Result<DirEntry> {
         let path = path.as_ref();
         let name = path
             .file_name()
@@ -65,7 +58,7 @@ impl DirTreeTool {
         if path.is_dir() {
             let children = fs::read_dir(path)?
                 .filter_map(|e| e.ok())
-                .map(|e| DirTreeTool::read_dir_tree(e.path()))
+                .map(|e| DirTreeTool::read_dir_tree_inner(e.path()))
                 .filter_map(Result::ok)
                 .collect();
             Ok(DirEntry {

@@ -17,17 +17,20 @@ impl BashTool {
 /// Executes the given bash code and returns the output (stdout and stderr).
 /// # Arguments
 ///
-/// * `code` - The bash code to execute.
+/// * `code` - The bash code to execute. 
+///
+/// * `working_dir` - The working directory
 ///
 /// # Returns
 ///
 /// Returns a Result containing the combined stdout and stderr output, or an error if execution fails.
-pub fn run_bash(code: &str) -> io::Result<String> {
+pub fn run_bash(code: &str, working_dir: &str) -> io::Result<String> {
     debug!("Executing bash command: {}", code);
 
     let output = Command::new("bash")
         .arg("-c")
         .arg(code)
+        .current_dir(working_dir)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .output()?;
@@ -59,6 +62,7 @@ impl Default for BashTool {
 #[derive(Deserialize)]
 pub struct BashToolArgs {
     pub code: String,
+    pub working_dir: String,
 }
 
 impl ToolInstance for BashTool {
@@ -67,7 +71,7 @@ impl ToolInstance for BashTool {
 
     fn run(args: Self::Args) -> Result<Self::Out, Box<dyn std::error::Error>> {
         debug!("BashTool::run called with code: {}", args.code);
-        let output = run_bash(&args.code)?;
+        let output = run_bash(&args.code, &args.working_dir)?;
         Ok(output)
     }
 
@@ -77,6 +81,7 @@ impl ToolInstance for BashTool {
             "Executes bash code and returns the output (stdout and stderr). The first parameter is the bash code to execute.".to_owned(),
             HashMap::from([
                 ("code".to_owned(), openai::FunctionParameter::new("string", "The bash code to execute")),
+                ("working_dir".to_owned(), openai::FunctionParameter::new("string", "The working directory the tool should work in."))
             ]),
             HashMap::new(),
         )
