@@ -164,29 +164,29 @@ impl ToolInstance for EditFilesTool {
             HashMap::from([
                 (
                     "path".to_owned(),
-                    openai::FunctionParameter::new("string", "Path to the file."),
+                    openai::FunctionParameter::new("integer", "Path to the file."),
                 ),
                 (
                     "content".to_owned(),
-                    openai::FunctionParameter::new("string", "Content to write"),
+                    openai::FunctionParameter::new("integer", "Content to write"),
                 ),
             ]),
             HashMap::from([
                 (
                     "from".to_owned(),
-                    openai::FunctionParameter::new("string", "Optional start byte index"),
+                    openai::FunctionParameter::new("integer", "Optional start byte index"),
                 ),
                 (
                     "to".to_owned(),
-                    openai::FunctionParameter::new("string", "Optional end byte index"),
+                    openai::FunctionParameter::new("integer", "Optional end byte index"),
                 ),
                 (
                     "start_line".to_owned(),
-                    openai::FunctionParameter::new("string", "Optional start line index (0-based)"),
+                    openai::FunctionParameter::new("integer", "Optional start line index (0-based)"),
                 ),
                 (
                     "end_line".to_owned(),
-                    openai::FunctionParameter::new("string", "Optional end line index (0-based)"),
+                    openai::FunctionParameter::new("integer", "Optional end line index (0-based)"),
                 ),
                 (
                     "start_col".to_owned(),
@@ -197,7 +197,7 @@ impl ToolInstance for EditFilesTool {
                 ),
                 (
                     "end_col".to_owned(),
-                    openai::FunctionParameter::new("string", "Optional end column index (0-based)"),
+                    openai::FunctionParameter::new("integer", "Optional end column index (0-based)"),
                 ),
             ]),
         )
