@@ -164,11 +164,11 @@ impl ToolInstance for EditFilesTool {
             HashMap::from([
                 (
                     "path".to_owned(),
-                    openai::FunctionParameter::new("integer", "Path to the file."),
+                    openai::FunctionParameter::new("string", "Path to the file."),
                 ),
                 (
                     "content".to_owned(),
-                    openai::FunctionParameter::new("integer", "Content to write"),
+                    openai::FunctionParameter::new("string", "Content to write"),
                 ),
             ]),
             HashMap::from([
