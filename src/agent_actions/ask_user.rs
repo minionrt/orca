@@ -16,11 +16,11 @@ impl AskUserTool {
 
 /// Sends the given inquiry to the CLI.
 /// Once its processed by the CLI it will return a String.
-/// #Arguments
+/// # Arguments
 ///
-/// * `inquiry` - The clarfication request send to the CLI by the Agent.
+/// * `inquiry` - The clarification request sent to the user.
 ///
-/// #Returns
+/// # Returns
 ///
 /// Returns a String containing a clarification.
 pub fn ask_user(inquiry: &str) -> String {
@@ -39,7 +39,7 @@ pub fn ask_user(inquiry: &str) -> String {
     match response {
         Ok(resp) => {
             if !resp.status().is_success() {
-                warn!("Received error status from CLI endpoint: {}", resp.status());
+                warn!("Received error status from inquries endpoint: {}", resp.status());
                 return "[ERROR] Received non-success status code".to_string();
             }
             match resp.text() {
@@ -51,8 +51,8 @@ pub fn ask_user(inquiry: &str) -> String {
             }
         }
         Err(e) => {
-            warn!("Could not contact CLI endpoint: {}", e);
-            "[ERROR] Could not contact CLI endpoint".to_string()
+            warn!("Could not contact inquiries endpoint: {}", e);
+            "[ERROR] Could not contact inquiries endpoint".to_string()
         }
     }
 }
@@ -80,10 +80,10 @@ impl ToolInstance for AskUserTool {
     fn return_choice() -> openai::Tool {
         openai::Tool::function(
             "ask_user".to_owned(),
-            "a tool for clarification inquiries".to_owned(),
+            "Ask the user a clarifying question".to_owned(),
             HashMap::from([(
                 "inquiry".to_owned(),
-                openai::FunctionParameter::new("string", "the inquiry that shall be returned."),
+                openai::FunctionParameter::new("string", "the question to present to the user."),
             )]),
             HashMap::new(),
         )

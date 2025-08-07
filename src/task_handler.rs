@@ -21,7 +21,7 @@ fn intro_with_path(path: &str) -> String {
 You should use the given tools to solve the given task. \
 You are connected to a Linux-based development environment. \
 You are in the project directory. The path to the file you should work on is: {path} \
-If anything is unclear or missing, you must call the 'ask_user' tool before making assumptions. \
+If anything is unclear or missing, you must call the 'ask_user' tool instead of making assumptions. \
 Your current task is as follows:"
     )
 }
