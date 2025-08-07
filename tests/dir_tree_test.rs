@@ -1,6 +1,5 @@
 use std::fs::{self, File};
 use teamprojekt_agents::agent_actions::dir_tree::DirTreeTool;
-use teamprojekt_agents::tools_interface::ToolInstance; // Trait-Import für .run()
 
 #[test]
 fn test_dir_tree_tool_basic_structure() {
@@ -15,8 +14,7 @@ fn test_dir_tree_tool_basic_structure() {
     File::create(root.join("gamma.txt")).expect("failed to create gamma.txt");
 
     // Runs tool
-    let entry = DirTreeTool::run(())
-    .expect("tool run failed");
+    let entry = DirTreeTool::read_dir_tree_inner(root).expect("read_dir_tree_inner failed");
 
     assert!(entry.is_dir);
     assert!(entry.children.is_some());
