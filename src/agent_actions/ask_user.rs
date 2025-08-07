@@ -39,7 +39,10 @@ pub fn ask_user(inquiry: &str) -> String {
     match response {
         Ok(resp) => {
             if !resp.status().is_success() {
-                warn!("Received error status from inquries endpoint: {}", resp.status());
+                warn!(
+                    "Received error status from inquries endpoint: {}",
+                    resp.status()
+                );
                 return "[ERROR] Received non-success status code".to_string();
             }
             match resp.text() {
