@@ -76,7 +76,7 @@ impl ToolInstance for AskUserTool {
     type Out = String;
 
     fn run(input: Self::Args) -> Result<Self::Out, Box<dyn std::error::Error>> {
-        debug!("AskUserTool::run called with code: {}", input.inquiry);
+        debug!("AskUserTool::run called with args: {}", input.inquiry);
         let output = ask_user(&input.inquiry);
         Ok(output)
     }
