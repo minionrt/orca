@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use teamprojekt_agents::agent_actions::create_directory::{
-        CreateDirectoryTool, create_directory,
+        CreateDirectoryTool, CreateDirectoryToolArgs, create_directory,
     };
     use teamprojekt_agents::tools_interface::ToolInstance;
     use tempfile::TempDir;
@@ -11,16 +11,15 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let test_path = temp_dir.path().join("test_dir");
 
-        let tool = CreateDirectoryTool::new();
-        let params = serde_json::json!({
-            "path": test_path.to_string_lossy()
-        });
+        let args = CreateDirectoryToolArgs {
+            path: test_path.to_string_lossy().to_string(),
+        };
 
-        let result = tool.run(params).unwrap();
+        let result = CreateDirectoryTool::run(args).unwrap();
 
         assert!(test_path.exists());
         assert!(test_path.is_dir());
-        assert!(result.as_str().unwrap().contains("Directory created"));
+        assert!(result.contains("Directory created"));
     }
 
     #[test]
