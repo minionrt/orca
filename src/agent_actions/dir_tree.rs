@@ -1,7 +1,8 @@
 use crate::openai;
 use crate::tools_interface::ToolInstance;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use std::collections::HashMap;
+use std::error::Error;
 use std::fs;
 use std::path::Path;
 
@@ -13,6 +14,41 @@ pub struct DirEntry {
 }
 
 pub struct DirTreeTool;
+
+#[derive(Deserialize)]
+pub struct DirTreeToolArgs {
+    pub path: String,
+}
+
+impl ToolInstance for DirTreeTool {
+    type Args = DirTreeToolArgs;
+    type Out = DirEntry;
+
+    /// Runs the directory tree tool
+    /// # Parameters
+    /// * `params`: serde_json::Value with optional "path" String (default: ".")
+    /// # Return
+    /// Returns a JSON representation of the directory tree or an error.
+    fn run(input: Self::Args) -> Result<Self::Out, Box<dyn Error>> {
+        Ok(Self::read_dir_tree(&input.path)?)
+    }
+
+    /// Returns the tool definition for this tool, including parameters and descriptions
+    fn return_choice() -> openai::Tool {
+        openai::Tool::function(
+            "dir_tree".to_owned(),
+            "Recursively returns the directory structure as JSON.".to_owned(),
+            HashMap::from([(
+                "path".to_owned(),
+                openai::FunctionParameter::new(
+                    "string",
+                    "The directory to scan (default: current directory \".\")",
+                ),
+            )]),
+            HashMap::new(),
+        )
+    }
+}
 
 impl DirTreeTool {
     pub fn new() -> Self {
@@ -51,38 +87,5 @@ impl DirTreeTool {
 impl Default for DirTreeTool {
     fn default() -> Self {
         DirTreeTool::new()
-    }
-}
-
-impl ToolInstance for DirTreeTool {
-    /// Runs the directory tree tool
-    /// # Parameters
-    /// * `params`: serde_json::Value with optional "path" String (default: ".")
-    /// # Returns
-    /// Returns a JSON representation of the directory tree or an error.
-    fn run(&self, params: Value) -> Result<Value, Box<dyn std::error::Error>> {
-        let path = params.get("path").and_then(|v| v.as_str()).unwrap_or(".");
-        let tree = Self::read_dir_tree(path)?;
-        Ok(serde_json::to_value(tree)?)
-    }
-
-    /// Returns the tool definition for this tool, including parameters and descriptions
-    fn return_choice() -> openai::Tool {
-        openai::Tool {
-            function: openai::Function {
-                name: "dir_tree".to_string(),
-                description: "Recursively returns the directory structure as JSON.".to_string(),
-                parameters: serde_json::json!({
-                    "type": "object",
-                    "properties": {
-                        "path": {
-                            "type": "string",
-                            "description": "The directory to scan (default: current directory \".\")"
-                        }
-                    }
-                }),
-            },
-            tool_type: "function".to_string(),
-        }
     }
 }

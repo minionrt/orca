@@ -1,17 +1,14 @@
 #[cfg(test)]
 mod tests {
-    use serde_json::{Value, json};
-    use teamprojekt_agents::agent_actions::bash::BashTool;
+    use teamprojekt_agents::agent_actions::bash::{BashTool, BashToolArgs};
     use teamprojekt_agents::tools_interface::ToolInstance;
 
     #[test]
     fn test_bash_tool_run_echo() {
-        let tool = BashTool::new();
-        let output = tool.run(json!({ "code": "echo hello" })).unwrap();
-        let output = match output {
-            Value::String(s) => s,
-            _ => "an error! The return value wasn't a Value::String".to_string(),
-        };
+        let output = BashTool::run(BashToolArgs {
+            code: "echo hello".to_owned(),
+        })
+        .unwrap();
         assert!(
             output.contains("hello"),
             "Expected output to contain 'hello', got: {output}"
@@ -20,12 +17,10 @@ mod tests {
 
     #[test]
     fn test_bash_tool_run_stderr() {
-        let tool = BashTool::new();
-        let output = tool.run(json!({"code": "ls /nonexistent_path"})).unwrap();
-        let output = match output {
-            Value::String(s) => s,
-            _ => "an error! The return value wasn't a Value::String".to_string(),
-        };
+        let output = BashTool::run(BashToolArgs {
+            code: "ls /nonexistent_path".to_owned(),
+        })
+        .unwrap();
         assert!(
             output.contains("No such file") || output.contains("cannot access"),
             "Expected error message in output, got: {output}"
@@ -38,6 +33,9 @@ mod tests {
         assert_eq!(tool.function.name, "bash");
         assert_eq!(tool.tool_type, "function");
         assert!(tool.function.description.contains("bash code"));
-        assert!(tool.function.parameters["properties"]["code"]["type"] == "string");
+        assert_eq!(
+            tool.function.parameters.properties["code"].param_type,
+            "string"
+        );
     }
 }

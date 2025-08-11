@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 use reqwest::blocking::Client;
 use serde::Deserialize;
+use tracing::{debug, info};
 use url::Url;
 
 /// Represents the status of a task as returned by the API.
@@ -40,11 +41,18 @@ pub fn get_task(
     client: Client,
 ) -> Result<TaskResponse, reqwest::Error> {
     let url = minion_api.join("agent/task").unwrap();
+    debug!("Fetching task from URL: {}", url);
+
     let response = client
         .get(url)
         .bearer_auth(minion_token)
         .send()?
         .error_for_status()?
         .json::<TaskResponse>()?;
+
+    info!(
+        "Task fetched successfully with status: {:?}",
+        response.status
+    );
     Ok(response)
 }

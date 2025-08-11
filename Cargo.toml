@@ -1,6 +1,6 @@
 [package]
 name = "teamprojekt-agents"
-version = "0.1.0"
+version = "0.4.0"
 edition = "2024"
 
 [lib]
@@ -15,4 +15,6 @@ serde_json = "1.0.140"
 tokio = { version = "1.45.0", features = ["rt-multi-thread"] }
 tempfile = "3"
 anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
