@@ -1,10 +1,17 @@
-use std::fs;
-use std::io;
-//use tracing::{debug, info};
 use crate::openai;
 use crate::tools_interface::ToolInstance;
+use serde::Deserialize;
+use std::collections::HashMap;
+use std::fs;
+use std::io;
 
 pub struct CreateDirectoryTool;
+
+/// Arguments for the create directory tool
+#[derive(Deserialize)]
+pub struct CreateDirectoryToolArgs {
+    pub path: String,
+}
 
 impl CreateDirectoryTool {
     pub fn new() -> Self {
@@ -35,47 +42,23 @@ pub fn create_directory(path: &str) -> io::Result<()> {
 }
 
 impl ToolInstance for CreateDirectoryTool {
-    fn run(
-        &self,
-        params: serde_json::Value,
-    ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
-        //debug!("CreateDirectoryTool::run called with params: {:?}", params);
+    type Args = CreateDirectoryToolArgs;
+    type Out = String;
 
-        let path = match params.get("path") {
-            None => {
-                return Err("The parameter \"path\" doesn't exist in the given tool call".into());
-            }
-            Some(serde_json::Value::String(s)) => s,
-            Some(_) => {
-                return Err("The parameter \"path\" isn't given as string.".into());
-            }
-        };
-
-        //info!("Creating directory: {}", path);
-        create_directory(path)?;
-
-        Ok(serde_json::Value::String(format!(
-            "Directory created: {path}"
-        )))
+    fn run(input: Self::Args) -> Result<Self::Out, Box<dyn std::error::Error>> {
+        create_directory(&input.path)?;
+        Ok(format!("Directory created: {}", input.path))
     }
 
     fn return_choice() -> openai::Tool {
-        openai::Tool {
-            function: openai::Function {
-                name: "create_directory".to_string(),
-                description: "Creates a directory at the specified path. Creates parent directories if they don't exist.".to_string(),
-                parameters: serde_json::json!({
-                    "type": "object",
-                    "properties": {
-                        "path": {
-                            "type": "string",
-                            "description": "The path where the directory should be created"
-                        }
-                    },
-                    "required": ["path"]
-                }),
-            },
-            tool_type: "function".to_string(),
-        }
+        openai::Tool::function(
+            "create_directory".to_string(),
+            "Creates a directory at the specified path. Creates parent directories if they don't exist.".to_string(),
+            HashMap::from([(
+                "path".to_string(),
+                openai::FunctionParameter::new("string", "The path where the directory should be created"),
+            )]),
+            HashMap::new(),
+        )
     }
 }
