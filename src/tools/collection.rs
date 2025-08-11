@@ -1,5 +1,5 @@
 use crate::agent_actions::submit_code::GitSubmissionToolArgs;
-use crate::agent_actions::{bash, dir_tree, create_directory, edit_files, read_files, submit_code};
+use crate::agent_actions::{bash, create_directory, dir_tree, edit_files, read_files, submit_code};
 use crate::openai::Tool;
 use crate::tools_interface::ToolInstance;
 use std::error::Error;
@@ -40,10 +40,9 @@ pub fn call_tool(
             let args: GitSubmissionToolArgs = serde_json::from_value(args)?;
             serde_json::to_value(submit_code::GitSubmissionTool::run(args)?)?
         }
-        "create_directory" => {
-            let tool = create_directory::CreateDirectoryTool;
-            tool.run(args)
-        }
+        "create_directory" => serde_json::to_value(create_directory::CreateDirectoryTool::run(
+            serde_json::from_value(args)?,
+        )?)?,
         "dir_tree" => {
             serde_json::to_value(dir_tree::DirTreeTool::run(serde_json::from_value(args)?)?)?
         }
@@ -51,12 +50,6 @@ pub fn call_tool(
             error!("Unknown tool requested: {}", tool_name);
             return Err(format!("Tool '{tool_name}' not found.").into());
         }
-        "git_submission" => {
-            let tool = submit_code::GitSubmissionTool::default();
-            tool.run(args)
-        }
-        _ => Err(format!("Tool '{tool_name}' not found.").into()),
-    }
     };
 
     debug!("Tool {} executed successfully", tool_name);
