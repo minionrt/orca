@@ -59,7 +59,7 @@ impl ToolInstance for CreateDirectoryTool {
             "Creates a directory at the specified path. Creates parent directories if they don't exist.".to_string(),
             HashMap::from([(
                 "path".to_string(),
-                openai::FunctionParameter::new("string", "The path where the directory should be created"),
+                openai::FunctionParameter::new("string", "The path of the directory to be created"),
             )]),
             HashMap::new(),
         )
