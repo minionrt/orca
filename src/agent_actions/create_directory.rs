@@ -4,6 +4,7 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
 use std::io;
+use tracing::{debug, info};
 
 pub struct CreateDirectoryTool;
 
@@ -35,9 +36,9 @@ impl Default for CreateDirectoryTool {
 ///
 /// Returns Ok(()) if successful, or an error if the directory cannot be created.
 pub fn create_directory(path: &str) -> io::Result<()> {
-    //debug!("Creating directory: {}", path);
+    debug!("Creating directory: {}", path);
     fs::create_dir_all(path)?;
-    //info!("Directory created successfully: {path}");
+    info!("Directory created successfully: {path}");
     Ok(())
 }
 
@@ -46,7 +47,9 @@ impl ToolInstance for CreateDirectoryTool {
     type Out = String;
 
     fn run(input: Self::Args) -> Result<Self::Out, Box<dyn std::error::Error>> {
+        debug!("CreateDirectoryTool::run called with path: {}", input.path);
         create_directory(&input.path)?;
+        info!("Creating directory: {}", input.path);
         Ok(format!("Directory created: {}", input.path))
     }
 
