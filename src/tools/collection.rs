@@ -23,20 +23,29 @@ pub fn get_tools() -> Option<Vec<Tool>> {
 pub fn call_tool(
     tool_name: &str,
     args: serde_json::Value,
+    dir: &str,
 ) -> Result<serde_json::Value, Box<dyn Error>> {
     debug!("Calling tool: {} with args: {:?}", tool_name, args);
-
-    let result = match tool_name {
+    let result = Ok(match tool_name {
         "read_files" => serde_json::to_value(read_files::ReadFilesTool::run(
             serde_json::from_value(args)?,
         )?)?,
-        "edit_files" => serde_json::to_value(edit_files::EditFilesTool::run(
-            serde_json::from_value(args)?,
-        )?)?,
+        "edit_files" => {
+            #[allow(clippy::let_unit_value)]
+            // Ignore that tool always returns null in case we change the edit_files return type
+            let result = edit_files::EditFilesTool::run(serde_json::from_value(args)?)?;
+            let value = serde_json::to_value(result)?;
+            if value == serde_json::Value::Null {
+                serde_json::to_value("The file has been sucessfully edited.")?
+            } else {
+                value
+            }
+        }
         "bash" => serde_json::to_value(bash::BashTool::run(serde_json::from_value(args)?)?)?,
         "git_submission" => {
-            // this implicitly sets "args.this" to the default
-            let args: GitSubmissionToolArgs = serde_json::from_value(args)?;
+            // This implicitly sets "args.this" to the default
+            let mut args: GitSubmissionToolArgs = serde_json::from_value(args)?;
+            args.working_dir = Some(dir.to_string());
             serde_json::to_value(submit_code::GitSubmissionTool::run(args)?)?
         }
         "dir_tree" => {
@@ -46,8 +55,14 @@ pub fn call_tool(
             error!("Unknown tool requested: {}", tool_name);
             return Err(format!("Tool '{tool_name}' not found.").into());
         }
-    };
+    });
 
     debug!("Tool {} executed successfully", tool_name);
-    Ok(result)
+    match &result {
+        // If a tool returns null, that's automatically interpreted as success, but please handle your tool returns correctly in the match above
+        Ok(val) if val == &serde_json::Value::Null => {
+            Ok(serde_json::to_value("The action was successful.")?)
+        }
+        _ => result,
+    }
 }

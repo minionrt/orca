@@ -3,6 +3,7 @@
 use tracing::{debug, error, info, warn};
 use url::Url;
 
+use crate::agent_actions::submit_code::GitSubmissionTool;
 use crate::llm::{Completion, LLM, LLMAPIError, Message, MessageRole};
 use crate::memory::Memory;
 use crate::models::Model;
@@ -19,6 +20,7 @@ fn intro_with_path(path: &str) -> String {
     format!(
         "You are an autonomous agent that solves coding tasks. \
 You should use the given tools to solve the given task. \
+Please ONLY use bash tool if none of the others offers what you want to do, don't use bash tool with \"cd\"!\
 You are connected to a Linux-based development environment. \
 You are in the project directory. The path to the file you should work on is: {path} \
 Your current task is as follows:"
@@ -29,6 +31,7 @@ const MESSAGE_TOOL_RESPONSE: &str = r#"You are an autonomous agent that solves c
 You should use the given tools to solve the given task.
 You are connected to a Linux-based development environment. You are in the 
 project directory. If you think your task is done please call the git_submission tool and in the next step just tell me what you did.
+Please ONLY use bash tool if none of the others offers what you want to do, don't use bash tool with \"cd\"!
 The response of your last tool call is the following:"#;
 
 /// The possible outcomes of a task.
@@ -115,6 +118,7 @@ impl TaskHandler {
         let mut response = self.single_request(&task.request, &task.working_dir);
 
         let mut ctr: i8 = 0;
+        let mut submitted = false;
 
         loop {
             ctr += 1;
@@ -134,6 +138,13 @@ impl TaskHandler {
 
             // If llm returns a text I expect the task to be done
             if let Completion::Text(value) = completion {
+                // If the agend doesn't submit we use that message and submit for it
+                if !submitted {
+                    let _ = GitSubmissionTool::new(&task.working_dir).submit_changes(&value);
+                    debug!(
+                        "Git submission tool had to be called manually, the agent didn't submit."
+                    );
+                }
                 info!("Task completed with text response");
                 return TaskOutcome::Complete(value);
             } else if let Completion::ToolCalls(value) = completion {
@@ -142,7 +153,14 @@ impl TaskHandler {
                 let args = TaskHandler::get_tool_arguments(&value[0]);
 
                 info!("Calling tool: {} with args: {:?}", tool_name, args);
-                let tool_result = collection::call_tool(&tool_name, args.clone());
+                let tool_result =
+                    collection::call_tool(&tool_name, args.clone(), &task.working_dir);
+
+                if tool_name == "git_submission"
+                    && matches!(&tool_result, Ok(serde_json::Value::String(s)) if s.starts_with("submission successful"))
+                {
+                    submitted = true;
+                }
 
                 // Add the new interaction to the memory
                 self.memory.add(
@@ -168,7 +186,7 @@ impl TaskHandler {
 
             // Stop the loop after x runs
             ctr += 1;
-            if ctr >= 10 {
+            if ctr >= 25 {
                 return TaskOutcome::Failure(
                     "The interaction loop run too long, the agent can't stop yappin..".to_string(),
                     Some(TaskFailureReason::ProblemSolving),
