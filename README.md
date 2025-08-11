@@ -5,7 +5,7 @@
 - Install the [autominion CLI](https://github.com/autominion/cli).
 - Clone this repository on your machine:
   ```console
-  git clone git@github.com:autominion/teamprojekt-agents.git
+  git clone git@github.com:orca-agent/orca.git
   ```
 - From the root of this repository, run:
   ```console
