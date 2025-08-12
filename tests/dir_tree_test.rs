@@ -14,7 +14,7 @@ fn test_dir_tree_tool_basic_structure() {
     File::create(root.join("gamma.txt")).expect("failed to create gamma.txt");
 
     // Runs tool
-    let entry = DirTreeTool::read_dir_tree_inner(root).expect("read_dir_tree_inner failed");
+    let entry = DirTreeTool::read_dir_tree(root).expect("read_dir_tree_inner failed");
 
     assert!(entry.is_dir);
     assert!(entry.children.is_some());

@@ -1,4 +1,5 @@
 use crate::agent_actions::bash::BashToolArgs;
+use crate::agent_actions::dir_tree::DirTreeToolArgs;
 use crate::agent_actions::submit_code::GitSubmissionToolArgs;
 use crate::agent_actions::{bash, dir_tree, edit_files, read_files, submit_code};
 use crate::openai::Tool;
@@ -53,7 +54,10 @@ pub fn call_tool(
             args.working_dir = Some(dir.to_string());
             serde_json::to_value(submit_code::GitSubmissionTool::run(args)?)?
         }
-        "dir_tree" => serde_json::to_value(dir_tree::DirTreeTool::run(())?)?,
+        "dir_tree" => {
+            let args: DirTreeToolArgs = serde_json::from_str(&format!(r#"{{"path":"{dir}"}}"#))?;
+            serde_json::to_value(dir_tree::DirTreeTool::run(args)?)?
+        }
         _ => {
             error!("Unknown tool requested: {}", tool_name);
             return Err(format!("Tool '{tool_name}' not found.").into());
