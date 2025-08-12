@@ -44,7 +44,6 @@ pub fn call_tool(
         }
         "bash" => {
             let mut args: BashToolArgs = serde_json::from_value(args)?;
-            // Give working_dir as arg
             args.working_dir = dir.to_string();
             serde_json::to_value(bash::BashTool::run(args)?)?
         }
