@@ -1,5 +1,5 @@
 use crate::agent_actions::submit_code::GitSubmissionToolArgs;
-use crate::agent_actions::{bash, dir_tree, edit_files, read_files, submit_code};
+use crate::agent_actions::{bash, create_directory, dir_tree, edit_files, read_files, submit_code};
 use crate::openai::Tool;
 use crate::tools_interface::ToolInstance;
 use std::error::Error;
@@ -11,6 +11,7 @@ pub fn get_tools() -> Option<Vec<Tool>> {
         read_files::ReadFilesTool::return_choice(),
         edit_files::EditFilesTool::return_choice(),
         bash::BashTool::return_choice(),
+        create_directory::CreateDirectoryTool::return_choice(),
         submit_code::GitSubmissionTool::return_choice(),
         dir_tree::DirTreeTool::return_choice(),
     ];
@@ -48,6 +49,9 @@ pub fn call_tool(
             args.working_dir = Some(dir.to_string());
             serde_json::to_value(submit_code::GitSubmissionTool::run(args)?)?
         }
+        "create_directory" => serde_json::to_value(create_directory::CreateDirectoryTool::run(
+            serde_json::from_value(args)?,
+        )?)?,
         "dir_tree" => {
             serde_json::to_value(dir_tree::DirTreeTool::run(serde_json::from_value(args)?)?)?
         }
