@@ -7,15 +7,6 @@
 - Fixes: `fix/bug-name`
 - Use `-` for word separation
 
-## Development Process
-
-**Merge Schedule:**
-- PRs merged into `develop` by Thursday night (every two weeks)
-- `develop` merged into `main` on Friday before meetings
-- Version bumps: increment second number (e.g., v0.1.0 → v0.2.0)
-
-**After merging: delete the branch**
-
 ## Definition of Done
 
 - **Self-contained PRs** - no half-implemented features
