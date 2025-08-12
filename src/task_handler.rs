@@ -190,8 +190,8 @@ impl TaskHandler {
 
             // Stop the loop after x runs
             ctr += 1;
-            let MAX_LOOPS = 25;
-            if ctr >= MAX_LOOPS {
+            let max_loops = 25;
+            if ctr >= max_loops {
                 return TaskOutcome::Failure(
                     "The interaction loop run too long, the agent can't stop yappin..".to_string(),
                     Some(TaskFailureReason::ProblemSolving),
