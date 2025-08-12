@@ -42,7 +42,7 @@
 ## Getting Started
 
 1. Fork the repo
-2. Create your branch: `git checkout -b features/your-feature`
+2. Create your branch: `git checkout -b feature/your-feature`
 3. Make changes and test: `cargo test`
 4. Ensure CI passes: `cargo fmt && cargo clippy`
 5. Create PR with clear description
