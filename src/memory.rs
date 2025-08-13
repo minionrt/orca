@@ -89,7 +89,7 @@ impl Memory {
     ///
     /// If you also want to delete the latest interactions that are stored as literal Strings, you need to call `delete_recent`
     pub fn with_history(mut self, history: &str) -> Self {
-        info!("Memory: Changing history of agent, not `recent`-queue");
+        debug!("Memory: Changing history of agent, not `recent`-queue");
         self.history = history.to_owned();
         self
     }
@@ -98,14 +98,14 @@ impl Memory {
     ///
     /// Attention! Doesn't clear history of summarized messages. If you want to delete both, please call `delete_history`
     pub fn delete_recent(mut self) -> Self {
-        info!("Memory: Deleting recent-queue, not history");
+        debug!("Memory: Deleting recent-queue, not history");
         self.recent.clear();
         self
     }
 
     /// Clears both the summarized history and the recent interactions queue.
     pub fn delete_history(&mut self) -> &Self {
-        info!("Memory: Deleting recent-queue and history");
+        debug!("Memory: Deleting recent-queue and history");
         self.history.clear();
         self.recent.clear();
         self
@@ -113,7 +113,7 @@ impl Memory {
 
     /// Changes the LLM model used for summarization to manually defined `Model` value.
     pub fn with_model(mut self, model: Model) -> Self {
-        info!("Memory: Changing the LLM Model for the Memory representation");
+        debug!("Memory: Changing the LLM Model for the Memory representation");
         self.llm = LLM::full(
             self.api_key.clone(),
             self.base_url.clone(),
@@ -156,7 +156,7 @@ impl Memory {
             assistant: llm_answer,
         });
 
-        info!("Memory: Cutting queue to defined length and summarizing the rest");
+        debug!("Memory: Cutting queue to defined length and summarizing the rest");
         if self.recent.len() > self.max_pairs {
             let overflow_count = self.recent.len() - self.max_pairs;
             let mut overflow_text = String::new();
