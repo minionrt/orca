@@ -10,7 +10,8 @@ mod tests {
     fn test_memory_set_history() {
         // Setup
         let history = "Test history.".to_string();
-        let expected_history = "Summarized history:\nTest history.\n\nRecent interactions:\n".to_string();
+        let expected_history =
+            "Summarized history:\nTest history.\n\nRecent interactions:\n".to_string();
         let memory = Memory::new(
             "test",
             &Url::parse("https://www.test.io/").expect("Invalid URL"),
