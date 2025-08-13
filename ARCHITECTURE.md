@@ -2,7 +2,7 @@
 
 ## Overview
 
-This agent fetches tasks from the minion API, clones target repositories, and executes requested changes using LLM-powered tools.
+This agent fetches tasks from the minion API, clones target repositories, and executes requested changes using LLM-controlled tools.
 
 ## Core Modules
 
