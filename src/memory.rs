@@ -2,95 +2,175 @@
 
 use crate::llm::{Completion, LLM, MessageRole};
 use crate::models::Model;
+use std::collections::VecDeque;
 use url::Url;
 
-const SUMMARIZE_INTRO: &str =
-    "Build a memory representation of the interaction. Skip all introduction. 
-Summarize the most important points from the entire conversation history provided, 
-along with the latest two messages—one from the user and one from the assistant. 
-Focus on capturing key facts, goals, preferences, and any evolving context.\n";
+const MEMORY_LENGTH: usize = 8;
+const SUMMARIZE_INTRO: &str = r#"**System Prompt: Coding Agent Memory Summarizer**
 
-/* Example code for testing or using memory:
-let mut memory = Memory::new(&minion_token, &minion_api);
-memory.add(
-    "Ich liebe Hühnchen, mit Reis".to_string(),
-    "Aber ich bin Veganer!!!".to_string(),
-);
-print!("{}", memory.read());
-*/
+You are an AI specialized in compressing the memory of a coding assistant’s past interactions into concise, factual summaries that preserve all important information needed to continue the task effectively.
 
-/// Memory contains the summary of all previous interactions with the llm
-/// It prompts a (ideally) really basic model for a summary of the previous
-/// history and the new additional interaction messages and stores this
-/// summary in history
+**Your role:**
+- You will receive two new messages: one from the user and one from the coding agent.
+- You will also receive the previous summary of all earlier interactions.
+- Your task is to create a new, updated summary that incorporates the two new messages and all necessary information from the previous summary.
+
+**Guidelines:**
+1. **Purpose:** The summary is for the agent’s internal memory only, not for the user. It must be optimized for problem-solving and continuity of work.
+2. **Content:**
+   - Include only factual, task-relevant details: code-related facts, problem statements, constraints, solutions tried, results, and technical context.
+   - Keep the facts as they are stated; do not paraphrase technical details.
+   - Do not include irrelevant conversation, small talk, or emotional content.
+3. **Conciseness:**
+   - Be as short as possible while preserving all important key facts from the task, code, and topic.
+   - Do not include full code snippets unless a specific fragment is essential for context.
+4. **Accuracy:** Ensure all retained facts remain correct and unaltered.
+5. **Structure:**
+   - Use a clear, structured format that helps the coding agent quickly retrieve information.
+   - Suggested sections:
+     - **Current Task / Goal**
+     - **Key Facts & Context**
+     - **Progress & Decisions Made**
+     - **Outstanding Questions / Next Steps**
+
+**Output:**
+Produce only the updated summary in the structured format above. Do not include explanations of your process."#;
+
+#[derive(Clone, Debug)]
+pub struct Interaction {
+    // Message of the user, in our case the task or the response of the tools
+    pub user: String,
+    // Answer of the LLM
+    pub assistant: String,
+}
+
+/// Memory stores a summarized history plus the most recent `MEMORY_LENGTH` full interactions
+/// 
+/// This should act as our "working memory":
+/// - `recent` contains the latest `MEMORY_LENGTH` interactions
+/// - `Memory` contains the proposed filter, so all the messages older than the limit are summarized by the defined LLM
 pub struct Memory {
-    history: String, //currently still the skateboard, if we would want to upgrade we can mix a queue with the current history
+    history: String,
+    recent: VecDeque<Interaction>, // Holds last `MEMORY_LENGTH` interactions
     llm: LLM,
     api_key: String,
     base_url: Url,
+    max_pairs: usize,
 }
 
 impl Memory {
-    /// Creates new Memory instance with empty history and predefined model
+    /// Create new `Memory` instance with empty history, no recent interactions and predefined model 
     pub fn new(api_key: &str, base_url: &Url) -> Self {
         Memory {
             history: "empty".to_string(),
+            recent: VecDeque::new(),
             llm: LLM::full(
                 api_key.to_string(),
                 base_url.clone(),
                 Model::Basic.into(),
                 None,
                 None,
-            ), //TODO replace model with one from model enum
+            ),
             api_key: api_key.to_string(),
             base_url: base_url.clone(),
+            max_pairs: MEMORY_LENGTH,
         }
     }
-    ///creates a new Memory instance with given history and predefined model
+
+    /// Ceate new `Memory` instance with a given history so we can restore memory or make the agent remember something
     pub fn new_with_history(api_key: String, base_url: &Url, history: String) -> Self {
         Self::new(&api_key, base_url).with_history(&history)
     }
-    ///(re-)sets the current history to the given one
+
+    /// Change the history of the agent. Attention, that only replaces the summarized history part!
+    /// 
+    /// If you also want to delete the latest interactions that are stored as literal Strings, you need to call `delete_recent`
     pub fn with_history(mut self, history: &str) -> Self {
         self.history = history.to_owned();
         self
     }
-    ///(re-)sets the current model to the given one
+
+    /// Delete the queue of recent interactions
+    /// 
+    /// Attention! Doesn't clear history of summarized messages. If you want to delete both, please call `delete_history`
+    pub fn delete_recent(mut self) -> Self {
+        self.recent.clear();
+        self
+    }
+
+    /// Changes the LLM model used for summarization to manually defined `Model` value.
     pub fn with_model(mut self, model: Model) -> Self {
-        //TODO change Model to model type
         self.llm = LLM::full(
             self.api_key.clone(),
             self.base_url.clone(),
             model.into(),
             None,
             None,
-        ); //add model.into() here
+        );
         self
     }
 
-    ///returns the whole history as String
-    pub fn read(&self) -> &String {
-        &self.history
+    /// Return string of summarized history followed by all recent interactions.
+    /// 
+    /// This is the full memory context of the agent that can be used for prompting the LLM.
+    pub fn read(&self) -> String {
+        let mut combined = String::new();
+        combined.push_str(&format!("Summarized history:\n{}\n\n", self.history));
+        combined.push_str("Recent interactions:\n");
+        for (i, pair) in self.recent.iter().enumerate() {
+            combined.push_str(&format!(
+                "Pair {}:\nUser: {}\nAssistant: {}\n\n",
+                i + 1,
+                pair.user,
+                pair.assistant
+            ));
+        }
+        combined
     }
-    ///add new interaction to history, expects the latest user input and the latest llm answer
+
+    /// Add new interaction to Memory representation
+    /// 
+    /// The new interaction is appended as it is to the `recent` queue and if the queue hits its border
+    /// the oldest interactions are summarized into `history`.
     pub fn add(&mut self, user_input: String, llm_answer: String) {
-        let content = format!(
-            "{}\n History: {} \n User/Tool Input: {}\n The answer of the LLM: {}",
-            SUMMARIZE_INTRO, self.history, user_input, llm_answer
-        );
-        // prompts a (ideally) really basic model for a summary of the previous
-        // history and the new additional interaction messages and stores this summary in self.history
-        self.history = match self.llm.prompt_unwrapped(content, MessageRole::User) {
-            Ok(r) => match &r {
-                Completion::Text(content) => content.clone(),
-                Completion::ToolCalls(_) => panic!("Expected text completion, got tool call!"),
-            },
-            Err(_e) => panic!("Something went wrong with summarizing the memory."),
-        };
+        // Add the new interaction
+        self.recent.push_back(Interaction {
+            user: user_input,
+            assistant: llm_answer,
+        });
+
+        if self.recent.len() > self.max_pairs {
+            let overflow_count = self.recent.len() - self.max_pairs;
+            let mut overflow_text = String::new();
+
+            for _ in 0..overflow_count {
+                if let Some(old) = self.recent.pop_front() {
+                    overflow_text.push_str(&format!(
+                        "User: {}\nAssistant: {}\n\n",
+                        old.user, old.assistant
+                    ));
+                }
+            }
+
+            let content = format!(
+                "{}\nHistory: {}\nNew Interactions to Summarize:\n{}",
+                SUMMARIZE_INTRO, self.history, overflow_text
+            );
+
+            self.history = match self.llm.prompt_unwrapped(content, MessageRole::User) {
+                Ok(r) => match &r {
+                    Completion::Text(content) => content.clone(),
+                    Completion::ToolCalls(_) => panic!("Expected text completion, got tool call!"),
+                },
+                Err(_e) => panic!("Something went wrong with summarizing the memory."),
+            };
+        }
     }
-    ///delete whole history
+
+    /// Clears both the summarized history and the recent interactions queue.
     pub fn delete_history(&mut self) -> &Self {
-        self.history = "".to_string();
+        self.history.clear();
+        self.recent.clear();
         self
     }
 }
