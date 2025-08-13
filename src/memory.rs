@@ -3,6 +3,7 @@
 use crate::llm::{Completion, LLM, MessageRole};
 use crate::models::Model;
 use std::collections::VecDeque;
+use tracing::{debug, error, info, warn};
 use url::Url;
 
 const MEMORY_LENGTH: usize = 8;
@@ -61,6 +62,7 @@ pub struct Memory {
 impl Memory {
     /// Create new `Memory` instance with empty history, no recent interactions and predefined model 
     pub fn new(api_key: &str, base_url: &Url) -> Self {
+        info!("Memory: Creating new Memory instance");
         Memory {
             history: "empty".to_string(),
             recent: VecDeque::new(),
@@ -79,6 +81,7 @@ impl Memory {
 
     /// Ceate new `Memory` instance with a given history so we can restore memory or make the agent remember something
     pub fn new_with_history(api_key: String, base_url: &Url, history: String) -> Self {
+        info!("Memory: Creating new Memory instance with history");
         Self::new(&api_key, base_url).with_history(&history)
     }
 
@@ -86,6 +89,7 @@ impl Memory {
     /// 
     /// If you also want to delete the latest interactions that are stored as literal Strings, you need to call `delete_recent`
     pub fn with_history(mut self, history: &str) -> Self {
+        info!("Memory: Changing history of agent, not `recent`-queue");
         self.history = history.to_owned();
         self
     }
@@ -94,12 +98,22 @@ impl Memory {
     /// 
     /// Attention! Doesn't clear history of summarized messages. If you want to delete both, please call `delete_history`
     pub fn delete_recent(mut self) -> Self {
+        info!("Memory: Deleting recent-queue, not history");
         self.recent.clear();
         self
     }
-
+    
+    /// Clears both the summarized history and the recent interactions queue.
+    pub fn delete_history(&mut self) -> &Self {
+        info!("Memory: Deleting recent-queue and history");
+        self.history.clear();
+        self.recent.clear();
+        self
+    }
+    
     /// Changes the LLM model used for summarization to manually defined `Model` value.
     pub fn with_model(mut self, model: Model) -> Self {
+        info!("Memory: Changing the LLM Model for the Memory representation")
         self.llm = LLM::full(
             self.api_key.clone(),
             self.base_url.clone(),
@@ -114,6 +128,7 @@ impl Memory {
     /// 
     /// This is the full memory context of the agent that can be used for prompting the LLM.
     pub fn read(&self) -> String {
+        info!("Memory: reading full memory context");
         let mut combined = String::new();
         combined.push_str(&format!("Summarized history:\n{}\n\n", self.history));
         combined.push_str("Recent interactions:\n");
@@ -125,6 +140,7 @@ impl Memory {
                 pair.assistant
             ));
         }
+        debug!("Memory: Full memory context:{}", combined);
         combined
     }
 
@@ -133,12 +149,14 @@ impl Memory {
     /// The new interaction is appended as it is to the `recent` queue and if the queue hits its border
     /// the oldest interactions are summarized into `history`.
     pub fn add(&mut self, user_input: String, llm_answer: String) {
-        // Add the new interaction
+        info!("Memory: Adding the new interaction pair to recent");
+        debug!("User_input: {}, LLM_Input: {}", user_input, llm_answer);
         self.recent.push_back(Interaction {
             user: user_input,
             assistant: llm_answer,
         });
 
+        info!("Memory: Cutting queue to defined length and summarizing the rest");
         if self.recent.len() > self.max_pairs {
             let overflow_count = self.recent.len() - self.max_pairs;
             let mut overflow_text = String::new();
@@ -162,15 +180,12 @@ impl Memory {
                     Completion::Text(content) => content.clone(),
                     Completion::ToolCalls(_) => panic!("Expected text completion, got tool call!"),
                 },
-                Err(_e) => panic!("Something went wrong with summarizing the memory."),
+                Err(e) => {
+                    error!("Memory: LLM request failed: {}", e);
+                    panic!("Something went wrong with summarizing the memory.")
+                },
             };
+            debug!("New history representation: {}", self.history);
         }
-    }
-
-    /// Clears both the summarized history and the recent interactions queue.
-    pub fn delete_history(&mut self) -> &Self {
-        self.history.clear();
-        self.recent.clear();
-        self
     }
 }
