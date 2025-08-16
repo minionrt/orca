@@ -34,7 +34,13 @@ impl ToolInstance for ReadFilesTool {
     fn return_choice() -> openai::Tool {
         openai::Tool::function(
             "read_files".to_owned(),
-            "Reads the content of a file.".to_owned(),
+            "Reads the content of a file. \
+            Path must be an absolute path. \
+            Examples: \
+            YES: /workspace/src/main.rs \
+            NO: src/main.rs \
+            NO: workspace/src/main.rs \
+            NO: /root/src/main.rs".to_owned(),
             HashMap::from([(
                 "path".to_owned(),
                 openai::FunctionParameter::new("string", "Path to the file to read"),

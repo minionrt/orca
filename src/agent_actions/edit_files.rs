@@ -138,7 +138,7 @@ impl ToolInstance for EditFilesTool {
     type Args = EditFilesToolArgs;
     type Out = ();
     fn run(args: EditFilesToolArgs) -> Result<(), Box<dyn std::error::Error>> {
-        let mut path = args.path.clone();
+        let path = args.path.clone();
         let content = &args.content;
 
         if let (Some(from), Some(to)) = (args.from, args.to) {
@@ -160,11 +160,18 @@ impl ToolInstance for EditFilesTool {
     fn return_choice() -> openai::Tool {
         openai::Tool::function(
             "edit_files".to_owned(),
-            "Edits the contents of a file, optionally by range".to_owned(),
+            "Edits the contents of a file. \
+            Path must be an absolute path. \
+            Examples: \
+            YES: /workspace/src/main.rs \
+            NO: src/main.rs \
+            NO: workspace/src/main.rs \
+            NO: /root/src/main.rs".to_owned(),
+            
             HashMap::from([
                 (
                     "path".to_owned(),
-                    openai::FunctionParameter::new("string", "Path to the file."),
+                    openai::FunctionParameter::new("string", "Path to the file. Always use absolute paths."),
                 ),
                 (
                     "content".to_owned(),
