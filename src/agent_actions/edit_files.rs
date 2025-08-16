@@ -166,12 +166,15 @@ impl ToolInstance for EditFilesTool {
             YES: /workspace/src/main.rs \
             NO: src/main.rs \
             NO: workspace/src/main.rs \
-            NO: /root/src/main.rs".to_owned(),
-            
+            NO: /root/src/main.rs"
+                .to_owned(),
             HashMap::from([
                 (
                     "path".to_owned(),
-                    openai::FunctionParameter::new("string", "Path to the file. Always use absolute paths."),
+                    openai::FunctionParameter::new(
+                        "string",
+                        "Path to the file. Always use absolute paths.",
+                    ),
                 ),
                 (
                     "content".to_owned(),

@@ -40,7 +40,8 @@ impl ToolInstance for ReadFilesTool {
             YES: /workspace/src/main.rs \
             NO: src/main.rs \
             NO: workspace/src/main.rs \
-            NO: /root/src/main.rs".to_owned(),
+            NO: /root/src/main.rs"
+                .to_owned(),
             HashMap::from([(
                 "path".to_owned(),
                 openai::FunctionParameter::new("string", "Path to the file to read"),
