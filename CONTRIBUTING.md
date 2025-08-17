@@ -3,7 +3,7 @@
 ## Branch Conventions
 
 **Name your branches correctly:**
-- Features: `features/feature-name`
+- Features: `feature/feature-name`
 - Fixes: `fix/bug-name`
 - Use `-` for word separation
 
