@@ -181,7 +181,7 @@ impl TaskHandler {
                 };
 
                 // Give returned value of the tool to the llm
-                response = self.send_tool_answer(&input, self.memory.read());
+                response = self.send_tool_answer(&input, &self.memory.read());
             }
 
             // Stop the loop after x runs
