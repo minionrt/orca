@@ -1,5 +1,7 @@
 use crate::agent_actions::submit_code::GitSubmissionToolArgs;
-use crate::agent_actions::{bash, create_directory, dir_tree, edit_files, read_files, submit_code};
+use crate::agent_actions::{
+    ask_user, bash, create_directory, dir_tree, edit_files, read_files, submit_code,
+};
 use crate::openai::Tool;
 use crate::tools_interface::ToolInstance;
 use std::error::Error;
@@ -13,6 +15,7 @@ pub fn get_tools() -> Option<Vec<Tool>> {
         bash::BashTool::return_choice(),
         create_directory::CreateDirectoryTool::return_choice(),
         submit_code::GitSubmissionTool::return_choice(),
+        ask_user::AskUserTool::return_choice(),
         dir_tree::DirTreeTool::return_choice(),
     ];
 
@@ -54,6 +57,9 @@ pub fn call_tool(
         )?)?,
         "dir_tree" => {
             serde_json::to_value(dir_tree::DirTreeTool::run(serde_json::from_value(args)?)?)?
+        }
+        "ask_user" => {
+            serde_json::to_value(ask_user::AskUserTool::run(serde_json::from_value(args)?)?)?
         }
         _ => {
             error!("Unknown tool requested: {}", tool_name);
