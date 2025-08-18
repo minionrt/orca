@@ -79,7 +79,7 @@ impl GitSubmissionTool {
     ///
     /// # Return
     /// Returns an io::Result indicating either success or failure
-    fn submit_changes(&self, commit_message: &str) -> io::Result<()> {
+    pub fn submit_changes(&self, commit_message: &str) -> io::Result<()> {
         self.add_changes()?;
         self.commit_changes(commit_message)?;
         self.push_changes()?;
@@ -99,7 +99,7 @@ pub struct GitSubmissionToolArgs {
     action: String,
     commit_message: String,
     #[serde(default)]
-    working_dir: Option<String>,
+    pub working_dir: Option<String>,
     #[serde(skip)]
     this: GitSubmissionTool,
 }
@@ -124,7 +124,7 @@ impl ToolInstance for GitSubmissionTool {
         let tool = if let Some(working_dir) = params.working_dir.clone() {
             GitSubmissionTool::new(working_dir)
         } else {
-            params.this
+            params.this // <- we could refactor this
         };
 
         Ok(match params.action.as_str() {
