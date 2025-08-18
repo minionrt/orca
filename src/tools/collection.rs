@@ -1,5 +1,7 @@
 use crate::agent_actions::submit_code::GitSubmissionToolArgs;
-use crate::agent_actions::{ask_user,bash, create_directory, dir_tree, edit_files, read_files, submit_code};
+use crate::agent_actions::{
+    ask_user, bash, create_directory, dir_tree, edit_files, read_files, submit_code,
+};
 use crate::openai::Tool;
 use crate::tools_interface::ToolInstance;
 use std::error::Error;
