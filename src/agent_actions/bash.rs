@@ -78,7 +78,14 @@ impl ToolInstance for BashTool {
     fn return_choice() -> openai::Tool {
         openai::Tool::function(
             "bash".to_owned(),
-            "Executes bash code and returns the output (stdout and stderr). The first parameter is the bash code to execute.".to_owned(),
+            "Executes bash code and returns the output (stdout and stderr). The first parameter is the bash code to execute. \
+            If a path is used in the bash code you want to execute, it needs to be an absolute path \
+            Examples: \
+            YES: /workspace/src/main.rs \
+            NO: src/main.rs \
+            NO: workspace/src/main.rs \
+            NO: /root/src/main.rs
+            ".to_owned(),
             HashMap::from([
                 ("code".to_owned(), openai::FunctionParameter::new("string", "The bash code to execute")),
                 ("working_dir".to_owned(), openai::FunctionParameter::new("string", "The working directory the tool should work in."))
