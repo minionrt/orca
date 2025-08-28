@@ -7,6 +7,7 @@ mod tests {
     fn test_bash_tool_run_echo() {
         let output = BashTool::run(BashToolArgs {
             code: "echo hello".to_owned(),
+            working_dir: ".".to_owned(),
         })
         .unwrap();
         assert!(
@@ -19,6 +20,7 @@ mod tests {
     fn test_bash_tool_run_stderr() {
         let output = BashTool::run(BashToolArgs {
             code: "ls /nonexistent_path".to_owned(),
+            working_dir: ".".to_owned(),
         })
         .unwrap();
         assert!(

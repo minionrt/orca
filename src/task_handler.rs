@@ -21,6 +21,8 @@ fn intro_with_path(path: &str) -> String {
         "You are an autonomous agent that solves coding tasks. \
 You should use the given tools to solve the given task. \
 Please ONLY use bash tool if none of the others offers what you want to do, don't use bash tool with \"cd\"!\
+Whenever you receive a filename without a full path, or if a file access fails, 
+you MUST use the dir_tree tool to determine the correct file path before proceeding.
 You are connected to a Linux-based development environment. \
 You are in the project directory. The path to the file you should work on is: {path} \
 If anything is unclear or missing, you must call the 'ask_user' tool instead of making assumptions. \
@@ -32,6 +34,8 @@ const MESSAGE_TOOL_RESPONSE: &str = r#"You are an autonomous agent that solves c
 You should use the given tools to solve the given task.
 You are connected to a Linux-based development environment. You are in the 
 project directory. If you think your task is done please call the git_submission tool and in the next step just tell me what you did.
+Whenever you receive a filename without a full path, or if a file access fails, 
+you MUST use the dir_tree tool to determine the correct file path before proceeding.
 Please ONLY use bash tool if none of the others offers what you want to do, don't use bash tool with \"cd\"!
 The response of your last tool call is the following:"#;
 
@@ -139,7 +143,7 @@ impl TaskHandler {
 
             // If llm returns a text I expect the task to be done
             if let Completion::Text(value) = completion {
-                // If the agend doesn't submit we use that message and submit for it
+                // If the agent doesn't submit we use that message and submit for it
                 if !submitted {
                     let _ = GitSubmissionTool::new(&task.working_dir).submit_changes(&value);
                     debug!(
@@ -188,7 +192,8 @@ impl TaskHandler {
 
             // Stop the loop after x runs
             ctr += 1;
-            if ctr >= 25 {
+            let max_loops = 25;
+            if ctr >= max_loops {
                 return TaskOutcome::Failure(
                     "The interaction loop run too long, the agent can't stop yappin..".to_string(),
                     Some(TaskFailureReason::ProblemSolving),

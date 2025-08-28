@@ -138,19 +138,19 @@ impl ToolInstance for EditFilesTool {
     type Args = EditFilesToolArgs;
     type Out = ();
     fn run(args: EditFilesToolArgs) -> Result<(), Box<dyn std::error::Error>> {
-        let path = &args.path;
+        let path = args.path.clone();
         let content = &args.content;
 
         if let (Some(from), Some(to)) = (args.from, args.to) {
-            Self::edit_file_from_to(path, content, from, to)?;
+            Self::edit_file_from_to(&path, content, from, to)?;
         } else if let (Some(start_line), Some(start_col), Some(end_line), Some(end_col)) =
             (args.start_line, args.start_col, args.end_line, args.end_col)
         {
             Self::edit_file_line_col_range(
-                path, content, start_line, start_col, end_line, end_col,
+                &path, content, start_line, start_col, end_line, end_col,
             )?;
         } else {
-            Self::edit_file(path, content)?;
+            Self::edit_file(&path, content)?;
         }
 
         Ok(())
@@ -160,11 +160,21 @@ impl ToolInstance for EditFilesTool {
     fn return_choice() -> openai::Tool {
         openai::Tool::function(
             "edit_files".to_owned(),
-            "Edits the contents of a file, optionally by range".to_owned(),
+            "Edits the contents of a file. \
+            Path must be an absolute path. \
+            Examples: \
+            YES: /workspace/src/main.rs \
+            NO: src/main.rs \
+            NO: workspace/src/main.rs \
+            NO: /root/src/main.rs"
+                .to_owned(),
             HashMap::from([
                 (
                     "path".to_owned(),
-                    openai::FunctionParameter::new("string", "Path to the file."),
+                    openai::FunctionParameter::new(
+                        "string",
+                        "Path to the file. Always use absolute paths.",
+                    ),
                 ),
                 (
                     "content".to_owned(),
@@ -174,19 +184,22 @@ impl ToolInstance for EditFilesTool {
             HashMap::from([
                 (
                     "from".to_owned(),
-                    openai::FunctionParameter::new("string", "Optional start byte index"),
+                    openai::FunctionParameter::new("integer", "Optional start byte index"),
                 ),
                 (
                     "to".to_owned(),
-                    openai::FunctionParameter::new("string", "Optional end byte index"),
+                    openai::FunctionParameter::new("integer", "Optional end byte index"),
                 ),
                 (
                     "start_line".to_owned(),
-                    openai::FunctionParameter::new("string", "Optional start line index (0-based)"),
+                    openai::FunctionParameter::new(
+                        "integer",
+                        "Optional start line index (0-based)",
+                    ),
                 ),
                 (
                     "end_line".to_owned(),
-                    openai::FunctionParameter::new("string", "Optional end line index (0-based)"),
+                    openai::FunctionParameter::new("integer", "Optional end line index (0-based)"),
                 ),
                 (
                     "start_col".to_owned(),
@@ -197,7 +210,10 @@ impl ToolInstance for EditFilesTool {
                 ),
                 (
                     "end_col".to_owned(),
-                    openai::FunctionParameter::new("string", "Optional end column index (0-based)"),
+                    openai::FunctionParameter::new(
+                        "integer",
+                        "Optional end column index (0-based)",
+                    ),
                 ),
             ]),
         )

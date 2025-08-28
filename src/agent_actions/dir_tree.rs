@@ -38,13 +38,8 @@ impl ToolInstance for DirTreeTool {
         openai::Tool::function(
             "dir_tree".to_owned(),
             "Recursively returns the directory structure as JSON.".to_owned(),
-            HashMap::from([(
-                "path".to_owned(),
-                openai::FunctionParameter::new(
-                    "string",
-                    "The directory to scan (default: current directory \".\")",
-                ),
-            )]),
+            // We intentionally don't tell the agent about the parameter `path` as we fill this one in `collection`
+            HashMap::new(),
             HashMap::new(),
         )
     }

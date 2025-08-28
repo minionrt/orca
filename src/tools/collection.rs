@@ -1,3 +1,5 @@
+use crate::agent_actions::bash::BashToolArgs;
+use crate::agent_actions::dir_tree::DirTreeToolArgs;
 use crate::agent_actions::submit_code::GitSubmissionToolArgs;
 use crate::agent_actions::{
     ask_user, bash, create_directory, dir_tree, edit_files, read_files, submit_code,
@@ -45,7 +47,10 @@ pub fn call_tool(
                 value
             }
         }
-        "bash" => serde_json::to_value(bash::BashTool::run(serde_json::from_value(args)?)?)?,
+        "bash" => {
+            let args: BashToolArgs = serde_json::from_value(args)?;
+            serde_json::to_value(bash::BashTool::run(args)?)?
+        }
         "git_submission" => {
             // This implicitly sets "args.this" to the default
             let mut args: GitSubmissionToolArgs = serde_json::from_value(args)?;
@@ -56,7 +61,8 @@ pub fn call_tool(
             serde_json::from_value(args)?,
         )?)?,
         "dir_tree" => {
-            serde_json::to_value(dir_tree::DirTreeTool::run(serde_json::from_value(args)?)?)?
+            let args: DirTreeToolArgs = serde_json::from_str(&format!(r#"{{"path":"{dir}"}}"#))?;
+            serde_json::to_value(dir_tree::DirTreeTool::run(args)?)?
         }
         "ask_user" => {
             serde_json::to_value(ask_user::AskUserTool::run(serde_json::from_value(args)?)?)?
