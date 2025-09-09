@@ -2,85 +2,34 @@ name: Monthly Auto Release
 
 on:
   schedule:
-    - cron: '0 0 1 * *' # 00:00 UTC, 1st of every month
+    - cron: '0 0 1 * *'
   workflow_dispatch: {}
 
 permissions:
   contents: write
 
-concurrency:
-  group: monthly-auto-release
-  cancel-in-progress: false
-
 jobs:
-  release:
+  create-release-pr:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Check if develop has new commits
         id: check
         run: |
           git fetch origin develop
           git fetch origin main
-          # Count commits in develop that are not in main
           commits_ahead=$(git rev-list origin/main..origin/develop --count)
-          echo "Commits ahead: $commits_ahead"
           echo "commits_ahead=$commits_ahead" >> $GITHUB_OUTPUT
 
-      - name: Merge develop into main
+      - name: Create PR develop → main
         if: steps.check.outputs.commits_ahead != '0'
-        run: |
-          git checkout main
-          git merge origin/develop --no-edit
-          git push origin main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Fetch all tags
-        if: steps.check.outputs.commits_ahead != '0'
-        run: git fetch --tags
-
-      - name: Bump minor version and tag
-        if: steps.check.outputs.commits_ahead != '0'
-        id: tag
-        run: |
-          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.1.0")
-          version=${latest_tag#v}
-          major=$(echo $version | cut -d. -f1)
-          minor=$(echo $version | cut -d. -f2)
-          new_minor=$((minor + 1))
-          new_version="v${major}.${new_minor}.0"
-      
-          echo "New version: $new_version"
-      
-          # Check if tag already exists on remote
-          if git rev-parse "$new_version" >/dev/null 2>&1; then
-            echo "Tag $new_version already exists. Skipping tag creation."
-          else
-            git tag $new_version
-            git push origin $new_version
-          fi
-      
-          echo "new_version=$new_version" >> $GITHUB_OUTPUT
-      
-
-      - name: Create GitHub Release
-        if: steps.check.outputs.commits_ahead != '0'
-        uses: actions/create-release@v1
+        uses: peter-evans/create-pull-request@v7
         with:
-          tag_name: ${{ steps.tag.outputs.new_version }}
-          release_name: ${{ steps.tag.outputs.new_version }}
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "chore(release): monthly merge develop into main"
+          body: "Automated monthly release PR. Includes all commits from develop → main."
+          branch: auto/release-${{ github.run_id }}
+          base: main
+          commit-message: "chore(release): monthly merge develop into main"
