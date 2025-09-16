@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod tests {
-    use teamprojekt_agents::agent_actions::create_directory::{
+    use orca::agent_actions::create_directory::{
         CreateDirectoryTool, CreateDirectoryToolArgs, create_directory,
     };
-    use teamprojekt_agents::tools_interface::ToolInstance;
+    use orca::tools_interface::ToolInstance;
     use tempfile::TempDir;
 
     #[test]

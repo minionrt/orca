@@ -2,8 +2,8 @@
 mod tests {
     // Use super::*; -> this imports parent modules
 
-    use teamprojekt_agents::memory::Memory;
-    use teamprojekt_agents::models::Model;
+    use orca::memory::Memory;
+    use orca::models::Model;
     use url::Url;
 
     #[test]

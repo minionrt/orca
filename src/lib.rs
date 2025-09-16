@@ -5,6 +5,7 @@ pub mod logging;
 pub mod memory;
 pub mod models;
 pub mod openai;
+pub mod repo_clone;
 pub mod report;
 pub mod task_handler;
 pub mod tools;

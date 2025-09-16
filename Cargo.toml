@@ -1,10 +1,10 @@
 [package]
-name = "teamprojekt-agents"
+name = "orca"
 version = "0.4.0"
 edition = "2024"
 
 [lib]
-name = "teamprojekt_agents"
+name = "orca"
 path = "src/lib.rs"
 
 [dependencies]

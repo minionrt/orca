@@ -1,29 +1,16 @@
-mod agent_actions;
-mod fetch_task;
-mod llm;
-mod logging;
-mod memory;
-mod models;
-mod openai;
-mod report;
-mod task_handler;
-mod tools;
-mod tools_interface;
-
-use report::{try_report_failure, try_report_success};
+use orca::report::{try_report_failure, try_report_success};
+use orca::task_handler::{Task, TaskHandler, TaskOutcome};
+use orca::{fetch_task::get_task, repo_clone::GitRepository};
 use reqwest::blocking::Client;
 use std::env;
-use task_handler::{Task, TaskHandler, TaskOutcome};
-use url::Url;
-mod repo_clone;
-use crate::{fetch_task::get_task, repo_clone::GitRepository};
 use tracing::{error, info};
+use url::Url;
 
 fn main() {
     // Initialize logging first thing
-    logging::init_logging();
+    orca::logging::init_logging();
 
-    info!("Starting teamprojekt-agents");
+    info!("Starting orca");
 
     // The agent receives the HTTP API base url and token via the following environment variables.
     // See https://github.com/autominion/spec/blob/main/spec/runtime.md
@@ -83,7 +70,7 @@ fn main() {
                 minion_api,
                 minion_token,
                 "There has been an error while receiving the task",
-                Some(report::TaskFailureReason::TaskIssues),
+                Some(orca::report::TaskFailureReason::TaskIssues),
                 http_client,
             );
             return;

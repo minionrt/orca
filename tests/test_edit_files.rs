@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
+    use orca::agent_actions::edit_files::EditFilesTool;
     use std::fs;
     use std::io::Write;
-    use teamprojekt_agents::agent_actions::edit_files::EditFilesTool;
     use tempfile::NamedTempFile;
 
     fn read_file(path: &std::path::Path) -> String {

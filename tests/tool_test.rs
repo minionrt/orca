@@ -1,5 +1,5 @@
-use teamprojekt_agents::llm::Completion;
-use teamprojekt_agents::openai::ToolCall;
+use orca::llm::Completion;
+use orca::openai::ToolCall;
 
 #[test]
 fn parses_only_toolcalls_to_completionkind() {

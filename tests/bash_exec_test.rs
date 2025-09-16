@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use teamprojekt_agents::agent_actions::bash::{BashTool, BashToolArgs};
-    use teamprojekt_agents::tools_interface::ToolInstance;
+    use orca::agent_actions::bash::{BashTool, BashToolArgs};
+    use orca::tools_interface::ToolInstance;
 
     #[test]
     fn test_bash_tool_run_echo() {

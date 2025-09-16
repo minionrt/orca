@@ -14,7 +14,7 @@ COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 # Build the application
 COPY . .
-RUN cargo build --release --bin teamprojekt-agents
+RUN cargo build --release --bin orca
 
 # Runtime image: debian:bookworm-slim with Rust toolchain installed
 FROM debian:bookworm-slim AS runtime
@@ -41,7 +41,7 @@ RUN apt-get update && \
 WORKDIR /app
 
 # Copy the compiled binary from the builder stage
-COPY --from=builder /app/target/release/teamprojekt-agents /usr/local/bin/teamprojekt-agents
+COPY --from=builder /app/target/release/orca /usr/local/bin/orca
 
 # Copy source code for optional rebuilds
 COPY . .
@@ -50,4 +50,4 @@ COPY . .
 ENV PATH="/root/.cargo/bin:$PATH"
 
 # Set default entrypoint to the built binary
-ENTRYPOINT ["/usr/local/bin/teamprojekt-agents"]
+ENTRYPOINT ["/usr/local/bin/orca"]

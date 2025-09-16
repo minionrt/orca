@@ -1,5 +1,5 @@
+use orca::agent_actions::dir_tree::DirTreeTool;
 use std::fs::{self, File};
-use teamprojekt_agents::agent_actions::dir_tree::DirTreeTool;
 
 #[test]
 fn test_dir_tree_tool_basic_structure() {

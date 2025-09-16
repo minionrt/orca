@@ -1,7 +1,7 @@
 /* #[cfg(test)]
 mod tests {
-    use teamprojekt_agents::agent_actions::submit_code::GitSubmissionTool;
-    use teamprojekt_agents::tools_interface::ToolInstance;
+    use orca::agent_actions::submit_code::GitSubmissionTool;
+    use orca::tools_interface::ToolInstance;
     use serde_json::json;
 
     #[test]
