@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::io;
 use std::process::Command;
 use tracing::{debug, info};

@@ -1,10 +1,9 @@
-name: Container Publish
+name: Container Build and Publish
 run-name: ${{ github.event.head_commit.message }}
 
 on:
   push:
-    branches:
-      '**'
+    branches: ['**']
 
 permissions:
   contents: read

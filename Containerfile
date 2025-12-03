@@ -16,8 +16,8 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 RUN cargo build --release --bin orca
 
-# Runtime image: debian:bookworm-slim with Rust toolchain installed
-FROM debian:bookworm-slim AS runtime
+# Runtime image: debian:trixie-slim with Rust toolchain installed
+FROM debian:trixie-slim AS runtime
 
 # Install necessary libraries, Rust toolchain, and dependencies
 RUN apt-get update && \

@@ -25,7 +25,7 @@ pub struct ChatCompletionMessage {
     // TODO
     // - annotations
 }
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 /// AI Response - Tool call requested by LLM
 pub struct ToolCall {
     pub id: String,
@@ -35,7 +35,7 @@ pub struct ToolCall {
     pub function: ResponseFunction,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 /// AI Response - Function that LLM wants to call
 pub struct ResponseFunction {
     pub name: String,

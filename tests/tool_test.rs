@@ -1,5 +1,6 @@
 use orca::llm::Completion;
 use orca::openai::ToolCall;
+use tracing::info;
 
 #[test]
 fn parses_only_toolcalls_to_completionkind() {
@@ -20,7 +21,7 @@ fn parses_only_toolcalls_to_completionkind() {
     let tool_calls: Vec<ToolCall> = serde_json::from_str(json).unwrap();
     let completion_kind = Completion::ToolCalls(tool_calls.clone());
     // Run cargo test -- --nocapture to see actual parsing.
-    println!("{completion_kind:?}");
+    info!("{completion_kind:?}");
 
     // Checking if it was parsed right
     match completion_kind {

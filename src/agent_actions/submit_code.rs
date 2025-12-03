@@ -38,7 +38,7 @@ impl GitSubmissionTool {
     /// Commits all added changes.
     ///
     /// # Arguments
-    /// * `commit_message` - The commit message, provided by the llm. If none is provided, it'll still work.
+    /// * `commit_message` - The commit message, provided by the LLM. If none is provided, it'll still work.
     ///
     /// # Return
     /// Returns an io::Result indicating either success or failure
@@ -75,7 +75,7 @@ impl GitSubmissionTool {
     /// Full action cycle: adds, commits, and pushes all changes.
     ///
     /// # Arguments
-    /// * `commit_message` - the commit messsage provided by the llm. If none is provided it'll still work.
+    /// * `commit_message` - the commit messsage provided by the LLM. If none is provided it'll still work.
     ///
     /// # Return
     /// Returns an io::Result indicating either success or failure

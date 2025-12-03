@@ -1,20 +1,29 @@
 name: Rust CI
+run-name: ${{ github.event.head_commit.message }}
 
 on:
   push:
-    branches: ["main", "develop"]
-  pull_request:
-    branches: ["main", "develop"]
+    branches: ['**']
 
 env:
   CARGO_TERM_COLOR: always
+  ORCA_E2E_AGENT_IMAGE: agent-under-test
+
+permissions:
+  contents: read
+  packages: write
+  statuses: write
 
 jobs:
-  build:
+  rust-ci:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Delete unnecessary cached tools to free up space needed for Docker
+        run: rm -rf /opt/hostedtoolcache
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       # Cache dependencies and build artifacts
       - name: Cache Cargo dependencies and build
@@ -36,6 +45,27 @@ jobs:
 
       - name: Build
         run: cargo build --verbose
+
+      - name: Setup dummy git config
+        run: |
+          git config --global user.name "LordTestington"
+          git config --global user.email "lordtestington@mctestface.com"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build the container image once, with cache enabled, and tag it
+      # as "agent-under-test" so tests can use it via ORCA_E2E_AGENT_IMAGE.
+      - name: Build container image with cache
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Containerfile
+          push: false
+          load: true
+          tags: agent-under-test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Run tests
         run: cargo test --verbose
