@@ -5,7 +5,7 @@
 - Install the [minionrt CLI](https://github.com/minionrt/cli).
 - Clone this repository on your machine:
   ```console
-  git clone git@github.com:orca-agent/orca.git
+  git clone git@github.com:minionrt/orca.git
   ```
 - From the root of this repository, run:
   ```console

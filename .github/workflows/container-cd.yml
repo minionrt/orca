@@ -37,6 +37,6 @@ jobs:
           context: .
           file: Containerfile
           push: true
-          tags: ghcr.io/orca-agent/orca:latest
+          tags: ghcr.io/minionrt/orca:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
