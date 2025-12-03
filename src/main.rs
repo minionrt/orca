@@ -13,7 +13,7 @@ fn main() {
     info!("Starting orca");
 
     // The agent receives the HTTP API base url and token via the following environment variables.
-    // See https://github.com/autominion/spec/blob/main/spec/runtime.md
+    // See https://github.com/minionrt/spec/blob/main/spec/runtime.md
     let minion_api: Url = env::var("MINION_API_BASE_URL").unwrap().parse().unwrap();
     let minion_token = env::var("MINION_API_TOKEN").unwrap();
 

@@ -2,7 +2,7 @@
 
 ## Quickstart
 
-- Install the [autominion CLI](https://github.com/autominion/cli).
+- Install the [minionrt CLI](https://github.com/minionrt/cli).
 - Clone this repository on your machine:
   ```console
   git clone git@github.com:orca-agent/orca.git
@@ -11,7 +11,7 @@
   ```console
   minion run --containerfile ./Containerfile
   ```
-  The autominion CLI will build a container image from the current state of your local clone of the `orca` repository.
+  The minionrt CLI will build a container image from the current state of your local clone of the `orca` repository.
   This container image will then subsequently be used to run the agent on the git repository in your current working directory.
 
 ## License
